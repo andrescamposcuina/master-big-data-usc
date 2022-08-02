@@ -1,0 +1,163 @@
+---
+title: 'Práctica 2: Optimización convexa'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+<style>
+body {text-align : justify}
+</style>
+
+# Carga de las librerías necesarias
+
+Primero cargamos las librerías necesarias:
+
+```{r, message=FALSE}
+library("scatterplot3d") # Para representrar gráficamente
+library(tidyverse) # General-purpose data wrangling
+library(lattice)
+```
+
+# Un problema de optimización convexa
+
+El problema a tratar es un problema de optimización convexa ya que cumple la definición de problema de optimización y además la función `f` a minimizar es una función convexa. 
+
+## Representaciones gráficas de superficies en R3
+
+Utilizaremos diferentes funciones para representra de forma gráfica la función a minimizar.
+
+```{r}
+x <- seq(-10, 10, length = 30)
+y <- x
+f <- function(x, y) {0.5 * (x^2 + y^2)}
+z <- outer(x, y, f)
+
+# Representación gráfica
+persp(x, y, z, col = 'red')
+
+# Gráfico de contornos
+contour(x, y, z)
+
+# Uso de la librería lattice
+g <- expand.grid(x = -10:10, y = -10:10)
+g$z <- 0.5 * (g$x^2 + g$y^2)
+wireframe(z ~ x * y, data = g, drape = TRUE)
+levelplot(z ~ x * y, g, contour = TRUE)
+```
+# Algoritmo de descenso de gradiente
+
+## Elección del paso
+
+### Con paso fijo
+
+Programamos el método del descenso de gradiente con un paso fijo:
+
+```{r}
+
+myGradientDescentFixedStep <- function(gamma, threshold, max_iter) {
+  
+  # Definimos el punto inicial
+  x <- gamma
+  y <- 1
+  
+  converged = F
+  iterations = 0
+  
+  # Por ahora ejecutamos con un paso fijo
+  t <- 0.001
+  
+  while(converged == F) {
+    
+    # Evaluamos el gradiente de la función objetivo en x^(k-1)
+    x_gradient <- x
+    y_gradient <- gamma*y
+    
+    # Actualizamos el punto x^k
+    x_new <- x - t * x_gradient
+    y_new <- y - t * y_gradient
+    x <- x_new
+    y <- y_new
+    
+    # Obtenemos el criterio de parada
+    stopping_criterion = 0.5 * (x^2 + (gamma*y)^2)
+    
+    # Comprobamos si se cumple el criterio de parada
+    if(stopping_criterion <= threshold) {
+      converged = T
+      return(paste("Optimal x:", x, "; Optimal y:", y, "; Converged"))
+    }
+    
+    # Comprobamos si se han ejecutado el número máximo de iteraciones
+    iterations = iterations + 1
+    if(iterations > max_iter) { 
+      converged = T
+      return(paste("Optimal x:", x, "; Optimal y:", y, "; Not Converged"))
+    }
+  }
+}
+
+myGradientDescentFixedStep(1, 0.001, 2500000)
+
+```
+### Utilizando como paso de cada iteración el obtenido por el método de búsqueda exacta (exact line search)
+
+Programamos el método del descenso de gradiente con un paso obtenido mediante el método de 'exact line search':
+
+```{r}
+
+myGradientDescent <- function(gamma, threshold, max_iter) {
+  
+  # Definimos el punto inicial
+  x <- gamma
+  y <- 1
+  
+  converged = F
+  iterations = 0
+  
+  # Obtenemos el paso (t) mediante el método 
+  t <- 0.001
+  
+  while(converged == F) {
+    
+    # Evaluamos el gradiente de la función objetivo en x^(k-1)
+    x_gradient <- x
+    y_gradient <- gamma*y
+    
+    # Actualizamos el punto x^k
+    x_new <- x - t * x_gradient
+    y_new <- y - t * y_gradient
+    x <- x_new
+    y <- y_new
+    
+    # Obtenemos el criterio de parada
+    stopping_criterion = 0.5 * (x^2 + (gamma*y)^2)
+    
+    # Comprobamos si se cumple el criterio de parada
+    if(stopping_criterion <= threshold) {
+      converged = T
+      return(paste("Optimal x:", x, "; Optimal y:", y, "; Converged"))
+    }
+    
+    # Comprobamos si se han ejecutado el número máximo de iteraciones
+    iterations = iterations + 1
+    if(iterations > max_iter) { 
+      converged = T
+      return(paste("Optimal x:", x, "; Optimal y:", y, "; Not Converged"))
+    }
+  }
+}
+
+myGradientDescent(1, 0.001, 2500000)
+

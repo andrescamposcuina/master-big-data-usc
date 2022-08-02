@@ -1,0 +1,368 @@
+---
+title: 'Boletín 3 - Reglas de Asociación'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Boletin3/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(cluster)
+library(dbscan)
+library(fpc)
+library(factoextra)
+library(gridExtra)
+library(reshape)
+library(arules)
+library(arulesViz)
+library(car)
+```
+
+#Cargar los datos
+
+Lo primero, como siempre, es cargar el fichero con los datos.
+
+```{r}
+pedidos <- read.csv("./data/pedidos.csv", header=TRUE, sep=",", encoding = 'UTF-8')
+pedidos
+```
+Cargamos también el fichero `productos.csv` con la información sobre los productos presentes en el fichero de pedidos.
+
+```{r}
+productos <- read.csv("./data/productos.csv", header=TRUE, sep=",", encoding = 'UTF-8')
+productos
+```
+
+Reemplazamos en el DataFrame de pedidos el `product_id` del producto por su nombre.
+
+```{r}
+pedidos$product_name <- productos[pedidos$product_id, "product_name"]
+pedidos$product_id <- NULL
+pedidos
+```
+
+Para continuar con el preprocesado, eliminamos las columnas del DataFrame `add_to_cart_order` y `reordered`, ya que no nos aportan información de valor para obtener reglas de asociación. 
+
+```{r}
+pedidos$add_to_cart_order <- NULL
+pedidos$reordered <- NULL
+pedidos
+```
+
+Comprobamos si nuestro DataFrame tiene elementos ausentes.
+
+```{r}
+sapply(
+  pedidos, function(x) {
+    sum(is.na(x))
+  }
+)
+```
+
+Como no hay valores ausentes, escribimos a un fichero en formato `.csv` el resultado del preprocesado de nuestros datos.
+
+```{r}
+# write.csv(pedidos, "./data/pedidos_preprocessed.csv", row.names=FALSE)
+```
+
+Ahora leemos a un objeto del tipo `transactions` el fichero `.csv` preprocesado que acabamos de escribir. Cabe destacar que el fichero escrito está en formato `single`.
+
+```{r}
+pedidos.trans <-
+  read.transactions(
+    "./data/pedidos_preprocessed.csv",
+    format = "single",
+    header=TRUE,
+    sep=",",
+    cols = c(1, 2),
+    rm.duplicates = TRUE,
+    quote = "\""
+  )
+```
+
+Mostramos el objeto del tipo `transactions` obtenido.
+
+```{r}
+pedidos.trans
+```
+
+Observamos la frecuencia de los items.
+
+```{r}
+head(itemFrequency(pedidos.trans))
+```
+
+# Ejercicio 1
+
+**Si consideramos que un itemset es frecuente cuando aparece en al menos 3.200 transacciones:**
+
+**Apartado 1**
+
+**¿Qué soporte debemos establecer? ¿Cuántos encontramos? ¿Cuál de ellos tiene el soporte más alto?**
+
+Calculamos el soporte que debemos establecer a través de la formula siguiente:
+
+$soporte(X) = \sigma(X)/N$
+
+Esta fórmula fue dada durante las expositivas de la asignatura. En esta fórmula, $X$ es el itemset, $\sigma(X)$ es el número de veces que debe aparecer para ser considerado como frecuente (en este caso 3200 veces) y N la cantidad de transacciones totales.
+
+```{r}
+soporte <- 3200 / nrow(pedidos.trans)
+soporte
+```
+
+Por lo tanto, para este soporte encontramos el siguiente número de itemsets frecuentes.
+ 
+```{r}
+pedidos.itemsets <- apriori(
+  pedidos.trans, 
+  parameter = list(target = "frequent itemsets", support = soporte), 
+  control = list(verbose = FALSE)
+)
+
+length(pedidos.itemsets)
+```
+
+Los 5 itemsets con el soporte más alto son los que se muestran a continuación (ordenados de mayor a menor soporte).
+
+```{r}
+inspect(head(sort(pedidos.itemsets, by = 'support'), 5))
+```
+
+**Apartado 2**
+
+**¿Cuántos de los itemsets frecuentes contienen el producto “Seedless Red Grapes”? ¿Cuál de ellos, con un tamaño de al menos dos items, tiene el soporte más alto?**
+
+Comprobamos de entre los itemsets frecuentes cuáles tienen el artículo _Seedless Red Grapes_.
+
+```{r}
+pedidos.itemsets.aux <-
+  subset(pedidos.itemsets, subset = items %pin% "Seedless Red Grapes")
+
+# Mostramos el número de itemsets que cumplen la condición anterior
+length(pedidos.itemsets.aux)
+```
+
+Comprobamos cuál de ellos, con un tamaño de al menos 2 items, tiene el soporte más alto. Para esto, al igual que antes, mostramos los top 5 itemsets ordenados de mayor a menor por valor del soporte que cumplen la condición de tener al menos 2 items.
+
+```{r}
+inspect(head(sort(
+  subset(pedidos.itemsets.aux, subset = size(items) >= 2), by = "support"
+), 5))
+```
+
+**Apartado 3**
+
+**¿Cuántos de los itemset frecuentes están incluidos en otros?**
+
+Esto lo podemos hacer a través de la función `is.subset`. Esta función nos devuelve el número de itemsets que están incluidos en los otros en forma de matriz. Haciendo la suma de columnas, podemos obtener para cada itemset en cuántos otros itemsets está contenido. Finalmente, contando cuántas columnas son diferentes de 0 podemos ver cuántos itemsets frecuentes están contenidos en otros.
+
+```{r}
+pedidos.itemsets.subset <- is.subset(pedidos.itemsets, sparse = FALSE, proper = TRUE)
+
+# Calculamos la suma de los valores de cada columna
+col.sum <- colSums(pedidos.itemsets.subset)
+
+# Vemos cuántas columnas son diferentes de cero
+print(sum(col.sum != 0))
+```
+
+# Ejercicio 2
+
+**Determina el valor necesario de confianza para que se generen 169 reglas con el soporte anteriormente definido.**
+
+Para obtener este valor lo que podemos hacer es obtener todas las reglas (poniendo la confianza igual a 0) y después ordenarlas por la confianza obtenida para ver cuál es la que le corresponde a la regla 169.
+
+En primer lugar generamos todas la reglas.
+
+```{r}
+pedidos.rules <- apriori(
+  pedidos.trans,
+  parameter = list(support = soporte, confidence = 0),
+  control = list(verbose = FALSE)
+)
+
+# Imprimimos el número de reglas generadas
+length(pedidos.rules)
+```
+
+Ahora si ordenamos de menor a mayor por el valor de la confianza obtenida para cada regla, el valor de la confianza que se obtenga para la regla número 169 es el que nos hace falta.
+
+```{r}
+# Ordenamos por confianza
+pedidos.rules.ordered <- sort(pedidos.rules, by = "confidence")
+
+# Obtenemos la confianza de la que queda en la posición 169
+confianza <- pedidos.rules.ordered[169]@quality$confidence
+
+# Mostramos la confianza obtenida
+print(confianza)
+```
+
+Comprobamos que para este valor de la confianza obtenemos 169 reglas.
+
+```{r}
+# Generamos las reglas de nuevo para este valor de la confianza
+pedidos.rules <- apriori(
+  pedidos.trans,
+  parameter = list(support = soporte, confidence = confianza),
+  control = list(verbose = FALSE)
+)
+
+# Imprimimos para ver que efectivamente se generan 169 reglas
+length(pedidos.rules)
+```
+
+**Apartado 1**
+
+**Al conjunto de reglas generadas añádele la medida basada en el casualSupport y el índice de Jaccard.**
+
+Añadimos nuevas medidas de la misma manera que hicimos en la práctica de reglas de asociación.
+
+```{r}
+quality(pedidos.rules) <- cbind(
+  quality(pedidos.rules),
+  interestMeasure(
+    pedidos.rules, 
+    c("casualSupport", "jaccard"), 
+    pedidos.trans
+  )
+)
+
+# Mostramos por pantalla
+inspectDT(pedidos.rules)
+```
+
+**Apartado 2**
+
+**¿Cuantas de dichas reglas son máximales? Indica la regla con la confianza mas alta.**
+
+Mostramos cuántas son maximales.
+
+```{r}
+pedidos.rules.maximal <- pedidos.rules[is.maximal(pedidos.rules)]
+
+# Mostramos cuántas son maximales
+length(pedidos.rules.maximal)
+```
+Indicamos la que tenga la confianza más alta.
+
+```{r}
+inspect(head(sort(pedidos.rules.maximal, by="confidence"), 1))
+```
+
+**Apartado 3**
+
+**¿Cuántas de dichas reglas están incluidas en otras? Indica la que tiene el casualSupport más alto.**
+
+Este caso es parecido al del ejercicio anterior.
+
+```{r}
+pedidos.rules.subset.a3.matrix <- is.subset(pedidos.rules, sparse = FALSE, proper = TRUE)
+
+# Calculamos la suma de los valores de cada columna
+col.sum.a3 <- colSums(pedidos.rules.subset.a3.matrix)
+
+# Vemos cuántas columnas son diferentes de cero
+print(sum(col.sum.a3 != 0))
+```
+
+De igual forma obtenemos la que tiene un mayor `casualSupport`:
+
+```{r}
+pedidos.rules.subset.a3 <- pedidos.rules[colSums(pedidos.rules.subset.a3.matrix) > 1]
+
+# Mostramos por pantalla
+inspect(head(sort(pedidos.rules.subset.a3, by = "casualSupport"), 1))
+```
+
+
+**Apartado 4**
+
+**¿Cuántas reglas no maximales existen? Indica la que tenga la confianza más alta y tenga, al menos, 2 items en el antecedente.**
+
+Vemos cuántas reglas no maximales existen.
+
+```{r}
+pedidos.rules.not.maximal <- pedidos.rules[!is.maximal(pedidos.rules)]
+
+# Mostramos el número por pantalla
+length(pedidos.rules.not.maximal)
+```
+
+De entre estas, indicamos la que tenga la confianza más alta y tenga, al menos, 2 items en el antecedente.
+
+```{r}
+inspect(head(sort(
+  subset(pedidos.rules.not.maximal, subset = size(lhs) >= 2),
+  by = "confidence"
+), 1))
+```
+
+**Apartado 5**
+
+**Indica el número de transacciones en las que se verifica la regla con la confianza más alta y que, además, incluyan “Organic Strawberries” en el antecedente o el consecuente.**
+
+Primero tenemos que obtener las reglas en las que aparezca _Organic Strawberries_ en el antecedente o en el consecuente.
+
+```{r}
+pedidos.rules.a5 <- subset(
+  pedidos.rules,
+  subset = (lhs %pin% "Organic Strawberries" | rhs %pin% "Organic Strawberries")
+  )
+
+# Mostramos por pantalla el número
+length(pedidos.rules.a5)
+```
+Ahora sólo nos queda ordenar por confianza y mostrar por pantalla la regla obtenida (mostraremos el top 5 ordenadas de mayor a menor confianza).
+
+```{r}
+inspectDT(head(sort(pedidos.rules.a5, by = "confidence"), 5))
+```
+
+Para ver el número de transacciones en donde se verifica la regla, mostramos la columna `count` de la regla con la confianza más alta.
+
+```{r}
+n.transacciones <- inspect(head(sort(pedidos.rules.a5, by = "confidence"), 1))$count
+
+# Mostramos por pantalla
+print(n.transacciones)
+```
+
+

@@ -1,0 +1,1979 @@
+---
+title: 'Boletín 2 - Evaluación de Clasificadores'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r, setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Primeros pasos
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+# Establecer el directorio de trabajo apropiado en esta celda
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Boletin2/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(MASS)
+library(foreign)
+library(car)
+library(Hmisc)
+library(VIM)
+library(mice)
+library(ggplot2)
+library(reshape)
+library(doParallel)
+library(plyr)
+library(caret)
+library(gridExtra)
+
+registerDoParallel(cores = 6)
+```
+
+# Resumen del trabajo realizado
+
+En esta sección se indicará la siguiente información:
+
+1. El preprocesamiento llevado a cabo sobre los datos.
+
+2. Los clasificadores que han sido probados.
+
+3. Las conclusiones alcanzadas.
+
+**Preprocesamiento de los datos realizado**
+
+El preprocesamiento llevado a cabo es el de eliminar la columna 'customerID' ya que no cuenta con información que nos sea útil para el entrenamiento de los clasificadores; la conversión de tipos de datos a los tipos adecuados; y la recodificación de los valores de ciertas columnas en las que aparecían de dos maneras distintas que el cliente no tenía contratado cierto servicio.
+
+**Clasificadores probados**
+
+Se han probado un SVM con kernel lineal, un árbol C5.0, una red neuronal, un clasificador mediante el método kNN y un SVM con kernel radial.
+
+Cada uno de estos cinco clasificadores fue entrenado con el dataset original, con el dataset tras una primera selección de variables y tras un segunda selección de variables.
+
+**Conclusiones alcanzadas**
+
+Los clasificadores que mejor se comportan con los datasets para los que se llevó a cabo la selección de variables son el árbol C5.0 y la red neuronal.
+
+En el caso del dataset original, el mejor clasificador es la red neuronal.
+
+Comparando las precisiones obtenidas por los clasificadores obtenidos entrenando sobre el dataset sobre el que se realizó la selección de variables con las preciones (sobre el conjunto de test) de los que fueron entrenados con el dataset que cuenta con todas las variables podemos ver que las precisiones son básicamente las mismas. Por lo que no vemos una mejora clara de utilizar la selección de variables.
+
+Sin embargo, cabe destacar que al trabajar con menos variables los tiempos de entrenamiento **sí** son menores al entrenar con los datasets en los que se ejecutó la selección de variables.
+
+# Preprocesamiento de los datos
+
+Lo primero que debemos hacer es cargar los datos y llevar a cabo el preprocesamiento de los mismos que sea necesario para poder empezar con el entrenamiento de nuestros clasificadores. Trabajaremos con los datos del fichero `customer.csv`, que contiene información sobre los clientes de una determinada compañía de telecomunicaciones. En concreto, cuenta con información de algunos aspectos demográficos y los servicios/productos que cada cliente (*customer*) tiene contratados. En la última columna se indica si el cliente en cuestión abandona la compañía en el siguiente mes.
+
+Por lo tanto, cargamos los datos.
+
+```{r}
+customer <- read.csv(
+  "data/customer.csv", 
+  header = TRUE
+  )
+```
+
+A continuación llevaremos a cabo un análisis descriptivo y la limpieza de los datos del DataFrame que acabamos de cargar.
+
+Por tanto, comprobamos la estructura del DataFrame mediante la función `str()`.
+
+```{r}
+str(customer)
+```
+
+Podemos ver que contamos con 7032 observaciones de las cuáles cada una de estas observaciones cuenta con 21 variables. La mayor parte de estas variables son leídas como tipo `chr` por la función `read.csv()`. Lo más probable es que tengamos que hacer conversiones de tipo de datos a una gran parte de estas variables, por lo que comprobamos los valores únicos que toma cada una de las colummnas de nuestro DataFrame.
+
+```{r}
+apply(customer, 2, function(x){ length(unique(x)) })
+```
+
+Podemos ver como cada cliente tiene un identificador único, que no nos aporta ningún tipo de información sobre si el cliente abandona la compañía o no, por lo que lo borramos.
+
+```{r}
+customer$customerID <- NULL
+```
+
+Volvemos a comprobar los valores únicos de cada una de las columnas.
+
+```{r}
+apply(customer, 2, function(x){ length(unique(x)) })
+```
+
+Ahora podemos ver como las siguientes columnas toman los siguientes posibles valores:
+
+* gender: *male* o *female*.
+
+* SeniorCitizen: si el cliente es un ciudadano *senior* (1 ó 0).
+
+* Partner: si el cliente tiene pareja o no (*Yes* o *No*).
+
+* Dependents: si el cliente tiene gente bajo su cargo o no (*Yes* o *No*).
+
+* PhoneService: si el cliente tiene servicio telefónico contratado o no (*Yes* o *No*).
+
+* MultipleLines: si el cliente tiene múltiples lineas contratadas (*Yes* o *No*).
+
+* InternetService: *DSL*, *Fiber optic* o *No*.
+
+* OnlineSecurity: *Yes*, *No* o *No internet service*.
+
+* OnlineBackup: *Yes*, *No* o *No internet service*.
+
+* DeviceProtection: *Yes*, *No* o *No internet service*.
+
+* TechSupport: *Yes*, *No* o *No internet service*.
+
+* StreamingTV: *Yes*, *No* o *No internet service*.
+
+* StreamingMovies: *Yes*, *No* o *No internet service*.
+
+* Contract: *Month-to-month*, *One year* o *Two year*.
+
+* PaperlessBilling: si el cliente tiene factura sin papel (*Yes* o *No*).
+
+* PaymentMethod: *Electronic check*, *Mailed check*, *Bank transfer (automatic)* o *Credit card (automatic)*.
+
+* Churn: *Yes* o *No*.
+
+Todas estas variables pueden ser convertidas al tipo de dato `Factor` para su mejor gestión por parte de los clasificadores. El resto de las variables toman valores dentro de un rango y las dejaremos con el tipo de datos con el que fueron leídas del fichero `.csv`.
+
+```{r}
+customer$gender <- as.factor(customer$gender)
+customer$Partner <- as.factor(customer$Partner)
+customer$Dependents <- as.factor(customer$Dependents)
+customer$PhoneService <- as.factor(customer$PhoneService)
+customer$MultipleLines <- as.factor(customer$MultipleLines)
+customer$InternetService <- as.factor(customer$InternetService)
+customer$OnlineSecurity <- as.factor(customer$OnlineSecurity)
+customer$OnlineBackup <- as.factor(customer$OnlineBackup)
+customer$DeviceProtection <- as.factor(customer$DeviceProtection)
+customer$TechSupport <- as.factor(customer$TechSupport)
+customer$StreamingTV <- as.factor(customer$StreamingTV)
+customer$StreamingMovies <- as.factor(customer$StreamingMovies)
+customer$Contract <- as.factor(customer$Contract)
+customer$PaperlessBilling <- as.factor(customer$PaperlessBilling)
+customer$PaymentMethod <- as.factor(customer$PaymentMethod)
+customer$Churn <- as.factor(customer$Churn)
+```
+
+Tras estas transformaciones, nuestro DataFrame cuenta con la estructura siguiente.
+
+```{r}
+str(customer)
+```
+
+Lo siguiente es comprobar el número de valores ausentes en cada una de las columnas.
+
+```{r}
+sapply(customer, function(x){ sum(is.na(x)) })
+```
+
+Como podemos ver, nuestro DataFrame no cuenta con valores ausentes. Sin embargo, observando los niveles que toman algunas de las variables de tipo `Factor` podemos ver que aún hay algo de preprocesamiento que llevar a cabo. En muchas de las columnas se presentan tanto el valor *No* como el valor *No internet service*, cuando en realidad ambos significan que el cliente no tiene contratado alguno de los servicios ofrecidos por la compañía, esto los podemos cambiar para simplificar nuestro DataFrame conservando la misma información sobre los clientes.
+
+```{r}
+cols_to_recode <- c(
+  "OnlineSecurity",
+  "OnlineBackup",
+  "DeviceProtection",
+  "TechSupport",
+  "StreamingTV",
+  "StreamingMovies"
+)
+
+for (i in 1:ncol(customer[, cols_to_recode])) {
+  customer[, cols_to_recode][, i] <- as.factor(mapvalues(
+    customer[, cols_to_recode][, i],
+    from = c("No internet service"),
+    to = c("No")
+  ))
+}
+```
+
+Lo mismo haremos para la columna 'MultipleLines', ya que tanto el valor *No* como el *No phone service* tienen el mismo significado ya que si no tienes servicio telefónico contratado eso implica que no puedes tener varias lineas.
+
+```{r}
+customer$MultipleLines <- as.factor(mapvalues(
+  customer$MultipleLines,
+  from = c("No phone service"),
+  to = c("No")
+))
+```
+
+También podemos observar como la columna 'SeniorCitizen' toma los valores 0 y 1 cuando podría seguir el formato del resto de columnas que presentan un tipo de dato `Factor` con dos niveles *Yes* y *No*.
+
+```{r}
+customer$SeniorCitizen <- as.factor(mapvalues(
+  customer$SeniorCitizen,
+  from = c("0", "1"),
+  to = c("No", "Yes")
+))
+```
+
+La estructura del DataFrame que nos queda tras aplicar todas estas transformaciones es la siguiente.
+
+```{r}
+str(customer)
+```
+
+Ahora que ya hemos terminado de limpiar los datos podemos usar la función `describe()` del paquete `Hmisc` para analizar la distribución de los valores de nuestro DataFrame.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+customer.describe <- describe(customer)
+plot(customer.describe)
+```
+
+También podemos representar para aquellas variables de tipo `Factor` el número de elementos de nuestro DataFrame para cada una de los posibles valores que esa columna puede tomar. Mostramos para algunas de las columnas esta gráfica a continuación.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+p1 <- ggplot(customer, aes(x = gender)) +
+  ggtitle("Gender") +
+  xlab("Gender") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p2 <- ggplot(customer, aes(x = SeniorCitizen)) +
+  ggtitle("Senior Citizen") +
+  xlab("Senior Citizen") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p3 <- ggplot(customer, aes(x = Partner)) +
+  ggtitle("Partner") +
+  xlab("Partner") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p4 <- ggplot(customer, aes(x = Dependents)) +
+  ggtitle("Dependents") +
+  xlab("Dependents") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p5 <- ggplot(customer, aes(x = PhoneService)) +
+  ggtitle("Phone Service") +
+  xlab("Phone Service") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p6 <- ggplot(customer, aes(x = MultipleLines)) +
+  ggtitle("Multiple Lines") +
+  xlab("Multiple Lines") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p7 <- ggplot(customer, aes(x = InternetService)) + 
+  ggtitle("Internet Service") +
+  xlab("Internet Service") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p8 <- ggplot(customer, aes(x = OnlineSecurity)) +
+  ggtitle("Online Security") +
+  xlab("Online Security") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+p9 <- ggplot(customer, aes(x = Churn)) +
+  ggtitle("Churn") +
+  xlab("Churn") +
+  geom_bar(aes(y = 100 * (..count..) / sum(..count..)), width = 0.5) +
+  ylab("Percentage") +
+  coord_flip()
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, nrow=3)
+```
+
+Como se puede ver, una de las columnas que más nos interesan es la de 'Churn'. Se puede ver como una gran mayoría de los clientes no han abandonado la empresa (por encima del 60%).
+
+También podemos ver si hay algún tipo de correlación entre las columnas de tipo numérico. Esto lo podemos hacer mediante un *scatter plot*.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+cols_to_plot = c ("tenure","MonthlyCharges","TotalCharges")
+
+featurePlot(
+  x = customer[, (names(customer) %in% cols_to_plot)],
+  y = customer$Churn,
+  plot = "pairs",
+  auto.key = list(columns = 2))
+```
+
+Como se puede ver, las variables 'MonthlyCharge' y 'TotalCharge' están directamente relacionadas. Esto se debe a que la columna 'TotalCharge' se calcula puede calcular como el gasto por mes de cada cliente multiplicado por el número de meses que ese cliente lleva en la compañía.
+
+# Selección de variables
+
+A continuación realizaremos la selección de las variables que mejor ajustan el problema que queremos abordar de entrenar un clasificador que nos devuelve si un cliente va a abandonar la compañía o no en función de los valores del resto de atributos para los que tenemos información.
+
+Podemos hacer un breve estudio para comprobar cuál de los distintos métodos de selección de variables nos devuelve los mejores resultados. Para esto probaremos dos de los cuatro métodos de selección de variables proporcionados por el paquete `caret`. 
+
+Empezamos por los métodos de **eliminación recursiva de variables**.
+
+El parámetro `functions` indica qué tipo de clasificador se va a utilizar para evaluar los distintos conjuntos de variables. Los posibles valores son: regresión lineal (`lmFuncs`), random forests (`rfFuncs`), naive Bayes (`nbFuncs`), bagged trees (`treebagFuncs`) y cualquier clasificador accesible a través del paquete caret, aunque sólo probaremos algunas de ellas por un límite de tiempo tanto para realizar esta práctica como para compilar el fichero final en `.html`.
+
+**Random Forest**
+
+```{r}
+# Para permitir la reproducibilidad del proceso, definimos semillas
+set.seed(123)
+
+subsets <- c(3:20)
+seeds <- vector(mode = "list", length = 6)
+for (i in 1:5) {
+  seeds[[i]] <- sample.int(1000, length(subsets) + 1)
+}
+seeds[[6]] <- sample.int(1000, 1)
+
+# Creamos el objeto de control
+rfFuncs.ctrl.rfe <- rfeControl(
+  functions = rfFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = FALSE,
+  allowParallel = TRUE)
+
+# # Realizamos la selección de variables
+# rfFuncs.rfe <- rfe(
+#   Churn~.,
+#   data = customer,
+#   sizes = subsets,
+#   rfeControl = rfFuncs.ctrl.rfe)
+# 
+# saveRDS(rfFuncs.rfe, "./models/rfFuncs.rfe.rds")
+rfFuncs.rfe = readRDS("./models/rfFuncs.rfe.rds")
+
+# Mostramos la información de la selección de variables
+rfFuncs.rfe
+```
+
+**Bagged Trees**
+
+```{r}
+set.seed(123)
+
+# Creamos el objeto de control
+treebagFuncs.ctrl.rfe <- rfeControl(
+  functions = treebagFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = FALSE,
+  allowParallel = TRUE)
+
+# # Realizamos la selección de variables
+# treebagFuncs.rfe <- rfe(
+#   Churn~.,
+#   data = customer,
+#   sizes = subsets,
+#   rfeControl = treebagFuncs.ctrl.rfe)
+# 
+# saveRDS(treebagFuncs.rfe, "./models/treebagFuncs.rfe.rds")
+treebagFuncs.rfe = readRDS("./models/treebagFuncs.rfe.rds")
+
+# Mostramos la información de la selección de variables
+treebagFuncs.rfe
+```
+
+Continuamos con los métodos de **eliminación de variables por filtros**. Aquí probaremos sólo el Análisis Discriminante Lineal (LDA).
+
+```{r}
+# Para permitir la reproducibilidad del proceso, definimos semillas
+set.seed(123)
+folds = 5
+seeds <- sample.int(1000, folds+1)
+
+ctrl.ranker <- sbfControl(
+  functions = ldaSBF,
+  method = "cv", 
+  number = folds,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = FALSE,
+  allowParallel = TRUE)
+
+# lda.ranker <- sbf(
+#   Churn~.,
+#   data=customer,
+#   sbfControl = ctrl.ranker)
+# 
+# saveRDS(lda.ranker, "./models/lda.ranker.rds")
+lda.ranker = readRDS("./models/lda.ranker.rds")
+
+# Mostramos la información de la selección de variables
+lda.ranker
+```
+
+El **resumen** de los resultados obtenidos hasta aquí se puede ver en la tabla siguiente:
+
+```{r}
+cols = c("Variables", "Accuracy", "Kappa", "AccuracySD", "KappaSD")
+
+lda.ranker$results$Variables <- c(length(lda.ranker$optVariables))
+
+variable.selection <- rbind.data.frame(
+  rfFuncs.rfe$results[rfFuncs.rfe$results$Variables == rfFuncs.rfe$bestSubset, ][, cols],
+  treebagFuncs.rfe$results[treebagFuncs.rfe$results$Variables == treebagFuncs.rfe$bestSubset, ][, cols],
+  lda.ranker$results[, cols])
+
+rownames(variable.selection) = c("rfFuncs.rfe", "treebags.rfe", "lda.ranker")
+
+# Mostramos por pantalla los resultados
+variable.selection
+```
+
+Como se puede ver el **método de selección de variables** que mejor precisión presenta es el que utiliza Random Forest, además de que es el que lo hace con un subconjunto menor de las variables, por lo que elegimos este método como el adecuado para llevar a cabo la selección de variables.
+
+```{r}
+sel.cols <- c(rfFuncs.rfe$optVariables,"Churn")
+sel.cols <- str_replace(sel.cols, " ", "")
+sel.cols <- str_replace(sel.cols, "Fiber", "")
+sel.cols <- str_replace(sel.cols, "optic", "")
+sel.cols <- str_replace(sel.cols, "year", "")
+sel.cols <- str_replace(sel.cols, "check", "")
+sel.cols <- str_replace(sel.cols, "Yes", "")
+sel.cols <- str_replace(sel.cols, "No", "")
+sel.cols <- str_replace(sel.cols, "Two", "")
+sel.cols <- str_replace(sel.cols, "Electronic", "")
+sel.cols <- str_replace(sel.cols, "One", "")
+
+customer.sel <- customer[, sel.cols]
+```
+
+# Tres clasificadores: entrenamiento, comparación y evaluación
+
+Ahora usaremos las funciones proporcionadas por el paquete `caret`  para implementar todos los pasos necesarios en la construcción y evaluación de los modelos de clasificación. Lo primero que debemos hacer es separar nuestro DataFrame en los conjuntos de entrenamiento y de test.
+
+```{r}
+# Para la reproducibilidad de los resultados
+set.seed(123)
+
+trainIndex <- createDataPartition(
+  customer.sel$Churn,
+  p = 0.66, 
+  list = FALSE, 
+  times = 1)
+
+customer.sel.train <- customer.sel[trainIndex, ]
+customer.sel.test <- customer.sel[-trainIndex, ]
+```
+
+## Entrenamiento
+
+Lo siguiente será llevar a cabo el entranamiento de los tres clasificadores. Para ello entrenaremos un *SVM con kernel lineal*, un árbol *C5.0* y una *red neuronal* en nuestro conjunto de datos.
+
+**SVM con kernel lineal**
+
+Comprobamos cuáles son los hiperparámetros que podemos utilizar para llevar a cabo la búsqueda de hiperparámetros óptima para este modelo.
+
+```{r}
+modelLookup("svmLinear")
+```
+
+Podemos ver que sólo hay un hiperparámetro que en el que podemos hacer la búsqueda. Este es el parámetro **C**. Para valores grandes de C se puede producir un caso de sobreaprendizaje de nuestro modelo. Por lo tanto, llevamos a cabo nuestro entrenamiento.
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10^(-4:4))
+svmLinear.grid <- expand.grid(C=C)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for(i in 1:number){
+  seeds[[i]] <- sample.int(1000, length(C))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmLinear.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE)
+
+# svmLinear <- train(
+#   Churn ~ .,
+#   data = customer.sel.train,
+#   method = "svmLinear",
+#   tuneGrid = svmLinear.grid,
+#   trControl = svmLinear.control
+# )
+# 
+# saveRDS(svmLinear, "./models/svmLinear.rds")
+svmLinear = readRDS("./models/svmLinear.rds")
+
+# Mostramos el resultado
+svmLinear
+```
+
+Podemos ver si representamos gráficamente el Accuracy para los diferentes valores de C que el mejor modelo se consigue para valores pequeños de C. 
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(svmLinear)
+```
+
+**Árbol C5.0**
+
+Ahora entrenaremos un segundo modelo, que será un árbol de clasificación C5.0. Igual que antes lo primero será ver cuáles son los hiperparámetros que podemos configurar.
+
+```{r}
+modelLookup("C5.0")
+```
+
+Vemos que en este caso hay tres hiperparámetros para los cuáles podemos llevar a acabo un búsqueda de los valores óptimos. Estos son *trials*, que es el número de iteraciones de boosting; *model* ; y *winnow*, que nos indica si el clasificador aplicará selección de variables antes de entrenar o no. Por tanto ejecutamos el entrenamiento.
+
+```{r}
+# Definimos los hiperparámetros a probar
+trials <- c(1:20)
+model <- c("tree", "rules")
+winnow <- c(TRUE, FALSE)
+
+# Definimos el grid de búsqueda de los hiperparámetros
+c50.grid <- expand.grid(
+  trials = trials,
+  model = model,
+  winnow = winnow)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for(i in 1:number){
+  seeds[[i]] <- sample.int(1000, length(trials)*length(model)*length(winnow))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+c50.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE)
+
+# c50 <- train(
+#   Churn ~ .,
+#   data = customer.sel.train,
+#   method = "C5.0",
+#   tuneGrid = c50.grid,
+#   trControl = c50.control
+# )
+# 
+# saveRDS(c50, "./models/c50.rds")
+c50 = readRDS("./models/c50.rds")
+
+# Mostramos el resultado por pantalla
+c50
+```
+
+Mostramos la gráfica del entrenamiento.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(c50)
+```
+
+**Red neuronal**
+
+Como en los casos anteriores, comprobamos los hiperparámetros.
+
+```{r}
+modelLookup("nnet")
+```
+
+Para el caso de la red neuronal, podemos configurar el número de neuronas en la capa intermedia (mediante el hiperparámetro `size`) y la tasa de aprendizaje de la red (mediante el hiperparámetro `decay`). A continuación entrenamos nuestro modelo.
+
+```{r, warning=FALSE}
+# Definimos los hiperparámetros a probar
+size <- c(5,10,15,20,25,30,35,40,45,50)
+decay <- c(10**(-5:2))
+
+# Definimos el grid de búsqueda de los hiperparámetros
+nnet.grid <- expand.grid(
+  size = size,
+  decay = decay)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for(i in 1:number){
+  seeds[[i]] <- sample.int(1000, length(size)*length(decay))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+nnet.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE)
+
+# nnet <- train(
+#   Churn ~ .,
+#   data = customer.sel.train,
+#   method = "nnet",
+#   tuneGrid = nnet.grid,
+#   trControl = nnet.control
+# )
+# 
+# saveRDS(nnet, "./models/nnet.rds")
+nnet = readRDS("./models/nnet.rds")
+
+# Mostramos el resultado por pantalla
+nnet
+```
+
+Mostramos la gráfica del entrenamiento.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(nnet)
+```
+
+El **resumen** de los resultados obtenidos por cada uno de nuestros tres clasificadores entrenados son los siguientes.
+
+```{r}
+cols <- c("Accuracy", "Kappa", "AccuracySD", "KappaSD")
+
+training.results <- rbind.data.frame(
+  svmLinear$results[rownames(svmLinear$bestTune), ][, cols],
+  c50$results[rownames(c50$bestTune), ][, cols],
+  nnet$results[rownames(nnet$bestTune), ][, cols]
+)
+
+rownames(training.results) <- c("svmLinear", "c50", "nnet")
+
+training.results
+```
+
+Como se puede observar, según estos resultados, el mejor modelo es la red neuronal con una precisión de 0,8066.
+
+## Comparación
+
+El paquete `caret` cuenta con funciones que nos permiten determinar las diferencias que existen entre diferentes modelos, generados con la función `train()`, a través de un remuestreo de las distribuciones y la información estadística sobre la diferencia de efectividad de cada uno ellos en los pliegues usados durante el entrenamiento con *cross-validation*. Para esto, primero agrupamos los resultados de remuestreo utilizando la función `resamples()`.
+
+```{r, warning=FALSE}
+models <- list(svmLinear = svmLinear, c50 = c50, nnet = nnet)
+customer.resample <- resamples(models)
+
+# Mostramos la resumen de la información de cada modelo
+summary(customer.resample)
+```
+
+Podemos visualizar las distribuciones obtenidas a partir del remuestreo mediante un diagrama de cajas gracias a la función `bwplot()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+bwplot(customer.resample)
+```
+
+Podemos ver como los tres clasificadores tienen las distribuciones de sus precisiones para cada pliegue entorno al valor de 0,8. También podemos ver esto mediante un gráfico de densidad gracias a la función `densityplot()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+densityplot(customer.resample)
+```
+
+Dado que todos los clasificadores han sido generados a partir de los mismos datos de entrenamiento, estamos en el caso de múltiples clasificadores en el mismo dominio. Para este caso podemos calcular la diferencia entre modelos mediante el *test T de Student con medidas pareadas* con ajuste de Bonferroni para evaluar la hipótesis nula de que no hay diferencia entre los distintos modelos (se aplicaría para cada par de clasificadores).
+
+La hipótesis que intenta comprobar el test se pueden expresar de la siguiente manera (para dos clasificadores).
+
+\begin{array}{lcl}
+	&H_0: &\mu_{modelo1} - \mu_{modelo2} = 0 \\
+	&H_1: &\mu_{modelo1} - \mu_{modelo2} \neq 0 
+\end{array}
+
+Esto lo podemos hacer a través de la función `diff()`.
+
+```{r}
+difValues <- diff(customer.resample)
+summary(difValues)
+```
+
+En la diagonal superior encontramos las estimaciones de las diferencias entre las medias de los resultados de precisión y de la medida Kappa y en la diagonal inferior encontramos los p-values para rechazar o no la hipótesis nula. 
+
+En este caso ninguno de los p-values presenta un valor inferior al valor de significancia por defecto de 0.05; por lo que en ningún caso podemos rechazar la hipótesis nula de que los modelos presentan la misma eficacia, con 95% de confianza.
+
+Los resultados sobre las diferencias entre métodos los podemos mostrar de forma gráfica a través de diferentes tipos de gráficas:
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+densityplot(difValues, metric = "Accuracy", auto.key = TRUE, pch = "|")
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+levelplot(difValues, what="diferences")
+```
+
+## Evaluación
+
+Podemos predecir el conjunto de test simplemente de la siguiente forma para los tres clasificadores. En primer lugar, calculamos la matriz de confusión y los principales índices de eficiencia para los tres clasificadores.
+
+**SVM con kernel lineal**
+
+```{r}
+customer.svmLinear.pred <- predict(
+  svmLinear, 
+  newdata = customer.sel.test
+)
+
+customer.svmLinear.conf <- confusionMatrix(
+  customer.svmLinear.pred,
+  customer.sel.test[, ncol(customer.sel.test)],
+  positive = "Yes"
+)
+
+customer.svmLinear.conf
+```
+**Árbol C5.0**
+
+```{r}
+customer.c50.pred <- predict(
+  c50, 
+  newdata = customer.sel.test
+)
+
+customer.c50.conf <- confusionMatrix(
+  customer.c50.pred,
+  customer.sel.test[, ncol(customer.sel.test)],
+  positive = "Yes"
+)
+
+customer.c50.conf
+```
+
+**Red neuronal**
+
+```{r}
+customer.nnet.pred <- predict(
+  nnet, 
+  newdata = customer.sel.test
+)
+
+customer.nnet.conf <- confusionMatrix(
+  customer.nnet.pred,
+  customer.sel.test[, ncol(customer.sel.test)],
+  positive = "Yes"
+)
+
+customer.nnet.conf
+```
+
+A partir de esta evaluación de los diferentes modelos en el conjunto de test podemos ver como el árbol C5.0 es el que presenta un mejor valor de precisión en este subconjunto de los datos que no fue usado durante el entrenamiento.
+
+Mostramos un resumen de los resultados de evaluación de los tres clasificadores:
+
+```{r}
+customer.svmLinear.conf.overall <- t(as.matrix(customer.svmLinear.conf, what = "overall"))
+
+customer.c50.conf.overall <- t(as.matrix(customer.c50.conf, what = "overall"))
+
+customer.nnet.conf.overall <- t(as.matrix(customer.nnet.conf, what = "overall"))
+
+customer.pred <- rbind.data.frame(
+  customer.svmLinear.conf.overall,
+  customer.c50.conf.overall,
+  customer.nnet.conf.overall)
+
+rownames(customer.pred) = c("svmLinear","c50", "nnet")
+
+# Mostramos por pantalla
+customer.pred
+```
+
+# Cinco clasificadores: entrenamiento, comparación y evaluación
+
+Añadimos al estudio anterior dos clasificadores adicionales. Estos serán un clasificador **kNN** y un **SVM con kernel radial**.
+
+## Entrenamiento
+
+Lo primero será entrenar los dos nuevos clasificadores.
+
+**kNN**
+
+Al igual que para los tres primeros lo primero que haremos es comprobar cuáles son los hiperparámetros para los que podemos llevar a cabo la búsqueda.
+
+```{r}
+modelLookup("knn")
+```
+
+Podemos ver que el hiperparámetro que podemos modificar es el hiperparámetro **k**. Un mayor valor de k produce modelos más sencillos. Entrenamos por tanto nuestro cuarto clasificador.
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+k <- c(1:100)
+knn.grid <- expand.grid(k=k)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for(i in 1:number){
+  seeds[[i]] <- sample.int(1000, length(k))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+knn.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# # Ejecutamos el entrenamiento
+# knn <- train(
+#   Churn ~ .,
+#   data = customer.sel.train,
+#   method = "knn",
+#   tuneGrid = knn.grid,
+#   trControl = knn.control
+# )
+# 
+# saveRDS(knn, "./models/knn.rds")
+knn = readRDS("./models/knn.rds")
+
+# Mostramos el resultado por pantalla
+knn
+```
+
+Mostramos la gráfica del entrenamiento.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(knn)
+```
+
+**SVM con kernel radial**
+
+Comprobamos los hiperparámetros.
+
+```{r}
+modelLookup("svmRadial")
+```
+
+El hiperparámetro **C** tiene el mismo significado que cuando entrenamos nuestro clasificador con el SVM con kernel linear, mientras que el hiperparámetro **sigma** afecta al rango de distancias en que los vecinos afectan a la predicción. Por lo tanto entrenamos nuestro quinto modelo.
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10^(-4:4))
+sigma <- c(2^c(-8:3))
+svmRadial.grid <- expand.grid(C=C, sigma=sigma)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for(i in 1:number){
+  seeds[[i]] <- sample.int(1000, length(C) * length(sigma))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmRadial.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE)
+
+# svmRadial <- train(
+#   Churn ~ .,
+#   data = customer.sel.train,
+#   method = "svmRadial",
+#   tuneGrid = svmRadial.grid,
+#   trControl = svmRadial.control
+# )
+# 
+# saveRDS(svmRadial, "./models/svmRadial.rds")
+svmRadial = readRDS("./models/svmRadial.rds")
+
+# Mostramos el resultado
+svmRadial
+```
+
+Mostramos la gráfica del entrenamiento.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(svmRadial)
+```
+
+El **resumen** de los resultados obtenidos para estos cinco clasificadores es el siguiente.
+
+```{r}
+cols <- c("Accuracy", "Kappa", "AccuracySD", "KappaSD")
+
+training.results <- rbind.data.frame(
+  svmLinear$results[rownames(svmLinear$bestTune),][, cols],
+  c50$results[rownames(c50$bestTune),][, cols],
+  nnet$results[rownames(nnet$bestTune),][, cols],
+  knn$results[rownames(knn$bestTune),][, cols],
+  svmRadial$results[rownames(svmRadial$bestTune),][, cols]
+)
+
+rownames(training.results) <-
+  c("svmLinear", "c50", "nnet", "knn", "svmRadial")
+
+training.results
+```
+
+Se puede observar como la **red neuronal** sigue presentando la mejor precisión.
+
+## Comparación
+
+Igual que para tres clasificadores, llevamos a cabo la comparación de nuestros cinco clasificadores utilizando las funciones `resamples()` y `diff()` del paquete `caret`.
+
+```{r, warning=FALSE}
+models.five <-
+  list(
+    svmLinear = svmLinear,
+    c50 = c50,
+    nnet = nnet,
+    knn = knn,
+    svmRadial = svmRadial
+  )
+customer.five.resample <- resamples(models.five)
+
+# Mostramos la resumen de la información de cada modelo
+summary(customer.five.resample)
+```
+Visualizamos las distribuciones obtenidas a partir del remuestreo mediante un diagrama de cajas gracias a la función `bwplot()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+bwplot(customer.five.resample)
+```
+
+Para calcular la diferencia entre los cinco modelos utilizando el *test T de Student con medidas pareadas* con ajuste de Bonferroni para evaluar la hipótesis nula de que no hay diferencia entre los distintos clasificadores gracias a la función `diff()`.
+
+```{r}
+difValues.five <- diff(customer.five.resample)
+summary(difValues.five)
+```
+
+Podemos rechazar la hipótesis nula de que ambos clasificadores son igual para el caso del clasificador kNN y la red neuronal; para todas las demás combinaciones entre clasificadores **no** podemos rechazarla.
+
+Los resultados sobre las diferencias entre métodos los podemos mostrar de forma gráfica a través de diferentes tipos de gráficas:
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+levelplot(difValues.five, what="diferences")
+```
+
+## Evaluación
+
+Calculamos las matrices de confusión y los principales índices de eficiencia para los dos nuevos clasificadores.
+
+**kNN**
+
+```{r}
+customer.knn.pred <- predict(
+  knn, 
+  newdata = customer.sel.test
+)
+
+customer.knn.conf <- confusionMatrix(
+  customer.knn.pred,
+  customer.sel.test[, ncol(customer.sel.test)],
+  positive = "Yes"
+)
+
+customer.knn.conf
+```
+
+**SVM con kernel radial**
+
+```{r}
+customer.svmRadial.pred <- predict(
+  svmRadial, 
+  newdata = customer.sel.test
+)
+
+customer.svmRadial.conf <- confusionMatrix(
+  customer.svmRadial.pred,
+  customer.sel.test[, ncol(customer.sel.test)],
+  positive = "Yes"
+)
+
+customer.svmRadial.conf
+```
+
+Mostramos el **resumen** de los resultados de evaluación de los cinco clasificadores.
+
+```{r}
+customer.knn.conf.overall <-
+  t(as.matrix(customer.knn.conf, what = "overall"))
+
+customer.svmRadial.conf.overall <-
+  t(as.matrix(customer.svmRadial.conf, what = "overall"))
+
+customer.pred.five <- rbind.data.frame(
+  customer.svmLinear.conf.overall,
+  customer.c50.conf.overall,
+  customer.nnet.conf.overall,
+  customer.knn.conf.overall,
+  customer.svmRadial.conf.overall
+)
+
+rownames(customer.pred.five) = c("svmLinear", "c50", "nnet", "knn", "svmRadial")
+
+# Mostramos por pantalla
+customer.pred.five
+```
+
+Como se puede ver, en el conjunto de test el clasificador que tiene una mejor precisión es el Árbol C5.0, seguido de cerca por la red neuronal. Los dos clasificadores añadidos no llegan a un 80% de precisión.
+
+# Selección de variables adicional
+
+En el enunciado se nos pide que realicemos un proceso de selección de variables adicional, por lo que añadiremos nuevas técnicas de selección de variables al proceso que se llevó a cabo previamente.
+
+Estas nuevas técnicas de selección de variables las ejecutaremos sobre el conjunto de datos original.
+
+Cabe recordar que las técnicas de selección de variables ya ejecutadas son la **eliminación recursiva de variables mediante** con los métodos de *Random Forest* y de *Bagged Trees* y la **eliminación de variable spor filtros** mediante *LDA*.
+
+Por esto ahora añadiremos a nuestro proceso de selección de variables adicional un proceso de **eliminación de variables con búsqueda aleatoria** mediante algoritmos genéticos y con enfriamento simulado.
+
+**Algoritmos genéticos**
+
+```{r, warning=FALSE}
+# Para permitir la reproducibilidad del proceso, definimos semillas
+set.seed(123)
+
+# Creamos el objeto de control
+rfGA.ctrl <- gafsControl(
+  functions = rfGA,
+  method = "cv",
+  number = 5,
+  returnResamp = "final",
+  verbose = FALSE,
+  allowParallel = TRUE
+)
+
+# # Ejecutamos la selección de variables
+# rfGA.time <- system.time(
+#   rfGA.rfe <- gafs(
+#     x = customer[, 1:ncol(customer) - 1],
+#     y = customer$Churn,
+#     iters = 25,
+#     popSize = 25,
+#     gafsControl = rfGA.ctrl
+#   )
+# )
+# 
+# saveRDS(rfGA.rfe, "./models/rfGA.rfe.rds")
+rfGA.rfe = readRDS("./models/rfGA.rfe.rds")
+
+# Mostramos la información de la selección de variables
+rfGA.rfe
+```
+
+El tiempo de ejecución de este método de selección de variables es, como se puede ver a continuación, mayor que el del resto de métodos.
+
+```{r}
+# rfGA.time
+
+# user  system elapsed 
+# 1341.66   39.01 3049.01 
+```
+
+**Enfriamiento simulado**
+
+```{r, warning=FALSE}
+set.seed(123)
+
+# Creamos el objeto de control
+rfSA.ctrl <- safsControl(
+  functions = rfSA,
+  method = "cv",
+  number = 5,
+  returnResamp = "final",
+  verbose = FALSE,
+  allowParallel = TRUE
+)
+ 
+# # Ejecutamos la selección de variables
+# rfSA.time <- system.time(rfSA.rfe <- safs(
+#   x = customer[, 1:ncol(customer) - 1],
+#   y = customer$Churn,
+#   iters = 25,
+#   safsControl = rfSA.ctrl
+# ))
+# 
+# saveRDS(rfSA.rfe, "./models/rfSA.rfe.rds")
+rfSA.rfe = readRDS("./models/rfSA.rfe.rds")
+
+# Mostramos la información de la selección de variables
+rfSA.rfe
+```
+
+El tiempo de ejecución de esta selección de variables es el que se muestra a continuación. No se ejecutó con más iteraciones por un límite finito de tiempo para realizar este boletín.
+
+```{r}
+# rfSA.time
+
+# user  system elapsed 
+# 41.48    2.03  101.22 
+```
+
+El **resumen** de los resultados obtenidos en nuestra primera selección de variables más los resultados de esta segunda selección de variables se pueden ver a continuación.
+
+```{r}
+cols = c("Variables", "Accuracy", "Kappa")
+
+rfGA.rfe$averages$Variables <- c(length(rfGA.rfe$optVariables))
+
+rfSA.rfe$averages$Variables <- c(length(rfSA.rfe$optVariables))
+
+variable.selection.new <- rbind.data.frame(
+  variable.selection[, cols],
+  rfGA.rfe$averages[rfGA.rfe$optIter, cols],
+  rfSA.rfe$averages[rfSA.rfe$optIter, cols]
+)
+
+rownames(variable.selection.new) = c("rfFuncs.rfe", "treebags.rfe", "lda.ranker", "rfGA.rfe", "rfSA.rfe")
+
+# Mostramos por pantalla los resultados
+variable.selection.new
+
+```
+
+Se puede ver que el método de selección de variables que mejor precisión presenta tras este estudio adicional fue el que utiliza **algoritmos genéticos**. Por lo tanto, reentrenaremos los tres modelos previamente entrenados con las variables seleccionadas por este nuevo método utilizado, y después entrenaremos dos clasificadores a mayores para poder llevar a cabo la comparación de los 5 clasificadores.
+
+# Cinco clasificadores: reentrenamiento
+
+Sin mucha más explicación, reentrenamos los 5 clasificadores con el nuevo conjunto de datos.
+
+Lo primero es llevar a cabo la selección de variables.
+
+```{r}
+sel.cols <- c(rfGA.rfe$optVariables, "Churn")
+customer.sel.new <- customer[, sel.cols]
+```
+
+Lo segundo es dividir el conjunto de datos en entrenamiento y test.
+
+```{r}
+# Para la reproducibilidad de los resultados
+set.seed(123)
+
+trainIndex <- createDataPartition(
+  customer.sel.new$Churn,
+  p = 0.66, 
+  list = FALSE, 
+  times = 1
+)
+
+customer.sel.new.train <- customer.sel.new[trainIndex, ]
+customer.sel.new.test <- customer.sel.new[-trainIndex, ]
+```
+
+## Entrenamiento
+
+Procedemos a reentrenar los 5 clasificadores anterior con el nuevo conjunto de datos resultado de la selección de ariables adicional.
+
+**SVM con kernel lineal**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10 ^ (-4:4))
+svmLinear.grid <- expand.grid(C = C)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(C))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmLinear.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# svmLinear.new <- train(
+#   Churn ~ .,
+#   data = customer.sel.new.train,
+#   method = "svmLinear",
+#   tuneGrid = svmLinear.grid,
+#   trControl = svmLinear.control
+# )
+#
+# saveRDS(svmLinear.new, "./models/svmLinear.new.rds")
+svmLinear.new = readRDS("./models/svmLinear.new.rds")
+
+# Mostramos el resultado
+svmLinear.new
+```
+
+**Árbol C5.0**
+
+```{r}
+# Definimos los hiperparámetros a probar
+trials <- c(1:20)
+model <- c("tree", "rules")
+winnow <- c(TRUE, FALSE)
+
+# Definimos el grid de búsqueda de los hiperparámetros
+c50.grid <- expand.grid(trials = trials,
+                        model = model,
+                        winnow = winnow)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <-
+    sample.int(1000, length(trials) * length(model) * length(winnow))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+c50.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# c50.new <- train(
+#   Churn ~ .,
+#   data = customer.sel.new.train,
+#   method = "C5.0",
+#   tuneGrid = c50.grid,
+#   trControl = c50.control
+# )
+#
+# saveRDS(c50.new, "./models/c50.new.rds")
+c50.new = readRDS("./models/c50.new.rds")
+
+# Mostramos el resultado por pantalla
+c50.new
+```
+
+**Red neuronal**
+
+```{r}
+# Definimos los hiperparámetros a probar
+size <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
+decay <- c(10 ** (-5:2))
+
+# Definimos el grid de búsqueda de los hiperparámetros
+nnet.grid <- expand.grid(size = size,
+                         decay = decay)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(size) * length(decay))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+nnet.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# nnet.new <- train(
+#   Churn ~ .,
+#   data = customer.sel.new.train,
+#   method = "nnet",
+#   tuneGrid = nnet.grid,
+#   trControl = nnet.control
+# )
+#
+# saveRDS(nnet.new, "./models/nnet.new.rds")
+nnet.new = readRDS("./models/nnet.new.rds")
+
+# Mostramos el resultado por pantalla
+nnet.new
+```
+
+**kNN**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+k <- c(1:100)
+knn.grid <- expand.grid(k = k)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(k))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+knn.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# knn.new <- train(
+#   Churn ~ .,
+#   data = customer.sel.new.train,
+#   method = "knn",
+#   tuneGrid = knn.grid,
+#   trControl = knn.control
+# )
+#
+# saveRDS(knn.new, "./models/knn.new.rds")
+knn.new = readRDS("./models/knn.new.rds")
+
+# Mostramos el resultado por pantalla
+knn.new
+```
+
+**SVM con kernel radial**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10 ^ (-4:4))
+sigma <- c(2 ^ c(-8:3))
+svmRadial.grid <- expand.grid(C = C, sigma = sigma)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(C) * length(sigma))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmRadial.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "all",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# svmRadial.new <- train(
+#   Churn ~ .,
+#   data = customer.sel.new.train,
+#   method = "svmRadial",
+#   tuneGrid = svmRadial.grid,
+#   trControl = svmRadial.control
+# )
+#
+# saveRDS(svmRadial.new, "./models/svmRadial.new.rds")
+svmRadial.new = readRDS("./models/svmRadial.new.rds")
+
+# Mostramos el resultado
+svmRadial.new
+```
+
+El **resumen** de los resultados obtenidos por cada uno de los cinco clasificadores entrenados se muestra en la tabla siguiente.
+
+```{r}
+cols <- c("Accuracy", "Kappa", "AccuracySD", "KappaSD")
+
+training.results.new <- rbind.data.frame(
+  svmLinear.new$results[rownames(svmLinear.new$bestTune), ][, cols],
+  c50.new$results[rownames(c50.new$bestTune), ][, cols],
+  nnet.new$results[rownames(nnet.new$bestTune), ][, cols],
+  knn.new$results[rownames(knn.new$bestTune), ][, cols],
+  svmRadial.new$results[rownames(svmRadial.new$bestTune), ][, cols]
+)
+
+rownames(training.results.new) <- c("svmLinear.new", "c50.new", "nnet.new", "knn.new", "svmRadial.new")
+
+training.results.new
+```
+
+Se puede ver que ahora, con nuestra segunda selección de variables, el mejor modelo (mayor precisión) en el conjunto de entrenamiento sigue siendo la **red neuronal**.
+
+## Comparación
+
+Llevamos a cabo la comparación de estos cinco clasificadores de la misma manera uqe lo hicimos previamente con tres.
+
+Primero agrupamos los resultados de remuestreo mediante la función `resamples()`.
+
+```{r, warning=FALSE}
+models.new <- list(
+  svmLinear.new = svmLinear.new,
+  c50.new = c50.new,
+  nnet.new = nnet.new,
+  knn.new = knn.new,
+  svmRadial.new = svmRadial.new
+)
+customer.resample.new <- resamples(models.new)
+
+# Mostramos la resumen de la información de cada modelo
+summary(customer.resample.new)
+```
+
+Visualizamos la distribución obtenida a partir del remuestreo mediante un diagrama de cajas utilizando la función `bwplot()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+bwplot(customer.resample.new)
+```
+
+Al igual que antes, podemos calcular la diferencia entre modelos meidante el *test T de Student con medidas pareadas* con ajuste de Bonferroni para evaluar la hipótesis nula de que no hay diferencia entre lso distintos modelos. Como antes, este test lo aplicamos mediante la función `diff()` del paquete `caret`.
+
+```{r}
+difValues.new <- diff(customer.resample.new)
+summary(difValues.new)
+```
+
+Sólo los p-values del clasificador **kNN** en comparación con los demás presentan un valor inferior al de significancia por defecto de '0.05'. Por lo tanto **sí** podemos rechazar la hipótesis nula de que ambos clasificadores presentan la misma eficacia, cuando se trate del caso del clasificador kNN en relación con los otros cuatro clasificador, mientras que para el resto de clasificadores **no** podemos.
+
+## Evaluación
+
+Calculamos la matriz de confusión y los principales índices de eficiencia para los cinco clasificadores.
+
+**SVM con kernel lineal**
+
+```{r}
+customer.svmLinear.new.pred <- predict(
+  svmLinear.new, 
+  newdata = customer.sel.new.test
+)
+
+customer.svmLinear.new.conf <- confusionMatrix(
+  customer.svmLinear.new.pred,
+  customer.sel.new.test[, ncol(customer.sel.new.test)],
+  positive = "Yes"
+)
+
+customer.svmLinear.new.conf
+```
+**Árbol C5.0**
+
+```{r}
+customer.c50.new.pred <- predict(
+  c50.new, 
+  newdata = customer.sel.new.test
+)
+
+customer.c50.new.conf <- confusionMatrix(
+  customer.c50.new.pred,
+  customer.sel.new.test[, ncol(customer.sel.new.test)],
+  positive = "Yes"
+)
+
+customer.c50.new.conf
+```
+
+**Red neuronal**
+
+```{r}
+customer.nnet.new.pred <- predict(
+  nnet.new, 
+  newdata = customer.sel.new.test
+)
+
+customer.nnet.new.conf <- confusionMatrix(
+  customer.nnet.new.pred,
+  customer.sel.new.test[, ncol(customer.sel.new.test)],
+  positive = "Yes"
+)
+
+customer.nnet.new.conf
+```
+
+**kNN**
+
+```{r}
+customer.knn.new.pred <- predict(
+  knn.new, 
+  newdata = customer.sel.new.test
+)
+
+customer.knn.new.conf <- confusionMatrix(
+  customer.knn.new.pred,
+  customer.sel.new.test[, ncol(customer.sel.new.test)],
+  positive = "Yes"
+)
+
+customer.knn.new.conf
+```
+
+**SVM con kernel radial**
+
+```{r}
+customer.svmRadial.new.pred <- predict(
+  svmRadial.new, 
+  newdata = customer.sel.new.test
+)
+
+customer.svmRadial.new.conf <- confusionMatrix(
+  customer.svmRadial.new.pred,
+  customer.sel.new.test[, ncol(customer.sel.new.test)],
+  positive = "Yes"
+)
+
+customer.svmRadial.new.conf
+```
+
+Mostramos un **resumen** de los resultados de evaluación de los cinco clasificadores.
+
+```{r}
+customer.svmLinear.new.conf.overall <- t(as.matrix(customer.svmLinear.new.conf, what = "overall"))
+
+customer.c50.new.conf.overall <- t(as.matrix(customer.c50.new.conf, what = "overall"))
+
+customer.nnet.new.conf.overall <- t(as.matrix(customer.nnet.new.conf, what = "overall"))
+
+customer.knn.conf.new.overall <- t(as.matrix(customer.knn.new.conf, what = "overall"))
+
+customer.svmRadial.new.conf.overall <- t(as.matrix(customer.svmRadial.new.conf, what = "overall"))
+
+customer.new.pred <- rbind.data.frame(
+  customer.svmLinear.conf.overall,
+  customer.c50.conf.overall, 
+  customer.nnet.conf.overall,
+  customer.knn.conf.new.overall,
+  customer.svmRadial.new.conf.overall)
+rownames(customer.new.pred) = c("svmLinear.new","c50.new", "nnet.new", "knn.new", "svmRadial.new")
+
+# Mostramos por pantalla
+customer.new.pred
+```
+
+Podemos ver como en el conjunto de test, el clasificador con la **mejor precisión** es el Árbol C5.0, seguido muy de cerca por la red neuronal.
+
+# Dataset original vs Selección de variables
+
+Para terminar este boletín, se hará un último análisis final para comprobar si el proceso de selección de variables aplicado mejor los resultados respecto a los que se pueden obtener a partir del dataset original.
+
+Por lo tanto lo que haremos es entrenar nuestros cinco clasificadores con el dataset completo (después de que se ejecutase el preprocesamiento) pero antes de llevar a cabo ningún tipo de selección de variables.
+
+Antes de empezar a entrenar debemos dividir el conjunto de datos original en entrenamiento y test.
+
+```{r}
+# Para la reproducibilidad de los resultados
+set.seed(123)
+
+trainIndex <- createDataPartition(
+  customer$Churn,
+  p = 0.66, 
+  list = FALSE, 
+  times = 1
+)
+
+customer.train <- customer[trainIndex, ]
+customer.test <- customer[-trainIndex, ]
+```
+
+Ahora ya podemos empezar a entrenar los modelos.
+
+**SVM con kernel lineal**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10 ^ (-4:4))
+svmLinear.grid <- expand.grid(C = C)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(C))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmLinear.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# svmLinear.original <- train(
+#   Churn ~ .,
+#   data = customer.train,
+#   method = "svmLinear",
+#   tuneGrid = svmLinear.grid,
+#   trControl = svmLinear.control
+# )
+# 
+# saveRDS(svmLinear.original, "./models/svmLinear.original.rds")
+svmLinear.original = readRDS("./models/svmLinear.original.rds")
+
+# Mostramos el resultado
+svmLinear.original
+```
+
+**Árbol C5.0**
+
+```{r}
+# Definimos los hiperparámetros a probar
+trials <- c(1:20)
+model <- c("tree", "rules")
+winnow <- c(TRUE, FALSE)
+
+# Definimos el grid de búsqueda de los hiperparámetros
+c50.grid <- expand.grid(trials = trials,
+                        model = model,
+                        winnow = winnow)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <-
+    sample.int(1000, length(trials) * length(model) * length(winnow))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+c50.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# c50.original <- train(
+#   Churn ~ .,
+#   data = customer.train,
+#   method = "C5.0",
+#   tuneGrid = c50.grid,
+#   trControl = c50.control
+# )
+# 
+# saveRDS(c50.original, "./models/c50.original.rds")
+c50.original = readRDS("./models/c50.original.rds")
+
+# Mostramos el resultado por pantalla
+c50.original
+```
+
+**Red neuronal**
+
+```{r, warning=FALSE}
+# Definimos los hiperparámetros a probar
+size <- c(5, 10, 15, 20, 25, 30, 35, 40, 45, 50)
+decay <- c(10 ** (-5:2))
+
+# Definimos el grid de búsqueda de los hiperparámetros
+nnet.grid <- expand.grid(size = size, decay = decay)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(size) * length(decay))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+nnet.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# nnet.original <- train(
+#   Churn ~ .,
+#   data = customer.train,
+#   method = "nnet",
+#   tuneGrid = nnet.grid,
+#   trControl = nnet.control
+# )
+# 
+# saveRDS(nnet.original, "./models/nnet.original.rds")
+nnet.original = readRDS("./models/nnet.original.rds")
+
+# Mostramos el resultado por pantalla
+nnet.original
+```
+
+**kNN**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+k <- c(1:100)
+knn.grid <- expand.grid(k = k)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(k))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+knn.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# knn.original <- train(
+#   Churn ~ .,
+#   data = customer.train,
+#   method = "knn",
+#   tuneGrid = knn.grid,
+#   trControl = knn.control
+# )
+# 
+# saveRDS(knn.original, "./models/knn.original.rds")
+knn.original = readRDS("./models/knn.original.rds")
+
+# Mostramos el resultado por pantalla
+knn.original
+```
+
+**SVM con kernel radial**
+
+```{r}
+# Definimos el grid de búsqueda de los hiperparámetros
+C <- c(10 ^ (-4:4))
+sigma <- c(2 ^ c(-8:3))
+svmRadial.grid <- expand.grid(C = C, sigma = sigma)
+
+# Para garantizar la reproducibilidad de los resultados
+set.seed(123)
+number <- 10
+
+seeds <- vector(mode = "list", length = number + 1)
+for (i in 1:number) {
+  seeds[[i]] <- sample.int(1000, length(C) * length(sigma))
+}
+seeds[[number + 1]] <- sample.int(1000, 1)
+
+svmRadial.control <- trainControl(
+  method = "cv",
+  number = number,
+  seeds = seeds,
+  returnResamp = "final",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+)
+
+# svmRadial.original <- train(
+#   Churn ~ .,
+#   data = customer.train,
+#   method = "svmRadial",
+#   tuneGrid = svmRadial.grid,
+#   trControl = svmRadial.control
+# )
+# 
+# saveRDS(svmRadial.original, "./models/svmRadial.original.rds")
+svmRadial.original = readRDS("./models/svmRadial.original.rds")
+
+# Mostramos el resultado
+svmRadial.original
+```
+
+El **resumen** de los resultados obtenidos por estos clasificadores entrenados con el conjunto de datos original es el siguiente.
+
+```{r}
+cols <- c("Accuracy", "Kappa", "AccuracySD", "KappaSD")
+
+training.results.original <- rbind.data.frame(
+  svmLinear.original$results[rownames(svmLinear.original$bestTune), ][, cols],
+  c50.original$results[rownames(c50.original$bestTune), ][, cols],
+  nnet.original$results[rownames(nnet.original$bestTune), ][, cols],
+  knn.original$results[rownames(knn.original$bestTune), ][, cols],
+  svmRadial.original$results[rownames(svmRadial.original$bestTune), ][, cols]
+)
+
+rownames(training.results.original) <- c("svmLinear.original", "c50.original", "nnet.original", "knn.original", "svmRadial.original")
+
+training.results.original
+```
+
+Para poder comprobar si el resultado de aplicar un proceso de selección de variables mejora el resultado que se obtedría con el dataset original, calculamos la precisión de estos cinco clasificadores en el conjunto de test.
+
+Por tanto, evaluamos estos clasificadores en el conjunto de test.
+
+**SVM con kernel lineal**
+
+```{r}
+customer.svmLinear.original.pred <- predict(
+  svmLinear.original, 
+  originaldata = customer.test
+)
+
+# Da un fallo que no tiene sentido 
+# Lo obviaré de la continuación de este boletín
+
+# customer.svmLinear.original.conf <- confusionMatrix(
+#   customer.svmLinear.original.pred,
+#   customer.test[, ncol(customer.test)],
+#   positive = "Yes"
+# )
+# 
+# customer.svmLinear.original.conf
+```
+
+**Árbol C5.0**
+
+```{r}
+customer.c50.original.pred <- predict(
+  c50.original, 
+  newdata = customer.test
+)
+
+customer.c50.original.conf <- confusionMatrix(
+  customer.c50.original.pred,
+  customer.test[, ncol(customer.test)],
+  positive = "Yes"
+)
+
+customer.c50.original.conf
+```
+
+**Red neuronal**
+
+```{r}
+customer.nnet.original.pred <- predict(
+  nnet.original, 
+  newdata = customer.test
+)
+
+customer.nnet.original.conf <- confusionMatrix(
+  customer.nnet.original.pred,
+  customer.test[, ncol(customer.test)],
+  positive = "Yes"
+)
+
+customer.nnet.original.conf
+```
+
+**knn**
+
+```{r}
+customer.knn.original.pred <- predict(
+  knn.original, 
+  newdata = customer.test
+)
+
+customer.knn.original.conf <- confusionMatrix(
+  customer.knn.original.pred,
+  customer.test[, ncol(customer.test)],
+  positive = "Yes"
+)
+
+customer.knn.original.conf
+```
+
+**SVM con kernel radial**
+
+```{r}
+customer.svmRadial.original.pred <- predict(
+  svmRadial.original, 
+  newdata = customer.test
+)
+
+customer.svmRadial.original.conf <- confusionMatrix(
+  customer.svmRadial.original.pred,
+  customer.test[, ncol(customer.test)],
+  positive = "Yes"
+)
+
+customer.svmRadial.original.conf
+```
+
+Mostramos el resumen de los resultados de evaluación.
+
+```{r}
+customer.c50.original.conf.overall <- t(as.matrix(customer.c50.original.conf, what = "overall"))
+
+customer.nnet.original.conf.overall <- t(as.matrix(customer.nnet.original.conf, what = "overall"))
+
+customer.knn.conf.original.overall <- t(as.matrix(customer.knn.original.conf, what = "overall"))
+
+customer.svmRadial.original.conf.overall <- t(as.matrix(customer.svmRadial.original.conf, what = "overall"))
+
+customer.original.pred <- rbind.data.frame(
+  customer.c50.original.conf.overall,
+  customer.nnet.original.conf.overall,
+  customer.knn.conf.original.overall,
+  customer.svmRadial.original.conf.overall)
+
+rownames(customer.original.pred) <- c("c50.original", "nnet.original", "knn.original", "svmRadial.original")
+
+# Mostramos por pantalla
+customer.original.pred
+```
+
+Ahora el clasificador con una mayor precisión es la red neuronal. Si lo comparamos con los resultados obtenidos con los entrenamientos que se ejecutaron sobre el dataset con la selección de variables vemos lo siguiente.
+
+```{r}
+customer.new.pred
+```
+
+Como se puede ver las precisiones obtenidas son básicamente las mismas, incluso algo más altas en los clasificadores entrenados mediante el conjunto de datos sin selección de variables. Por tanto, podemos concluir que aplicar un proceso de selección de variables no mejora los resultados obtenidos, pero si los iguala, y al trabajar con datasets menores los clasificadores entrenan más rápido.

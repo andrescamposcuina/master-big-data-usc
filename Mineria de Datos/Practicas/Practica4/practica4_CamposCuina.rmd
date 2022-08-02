@@ -1,0 +1,1015 @@
+---
+title: 'Entrega 4 - Clustering'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Practica4/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(caret)
+library(gridExtra)
+library(fastcluster)
+library(pvclust)
+library(cluster)
+library(dbscan)
+library(fpc)
+```
+
+# Ejercicios
+
+## Ejercicio 1
+
+**Examina el conjunto de datos y determina el número y tipo de los atributos, y el número de instancias.**
+
+Cargamos los datos.
+
+```{r}
+proteindata <- read.delim("./data/proteindata.txt", row.names = 1)
+```
+
+Lo examinamos.
+
+```{r}
+str(proteindata)
+```
+
+Como se puede observar, hay **9 variables**, todas ellas con tipo de dato **numeric**. Hay **25 instancias** en el DataFrame (25 filas) y se puede acceder a cada una de ellas a través del nombre del país que representan en inglés.
+
+Comprobamos si hay valores faltantes.
+
+```{r}
+apply(proteindata, 2, function(x){ sum(is.na(x)) })
+```
+
+No hay valores ausentes, por lo que parece que no es necesario ningún tipo de preprocesado de los datos.
+
+## Ejercicio 2
+
+**Comprueba el resultado de la operación anterior de forma gráfica. Utiliza los gráficos de dispersión y de cajas, para comparar los resultados antes y después del escalado.**
+
+Escalamos y centramos los datos mediante la función `scale()`.
+
+```{r}
+proteindata.scaled <- as.data.frame(scale(proteindata))
+```
+
+Graficamos mediante gráficos de dispersión.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+plot(proteindata, main = "Datos sin escalar")
+plot(proteindata.scaled, main = "Datos escalados")
+```
+
+Se aprecia como cambian las escalas en las que se encuentran nuestros datos. Lo mostramos también mediante un diagrama de cajas.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+proteindata.stacked <- stack(proteindata)
+proteindata.scaled.stacked <- stack(proteindata.scaled)
+
+p1 <- ggplot(
+  data = proteindata.stacked,
+  aes(
+    x = ind,
+    y = values,
+    color = ind
+  )
+) +
+geom_boxplot() +
+labs(
+  title = "Datos sin escalar",
+  x = "Variables",
+  y = "Valores",
+  color = 'Variables'
+)
+
+p2 <- ggplot(
+  data = proteindata.scaled.stacked,
+  aes(
+    x = ind,
+    y = values,
+    color = ind
+  )
+) +
+geom_boxplot() +
+labs(
+  title = "Datos escalados",
+  x = "Variables",
+  y = "Valores",
+  color = 'Variables'
+)
+
+grid.arrange(p1, p2, nrow=2)
+```
+
+Ahora se puede ver más fácilmente como los datos pasan a estar centrados y escalados entre -1 y 1.
+
+## Ejercicio 3
+
+**Como hemos visto en clase, existen varias formas de realizar el clustering aglomerativo en función de cómo se defina la distancia entre cluster:**
+
+**1. Cambia el parámetro method de la función `hclust()` y obtén los distintos dendrogramas.**
+
+**2. Prueba a cambiar también la forma de calcular la distancia y comprueba como afecta al resultado del clustering.**
+
+**3. Selecciona alguna de las combinaciones anteriores e interpreta los resultados obtenidos.**
+
+**4. ¿Cómo podríamos realizar un clustering jerárquicos por atributos? ¿Qué información podría relevar este tipo de clustering?**
+
+Antes de nada, obtenemos la matriz de distancias.
+
+```{r}
+proteindata.dist.euclidean <- dist(proteindata.scaled, method = "euclidian")
+```
+
+**Apartado 1**
+
+Obtenemos los distintos dendogramas que se pueden obtener modificando el parámetro `method` de la función `hclust()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+par(mfrow = c(2, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "average")), 
+  main = "average")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "ward.D")), 
+  main ="ward.D")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "ward.D2")), 
+  main = "ward.D2")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "single")), 
+  main = "single")
+
+par(mfrow = c(2, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "complete")), 
+  main = "complete")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "mcquitty")), 
+  main = "mcquitty")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "median")), 
+  main = "median")
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "centroid")), 
+  main = "centroid")
+```
+
+**Apartado 2**
+
+Probamos la distancia Manhattan en lugar de la distancia euclídea y vemos cómo afecta al resultado del clustering.
+
+Antes de nada calculamos una nueva matriz de distancias que utilice esta distancia.
+
+```{r}
+proteindata.dist.manhattan <- dist(proteindata.scaled, method = "manhattan")
+```
+
+Mostramos los dendogramas obtenidos por cada uno de los diferentes métodos para las dos distancias diferentes.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "average")),
+  main = "Distancia Euclídea (average)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "average")), 
+  main ="Distancia Manhattan (average)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "ward.D")),
+  main = "Distancia Euclídea (ward.D)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "ward.D")), 
+  main ="Distancia Manhattan (ward.D)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "ward.D2")),
+  main = "Distancia Euclídea (ward.D2)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "ward.D2")), 
+  main ="Distancia Manhattan (ward.D2)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "single")),
+  main = "Distancia Euclídea (single)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "single")), 
+  main ="Distancia Manhattan (single)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "complete")),
+  main = "Distancia Euclídea (complete)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "complete")), 
+  main ="Distancia Manhattan (complete)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "mcquitty")),
+  main = "Distancia Euclídea (mcquitty)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "mcquitty")), 
+  main ="Distancia Manhattan (mcquitty)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "median")),
+  main = "Distancia Euclídea (median)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "median")), 
+  main ="Distancia Manhattan (median)")
+
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "centroid")),
+  main = "Distancia Euclídea (centroid)")
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "centroid")), 
+  main ="Distancia Manhattan (centroid)")
+```
+
+**Apartado 3**
+
+Seleccionamos el método *average* con las distancias Manhattan y euclídea. Mostramos los dos dendogramas resultado de aplicar el clustering jerárquico.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+par(mfrow = c(1, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.euclidean, method = "average")),
+  main = "Distancia Euclídea (average)")
+abline(h=4, col="red", lty=2)
+
+plot(
+  as.dendrogram(hclust(proteindata.dist.manhattan, method = "average")), 
+  main ="Distancia Manhattan (average)")
+abline(h=10, col="red", lty=2)
+```
+
+Los clústers generados a partir de ambas distancias son diferentes desde la primera división de países. Esto se puede ver a través del ejemplo de Polonia, que para la distancia euclídea se va al cluster de la izquierda mientras que para la distancia Manhattan se va al cluster de la derecha. 
+
+Cuanto más se baja en el dendograma más diferencias hay entro los distintos clusters generados a través de ambas distancias.
+
+**Apartado 4**
+
+Para realizar el clustering jerárquico por atributos bastaría con transponer el DataFrame con el que estamos trabajando.
+
+```{r}
+proteindata.scaled.t <- data.frame(t(proteindata.scaled[-1]))
+colnames(proteindata.scaled.t) <- row.names(proteindata.scaled)
+
+# Mostramos el resultado por pantalla
+proteindata.scaled.t
+```
+
+Una vez hecho esto se puede realizar el clustering igual que antes.
+
+```{r}
+# Calculamos la matriz de distancias
+proteindata.dist.t <- dist(proteindata.scaled.t, method = "euclidean")
+
+# Ejecutamos el clustering
+plot(
+  as.dendrogram(hclust(proteindata.dist.t, method = "average")), 
+  main ="Distancia Manhattan (average)")
+```
+
+Esto nos puede servir para observar las similitudes entre los distintos atributos. De esta manera nos podemos hacer una idea de que tipo de alimentos tienen unas cantidades similares de proteína.
+
+## Ejercicio 4
+
+**1. Cambia el parámetro `method` de la función `hclust()` y obtén los distintos dendrogramas utilizando como medida de distancia el índice de correlación de Pearson. Compara los resultados.**
+
+**2. Genera los gráficos correspondientes a los distintos dendrogramas junto a sus heatmaps.**
+
+**3. Prueba a generar distintos dendrogramas a través de la función pvclust modificando las funciones de distancia y resalta aquellos clusters con un p-valor mayor.**
+
+**4. Elige, a tu criterio, la mejor partición e intenta interpretar los resultados.**
+
+**Apartado 1**
+
+Obtenemos la matriz de distancias utilizando el coeficiente de correlación de Pearson.
+
+```{r}
+cor.pe <- cor(t(as.matrix(proteindata.scaled)), method = c("pearson"))
+proteindata.dist.pearson <- as.dist(1 - cor.pe)
+```
+
+Obtenemos los distintos dendogramas usando esa medida.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+par(mfrow = c(2, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "average")), 
+  main = "average")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "ward.D")), 
+  main ="ward.D")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "ward.D2")), 
+  main = "ward.D2")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "single")), 
+  main = "single")
+
+par(mfrow = c(2, 2), mar = c(4, 2, 1, 1))
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "complete")), 
+  main = "complete")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "mcquitty")), 
+  main = "mcquitty")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "median")), 
+  main = "median")
+plot(
+  as.dendrogram(hclust(proteindata.dist.pearson, method = "centroid")), 
+  main = "centroid")
+```
+
+Destacan visualmente los métodos `ward.D` y `ward.D2` ya que todas las divisiones en los clusters se hacen por debajo de una latura igual a 2. El resto de métdos hacen todas las divisiones de los clusters con una altura inferior a 1. Esto nos puede indicar que para estos métodos los clústers son más similares entre sí que para `ward.D` y `ward.D2`.
+
+**Apartado 2**
+
+Ahora generamos los gráficos correspondientes a los distintos dendogramas junto a sus _heatmaps_.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "average")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "ward.D")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "ward.D2")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "single")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "complete")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "mcquitty")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "median")),
+  cexRow = .6,
+  cexCol = .6
+)
+
+heatmap(
+  as.matrix(proteindata.scaled),
+  Rowv = as.dendrogram(hclust(proteindata.dist.pearson, method = "centroid")),
+  cexRow = .6,
+  cexCol = .6
+)
+```
+
+**Apartado 3**
+
+Dejamos el método para generar el dendograma igual que en el ejemplo del enunciado (**complete**) y modificamos las funciones de distancia.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia euclidea
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "euclidean")
+plot(plot, cex = .6)
+pvrect(plot, alpha = 0.95)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia maximum
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "maximum")
+plot(plot, cex = .6)
+pvrect(plot, alpha = 0.95)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia manhattan
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "manhattan")
+plot(plot, cex = .6)
+pvrect(plot, alpha = 0.95)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia canberra
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "canberra")
+plot(plot, cex = .6)
+pvrect(plot, alpha = 0.95)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia minkowski
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "minkowski")
+plot(plot, cex = .6)
+pvrect(plot, alpha = 0.95)
+```
+
+**Apartado 4**
+
+Las dos distancias que obtienen un número mayor de clusters que estén soportados por los datos son la distancia _euclídea_ y la distancia _mikowski_.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia euclidea
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "euclidean")
+plot(plot, cex = .6)
+abline(h = 4, col="red")
+pvrect(plot, alpha = 0.95)
+```
+
+Si realizamos el corte a una altura de 4, con el uso de esta distancia encontramos **cinco clusters** que superan el umbral del 95% de soporte de los clusters por los datos.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Distancia minkowski
+plot <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "minkowski")
+plot(plot, cex = .6)
+abline(h = 4, col="red")
+pvrect(plot, alpha = 0.95)
+```
+
+Para el caso de la distancia _mikowski_ realizando el corte a la misma distancia de 4, también encontramos **cinco clusters** con un _p-value_ superior al 0,95. De hecho los clusters encontrados por esta distancia y la _euclídea_ son los mismos. Por tanto, ambos representan la mejor partición de los datos.
+
+## Ejercicio 5
+
+**Genera un gráfico con los índices siluetas para los clusterings obtenidos en el ejercicio anterior para particiones entre 1 y 6 clusters.**
+
+El clustering obtenido como mejor en el ejercicio anterior es el siguiente.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Obtenemos el cluster
+hc.euclidean <- pvclust(t(proteindata.scaled),
+                method.hclust = "complete",
+                method.dist = "euclidean")
+plot(hc.euclidean, cex = .6)
+pvrect(hc.euclidean, alpha = 0.95)
+```
+
+Ahora mostramos el gráfico con los índices siluetas para el mejor clustering obtenido en el ejercicio anterior para particiones entre 2 y 6 clusters.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+for (i in seq(2, 6)) {
+  title <- paste(c(i, " clusters"), collapse = " ")
+  plot(silhouette(cutree(hc.euclidean$hclust, i), proteindata.dist.euclidean), main="")
+}
+```
+
+## Ejercicio 6
+
+**Analiza cada uno de los campos del objeto `protein.kmeans` e indica qué representa cada uno.**
+
+Lo primero es definir el objeto `proteindata.kmeans`.
+
+```{r}
+set.seed(123)
+
+proteindata.kmeans <-
+  kmeans(
+    proteindata.scaled,
+    centers = 4,
+    iter.max = 10,
+    nstart = 10
+  )
+```
+
+Ahora analizamos los campos de dicho objeto y lo que representa cada uno de los mismos. Para ello primero los campos de dicho objeto.
+
+```{r}
+attributes(proteindata.kmeans)
+```
+
+Por lo tanto podemos ver como el objeto tiene **9 campos**. Consultando el valor de cada uno de estos campos, así como la documentación de la función `kmeans()` veremos que representa cada uno de ellos.
+
+**cluster**
+
+```{r}
+proteindata.kmeans$cluster
+```
+
+Un vector de enteros (de 1 a k) que nos indica el cluster al que pertenece cada una de las variables de nuestro DataFrame.
+
+**centers**
+
+```{r}
+proteindata.kmeans$centers
+```
+
+Matriz con los centros de cada uno de los clusters.
+
+**totss**
+
+```{r}
+proteindata.kmeans$totss
+```
+
+Es la suma total de cuadrados (o _Total Sum of Squares_ en inglés).
+
+**withinss**
+
+```{r}
+proteindata.kmeans$withinss
+```
+Vector con la suma total de cuadrados por cluster.
+
+**tot.withinss**
+
+```{r}
+proteindata.kmeans$tot.withinss
+```
+El equivale a ejecutar `sum(withinss)`, es decir, la suma de la suma total de cuadrados de cada cluster.
+
+**betweenss**
+
+```{r}
+proteindata.kmeans$betweenss
+```
+
+Es la suma de cuadrados entre clusters, es lo mismo que ejecutar `totss - tot.withinss`.
+
+```{r}
+proteindata.kmeans$totss - proteindata.kmeans$tot.withinss
+```
+
+**size**
+
+```{r}
+proteindata.kmeans$size
+```
+
+El tamaño de cada uno de los clusters (número de instancias por cluster).
+
+**iter**
+
+```{r}
+proteindata.kmeans$iter
+```
+
+Número de iteraciones ejecutadas por el algoritmo.
+
+**ifault**
+
+```{r}
+proteindata.kmeans$ifault
+```
+Indicador de algún posible problema durante la ejecuación del algoritmo, --para expertos.
+
+## Ejercicio 7
+
+**1. Realizar un procedimiento basado en la variable `tot.withinss` del objeto devuelto por el procedimiento `kmeans()` que muestre, de forma gráfica, los valores de dicha variable generados para 10 llamadas al algoritmo para distintos valores de k.**
+
+**2. ¿Cuál sería el valor de k idóneo?**
+
+**3. ¿Qué valor de k óptimo obtendríamos si lo calculásemos a través del índice silueta?**
+
+**Apartado 1**
+
+Mostramos los valores de la variables `tot.withinss` para valores de k que vayan de 2 al número máximo de clusters posibles (1 cluster para cada instancia).
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+# Fijamos el número de clusters máximo
+k <- nrow(proteindata.scaled) - 1
+
+clusters <- c(2:k)
+proteindata.kmeans.i <- data.frame(row.names = clusters)
+
+for (i in clusters) {
+  kmeans.iter <- kmeans(
+    proteindata.scaled, 
+    centers = i, 
+    iter.max = 10,
+    nstart = 10
+  )
+  
+  proteindata.kmeans.i[as.character(i), "tot.withinss"] <- kmeans.iter$tot.withinss
+}
+
+# Mostramos la gráfica
+plot(
+  x = rownames(proteindata.kmeans.i),
+  y = proteindata.kmeans.i$tot.withinss,
+  ylab = "tot.withinss",
+  xlab = "Valor de k",
+  type='b',
+  pch = 19
+)
+abline(v = 6, col = 'red')
+abline(v = 7, col = 'green')
+```
+
+**Apartado 2**
+
+Para ver el valor de k idóneo debemos identificar el valor de k para el cual ya haya mejoras significativas del SSE (el valor de `tot.withinss`). Este valor parece estar entre k=6 (rojo) y k=7 (verde). Elegimos el valor de **k=7** ya que en _kmeans_ para un valor de k mayor nos queda un modelo menos complejo.
+
+**Apartado 3**
+
+A través del índice silueta.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Fijamos el número de clusters máximo
+k <- nrow(proteindata.scaled) - 1
+
+clusters <- c(2:k)
+
+# Función para calcular el índice silueta para un valor k
+silhouette_score <- function(k) {
+  km <- kmeans(
+    proteindata.scaled, 
+    centers = k, 
+    iter.max = 10,
+    nstart = 10)
+  
+  ss <- silhouette(km$cluster, dist(proteindata.scaled))
+  
+  # Devolveemos la media del índice silueta
+  mean(ss[, 3])
+}
+
+avg_sil <- sapply(clusters, silhouette_score)
+
+# Mostramos la gráfica
+plot(
+  x = clusters,
+  y = avg_sil,
+  xlab = 'Valor de k',
+  ylab = 'Media de los índices silueta',
+  type = 'b',
+  pch = 19
+)
+abline(v = 3, col = 'red')
+```
+
+El índice silueta le asigna un valor entre -1 y 1 a cada elemento. Un valor cercano a -1 indica que posiblemente el elemento debe ser asignado a un cluster vecino. Un valor cercano a 1 indicaría que el elemento está bien agrupado y un valor cercano a 0 indica que el elemento está situado en la frontera de dos clusters.
+
+Por tanro, cuanto mayor sea el valor medio de los índices silueta mejor será el clustering generado para un valor k. En nuestro caso el k para el que se obtiene el valor óptimo del índice silueta es **k=3**.
+
+## Ejercicio 8
+
+**1. Genera los distintos tipos de gráficas comentadas en esta sesión para el objeto `proteindata.dbscan`.**
+
+**2. Intenta encontrar el k óptimo utilizando el índice silueta.**
+
+**Apartado 1**
+
+En primer lugar, mediante la función `kNNdistplot()` mostramos el gráfico de k-distancias que se puede utilizar para determinar el valor de $\epsilon$.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+k=3
+
+kNNdistplot(proteindata.scaled, k)
+abline(h=3.1, col="red")
+```
+
+Definimos el objeto `proteindata.dbscan`.
+ 
+```{r}
+proteindata.dbscan <- dbscan(
+  proteindata.scaled,
+  eps = 3.1
+)
+```
+ 
+Mostramos el gráfico de distribución de los clusters en función de las primeras componentes principales mediante la función `cusplot()`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+clusplot(proteindata.scaled, proteindata.dbscan$cluster)
+```
+
+También podemos mostrar cómo queda la distribuciones de los datos repecto a los 6 primeros atributos, pero no podemos representar la distribución de los centroides, ya que el objeto `proteindata.dbscan` no no proporciona esa información.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+cl <- proteindata.dbscan$cluster
+
+plot(
+  proteindata.scaled[, 1:6], 
+  col = cl,
+  main = "Distribución de los clusters respecto los 6 primeros atributos")
+```
+
+Todos salen en el mismo color (negro) ya que todos pertenecen a un sólo cluster.
+
+Por último, podemos representar para cada cluster (sólo hay uno) los valores de los atributos de cada nstancia de dicho cluster. De esta manera podemos comprobar que el proceso de clustering haya ido bien fijándonos en si las curvas son similares o no (deberían serlo).
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Definimos el número de clusters encontrados
+k <- length(unique(proteindata.dbscan$cluster))
+
+for (i in 1:k) {
+  matplot(
+    t(proteindata.scaled[proteindata.dbscan$cluster == i, ]),
+    type = "l",
+    main = paste("cluster:", i),
+    ylab = "valores",
+    xlab = "atributos"
+  )
+}
+```
+
+**Apartado 2**
+
+Intentamos encontrar el valor k óptimo utilizando el índice silueta. Para esto probaremos varios valores para el atributo `eps` y almacenaremos el índice silueta para cada uno de los valores de k resultantes de los valores de `eps` probados. Además sabemos que para `eps=3.1` ya sólo hay un cluster, por lo que probaremos para valores menores únicamente.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Definimos los valores de eps a probar 
+# Con eps=3.0 -> 1 cluster
+eps <- seq(1.9, 2.9, 0.1)
+
+# Función para calcular el índice silueta para un valor k
+silhouette_score <- function(eps) {
+  dbs <- dbscan(proteindata.scaled,
+                eps = eps)
+  
+  ss <- silhouette(dbs$cluster, dist(proteindata.scaled))
+  
+  # Devolveemos la media del índice silueta
+  mean(ss[, 3])
+}
+
+avg_sil <- sapply(eps, silhouette_score)
+
+# Mostramos la gráfica
+plot(
+  x = eps,
+  y = avg_sil,
+  xlab = 'Valor de eps',
+  ylab = 'Media de los índices silueta',
+  type = 'b',
+  pch = 19
+)
+abline(v = 2.7, col = 'red')
+```
+
+El mejor valor para el índice silueta se obtiene para un valor de `eps=2.7` que además nos devuelve el siguiente número k de clusters.
+
+```{r}
+dbs <- dbscan(proteindata.scaled,
+              eps = 2.7)
+
+length(unique(dbs$cluster))
+```
+
+Por lo que el valor óptimo de k, usando el índice silueta, es 3.
+
+
+## Ejercicio 9
+
+**1. Genera una tabla que recoja los valores para el estadístico gap y el número óptimo de clusters para los métodos analizados en este guión exceptuando el implementado por la función `fanny` y `dbscan.`**
+
+**2. Nombra los estadísticos calculados por la función `cluter.stat()`. Genera una tabla en la que queden los estadísticos analizados en clase para las técnicas del apartado anterior.**
+
+**3. Genera una tabla que recoja el número óptimo de clusters para los métodos los métodos analizados en este guión exceptuando el implementado por la función `fanny`.**
+
+**Apartado 1**
+
+```{r}
+set.seed(123)
+
+# Fijamos el número de clusters máximo
+k.max <- nrow(proteindata.scaled) - 1
+
+# Método kmeans
+proteindata.gap.kmeans <- clusGap(proteindata.scaled,
+                                  kmeans,
+                                  K.max = k.max,
+                                  verbose = FALSE)
+
+# Método pam
+proteindata.gap.pam <- clusGap(proteindata.scaled,
+                               pam,
+                               K.max = k.max,
+                               verbose = FALSE)
+
+# Método clara
+proteindata.gap.clara <- clusGap(proteindata.scaled,
+                                 clara,
+                                 K.max = k.max,
+                                 verbose = FALSE)
+
+# Obtenemos los mejores valores de k, para las anteriores funciones
+
+# Método kmeans
+proteindata.gap.kmeans.k <- maxSE(proteindata.gap.kmeans$Tab[, "gap"],
+                                  proteindata.gap.kmeans$Tab[, "SE.sim"],
+                                  method = "Tibs2001SEmax")
+
+# Método pam
+proteindata.gap.pam.k <- maxSE(proteindata.gap.pam$Tab[, "gap"],
+                               proteindata.gap.pam$Tab[, "SE.sim"],
+                               method = "Tibs2001SEmax")
+
+# Método clara
+proteindata.gap.clara.k <- maxSE(proteindata.gap.clara$Tab[, "gap"],
+                                 proteindata.gap.clara$Tab[, "SE.sim"],
+                                 method = "Tibs2001SEmax")
+```
+
+Almacenamos los resultados anterior en una tabla y la mostramos.
+
+```{r}
+proteindata.gap.results <- rbind.data.frame(
+  c(proteindata.gap.kmeans.k, proteindata.gap.kmeans$Tab[proteindata.gap.kmeans.k, "gap"]),
+  c(proteindata.gap.pam.k, proteindata.gap.pam$Tab[proteindata.gap.pam.k, "gap"]),
+  c(proteindata.gap.clara.k, proteindata.gap.clara$Tab[proteindata.gap.clara.k, "gap"])
+)
+
+# Asignamos nombres a las columnas y las filas del DataFrame
+colnames(proteindata.gap.results) <- c("mejor k", "gap")
+rownames(proteindata.gap.results) <- c("kmeans", "pam", "clara")
+
+# Mostramos por pantalla
+proteindata.gap.results
+```
+
+**Apartado 2**
+
+Vemos el resultado de la función `cluster.stat()` para el objeto `proteindata.kmeans`.
+
+```{r}
+proteindata.kmeans.stats <- cluster.stats(proteindata.dist.euclidean, proteindata.kmeans$cluster)
+
+proteindata.kmeans.stats
+```
+
+Los estadísticos calculados por esta función son los siguientes.
+
+```{r}
+attributes(proteindata.kmeans.stats)
+```
+
+Creamos la tabla en la que queden los estadísticos analizados en clase para las técnicas del apartado anterior.
+
+```{r}
+# Primero calculamos los clusterings para el método pam y el método clara
+
+# Se omite el siguiente código porque da el siguiente error que no tiene sentido:
+# Error: $ operator is invalid for atomic vectors
+# Al ejecutar -> proteindata.pam$clustering
+
+# proteindata.pam <- pam(proteindata.scaled, k = proteindata.gap.pam.k)
+# proteindata.pam.stats <-
+#   cluster.stats(proteindata.dist.euclidean, proteindata.pam$clustering)
+
+proteindata.clara <-
+  clara(proteindata.scaled, k = proteindata.gap.clara.k)
+proteindata.clara.stats <-
+  cluster.stats(proteindata.dist.euclidean, proteindata.clara$clustering)
+
+# Ahora creamos la tabla con los estadísticos
+proteindata.stats.results <- rbind.data.frame(
+  c(
+    proteindata.kmeans.stats$avg.silwidth,
+    proteindata.kmeans.stats$widestgap,
+    proteindata.kmeans.stats$dunn
+  ),
+  # c(
+  #   proteindata.pam.stats$avg.silwidth,
+  #   proteindata.pam.stats$widestgap,
+  #   proteindata.pam.stats$dunn
+  # ),
+  c(
+    proteindata.clara.stats$avg.silwidth,
+    proteindata.clara.stats$widestgap,
+    proteindata.clara.stats$dunn
+  )
+)
+
+# Nombre para las filas y las columnas
+colnames(proteindata.stats.results) <-
+  c("avg.silwidth", "widestgap", "dunn")
+# rownames(proteindata.stats.results) <- c("kmeans", "pam", "clara")
+rownames(proteindata.stats.results) <- c("kmeans", "clara")
+
+# Finalmente mostramos por pantalla
+proteindata.stats.results
+```
+
+**Apartado 3**
+
+Añadimos el método DBSCAN a los que ya se calcularon en el apartado 1.
+
+```{r}
+set.seed(123)
+
+# Fijamos el número de clusters máximo
+k.max <- nrow(proteindata.scaled) - 1
+
+proteindata.gap.dbscan <-
+  clusGap(
+    proteindata.scaled, 
+    dbscan,
+    K.max = k.max, 
+    verbose = FALSE
+)
+
+proteindata.gap.dbscan.k <- maxSE(
+  proteindata.gap.dbscan$Tab[, "gap"],
+  proteindata.gap.dbscan$Tab[, "SE.sim"],
+  method = "Tibs2001SEmax"
+)
+```
+
+Finalmente mostramos la tabla resultado.
+
+```{r}
+proteindata.gap.results.new <- rbind.data.frame(
+  proteindata.gap.results,
+  proteindata.gap.dbscan.k
+)
+rownames(proteindata.gap.results.new) <- c("kmeans","pam","clara","dbscan")
+
+# Mostramos por pantalla
+proteindata.gap.results.new
+```

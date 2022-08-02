@@ -1,0 +1,737 @@
+---
+title: 'Entrega 1 - Pre-Procesamiento'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 1
+  word_document:
+    toc: yes
+    toc_depth: 1
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+\newpage
+
+# Introducción
+
+En primer lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(tidyverse)
+library(MASS)
+library(foreign)
+library(car)
+library(Hmisc)
+library(VIM)
+library(mice)
+library(caret)
+```
+
+Definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Practica1/")
+```
+
+# Valores Especiales
+
+## Ejercicio 1:
+
+### Ejercicio 1.1
+
+```{r}
+NA + 1
+```
+El resultado es `NA` ya que la suma de un valor a un dato desconocido sigue siendo desconocido.
+
+### Ejercicio 1.2
+
+```{r}
+sum(c(NA,1,2))
+```
+
+Igual que en el ejercicio anterior, el resultado es `NA` ya que la suma de un valor a un dato desconocido sigue siendo desconocido.
+
+### Ejercicio 1.3
+
+```{r}
+median(c(NA,1,2,3), na.rm = TRUE)
+```
+
+La opción `na.rm=TRUE` elimina los valores `NA` por lo que la mediana se calcula de forma normal con los otros 3 valores presentes en el vector.
+
+### Ejercicio 1.4
+
+```{r}
+length(c(NA,2,3,4))
+```
+
+El valor `NA`, pese a ser un valor que no está disponible sí que se cuenta como uno de los valores presentes en el vector.
+
+### Ejercicio 1.5
+
+```{r}
+3 == NA
+```
+
+Como el valor de `NA` no está disponible, el resultado de compararlo con otro valor real tampoco será un valor que podamos conocer.
+
+### Ejercicio 1.6
+
+```{r}
+sum(c(2,3,NULL,4))
+```
+
+El valor `NULL` se puede considerar como el conjunto vacío, por lo que no se tiene en cuenta para hacer la suma de los elementos del vector.
+
+### Ejercicio 1.7
+
+```{r}
+x <- NULL
+```
+
+Se le asigna a `x` el valor `NULL`.
+
+### Ejercicio 1.8
+
+```{r}
+NaN == NULL
+```
+
+La respuesta `logical(0)` nos indica que tenemos un vector que debería contener valores booleanos pero que está vacío. Este se debe a que los valores NaN y NULL no se pueden comparar.
+
+### Ejercicio 1.9
+
+```{r}
+NULL == NULL
+```
+
+Al igual que en el ejercicio anterior, dos valores `NULL` no son comparables.
+
+### Ejercicio 1.10
+
+```{r}
+c <- 2
+```
+
+Se le asigna a `c` el valor 2.
+
+### Ejercicio 1.11
+
+```{r}
+pi/0
+```
+
+R utiliza el estándar [IEE754](https://stat.ethz.ch/R-manual/R-devel/library/base/html/double.html) según el cual la división entre 0 es infinito. Sin embargo, matemáticamente la división entre 0 es un valor indefinido.
+
+### Ejercicio 1.12
+
+```{r}
+2*Inf
+```
+
+El doble de infinito sigue siendo infinito.
+
+### Ejercicio 1.13
+
+```{r}
+Inf - 10e+10
+```
+
+Infinito menos cualquier otro valor que no sea infinito sigue siendo infinito.
+
+### Ejercicio 1.14
+
+```{r}
+Inf+Inf
+```
+
+Igual que en el caso de 2*`Inf`, el doble de infinito sigue siendo infinito.
+
+### Ejercicio 1.15
+
+```{r}
+exp(-Inf)
+```
+
+El valor de $e^x$ cuando $x$ se acerca a menos infinito tiende a 0.
+
+### Ejercicio 1.16
+
+```{r}
+3 < -Inf
+```
+
+Ningún valor puede ser menor que menos infinito, por eso esta comparación nos devuelve el valor booleano `FALSE`.
+
+### Ejercicio 1.17
+
+```{r}
+exp(NaN)
+```
+
+Las operaciones que implican un `NaN` devuelven un `NaN`.
+
+# Lectura de Datos
+
+## Ejercicio 2
+
+### Ejercicio 2.1
+
+Creo que la primera columna debe de tener el tipo de dato `integer`, de la segunda a la duodécima columna el tipo de dato `factor` (debido a que parece que indican la presencia o falta de alguna característica), la decimotercera columna un valor de tipo `numeric`, la decimocuarta de tipo `integer`, la decimoquinta de tipo `integer` también, la decimosexta de tipo `numeric`, la decimoséptima `numeric` también, la decimoctava de tipo `factor` y la última columna de tipo `factor`.
+
+### Ejercicio 2.2
+
+Sí, están representados mediante un '*'.
+
+### Ejercicio 2.3
+
+Creo que falta información sobre ciertas de las características para algunas de las muestras de nuestro dataset. Sin nombres para las columnas, es complicado poderle dar más sentido a estos datos.
+
+## Ejercicio 3
+
+Importamos los datos mediante el uso de la función `read.csv` sin modificar los parámetros.
+
+```{r}
+hepatitis = read.csv('./data/hepatitis.csv')
+```
+
+### Ejercicio 3.1
+
+Ejecutamos el comando `str(hepatitis)`:
+
+```{r}
+str(hepatitis)
+```
+
+Encontramos las siguientes anomalías:
+- Se ha leído la primera fila como si fuese el `header`.
+- Muchas de las columnas toman valores del tipo `char` cuando deberían ser del tipo `integer` o `factor`.
+- Los valores que faltan aparecen como `*` en lugar de como valores vacíos.
+
+A continuación ejecutamos la función `complete.cases(hepatitis)`:
+
+```{r}
+complete.cases(hepatitis)
+```
+
+No, ya que hay valores que no están completos en muchas de las filas de nuestro conjunto de datos, pero la salida de la función `complete.cases()` nos dice que todas las filas están completas.
+
+### Ejercicio 3.2
+
+Podríamos hacerlo mediante la siguiente línea de código:
+
+```{r}
+hepatitis[hepatitis == '*'] = NA
+```
+
+### Ejercicio 3.3
+
+Volvemos a cargar los datos utilizando correctamente los parámetros de la función `read.csv()`.
+
+```{r}
+hepatitis = read.csv(
+  file = './data/hepatitis.csv', 
+  header = FALSE, 
+  na.strings = '*'
+)
+```
+
+Ejecutamos el comando `str(hepatitis)`:
+
+```{r}
+str(hepatitis)
+```
+
+Ahora podemos ver como se han resuelto las anomalías citadas anteriormente.
+
+### Ejercicio 3.4
+
+Lo podríamos hacer en la siguiente línea de código:
+
+```{r}
+sum(!complete.cases(hepatitis))
+```
+
+Por lo tanto, vemos como hay 75 filas en nuestro dataset que tienen algún valor `NA`.
+
+Nombramos de forma correcta las columnas en el siguiente bloque de código en R:
+
+```{r}
+atributos <- c(
+  "EDAD",
+  "SEXO",
+  "ESTEROIDES",
+  "ANTIVIRALES",
+  "FATIGA",
+  "MALAISE",
+  "ANOREXIA",
+  "HIGgrande",
+  "HIGfirme",
+  "BAZOpalpa",
+  "ARANIASvac",
+  "ASCITIS",
+  "VARICES",
+  "BILIRRUBINA",
+  "FOSFATOalc",
+  "SGOT",
+  "ALBUMINA",
+  "PROTIME",
+  "HISTIOLOGIA",
+  "PRONOSTICO"
+)
+colnames(hepatitis) <- atributos
+```
+
+# Conversión de Tipos
+
+## Ejercicio 4
+
+```{r}
+# As Numeric
+hepatitis$BILIRRUBINA <- as.numeric(hepatitis$BILIRRUBINA)
+hepatitis$ALBUMINA <- as.numeric(hepatitis$ALBUMINA)
+
+# As Integer
+hepatitis$EDAD <- as.integer(hepatitis$EDAD)
+hepatitis$SGOT <- as.integer(hepatitis$SGOT)
+hepatitis$FOSFATOalc <- as.integer(hepatitis$FOSFATOalc)
+hepatitis$PROTIME <- as.integer(hepatitis$PROTIME)
+
+# As Logical
+hepatitis$ANTIVIRALES <- as.logical(hepatitis$ANTIVIRALES)
+hepatitis$HISTIOLOGIA <- as.logical(hepatitis$HISTIOLOGIA)
+hepatitis$ESTEROIDES <- as.logical(hepatitis$ESTEROIDES)
+hepatitis$ANTIVIRALES <- as.logical(hepatitis$ANTIVIRALES)
+hepatitis$FATIGA <- as.logical(hepatitis$FATIGA)
+hepatitis$MALAISE <- as.logical(hepatitis$MALAISE)
+hepatitis$ANOREXIA <- as.logical(hepatitis$ANOREXIA)
+hepatitis$HIGgrande <- as.logical(hepatitis$HIGgrande)
+hepatitis$HIGfirme <- as.logical(hepatitis$HIGfirme)
+hepatitis$BAZOpalpa <- as.logical(hepatitis$BAZOpalpa)
+hepatitis$ARANIASvac <- as.logical(hepatitis$ARANIASvac)
+hepatitis$ASCITIS <- as.logical(hepatitis$ASCITIS)
+hepatitis$VARICES <- as.logical(hepatitis$VARICES)
+```
+
+Comprobamos mediante la función `str()` el resultado de la conversión de tipos realizada anteriormente.
+
+```{r}
+str(hepatitis)
+```
+
+Cambiamos los valores de la columna PRONOSTICO:
+
+```{r}
+hepatitis$PRONOSTICO <- as.factor(
+  recode(
+    hepatitis$PRONOSTICO, "0 = 'FALLECE'; 1 = 'VIVE'"
+    )
+  )
+```
+
+## Ejercicio 5
+
+Hacemos esto en la siguiente celda de código:
+
+```{r}
+hepatitis$SEXO <- as.factor(
+  recode(
+    hepatitis$SEXO, "0 = 'FEMENINO'; 1 = 'MASCULINO'"
+    )
+  )
+```
+
+Tras estas transformaciones, nuestro dataset queda de la siguiente manera:
+
+```{r}
+str(hepatitis)
+```
+
+# Análisis de Valores Ausentes
+
+Estudiamos la distribución de los valores ausentes mediante la función `aggr()` del paquete `VIM`:
+
+```{r, warning=FALSE}
+aggr(
+  hepatitis,
+  numbers = TRUE,
+  prop = FALSE,
+  cex.axis = 0.7)
+```
+
+Otra función que nos permite hacer esto es la función `describe()` del paquete `Hmisc`.
+
+```{r, message=FALSE, echo=FALSE}
+hepatitis.describe <- describe(hepatitis)
+plot(hepatitis.describe)
+```
+
+# Imputación de Valores Ausentes
+
+## El paquete `VIM`
+
+Para poder realizar una imputación utilizando el método KNN podemos utilizar la función `kNN()`.
+
+```{r, warning=FALSE}
+hepatitis.knn <-
+  kNN(hepatitis, variable = c("FOSFATOalc", "ALBUMINA"))
+aggr(
+  hepatitis.knn,
+  delimiter = "_imp",
+  numbers = TRUE,
+  prop = FALSE,
+  cex.axis = 0.7
+)
+```
+
+### Ejercicio 6
+
+Una manera de saber qué valores han sido imputados es comprobar los valores de las columnas generedas después de la imputación de los valores que se lleva igual que la variable imputada con el sufijo '_imp'. Podemos comprobar si los valores de una columna, en este caso usaremos la columna ALBUMINA, han sido imputados imprimiendo el contenido de la columna ALBUMINA_imp. Esto lo hacemos en la siguiente celda de código:
+
+```{r}
+print(hepatitis.knn$ALBUMINA_imp)
+```
+
+Como podemos ver esta columna almacena el valor `FALSE` si el valor no fue imputado y el valor `TRUE` si sí que fue imputado.
+
+## El paquete `Hmisc`
+
+### Ejercicio 7
+
+#### Ejercicio 7.1
+
+Imputamos la variable `ALBUMINA` utilizando la media en la siguiente celda de código:
+
+```{r}
+hepatitis.mean <- hepatitis
+hepatitis.mean$ALBUMINA <- impute(hepatitis.mean$ALBUMINA, fun=mean)
+```
+
+La imprimimos para ver el resultado de esta imputación:
+
+```{r}
+print(hepatitis.mean$ALBUMINA)
+```
+
+#### Ejercicio 7.2
+
+Podemos almacenar en una nueva columna si los valores de la columna ALBUMINA fueron imputados para después utilizar la función `aggr()` de la misma manera que hicimos con anterioridad.
+
+```{r, warning=FALSE}
+# Almacenamos en una nueva columna si los valores de la columna ALBUMINA
+# son imputados
+hepatitis.mean$ALBUMINA_imp <- hepatitis$ALBUMINA != hepatitis.mean$ALBUMINA
+hepatitis.mean$ALBUMINA_imp[is.na(hepatitis.mean$ALBUMINA_imp)] <- TRUE
+
+aggr(
+  hepatitis.mean,
+  delimiter = "_imp",
+  numbers = TRUE,
+  prop = FALSE,
+  cex.axis = 0.7
+)
+```
+
+## El paquete `mice`
+
+Ejecutamos el método **Predictive Mean Matching** como prueba:
+
+```{r}
+tempImp.mice <- mice(hepatitis, m=5, method = "pmm", seed = 123)
+```
+
+Analizamos el valor de la variable ALBUMINA mediante la siguiente instrucción:
+
+```{r}
+print(tempImp.mice$imp$ALBUMINA)
+```
+
+Imprimimos el método de imputación que se ha utilizado en cada una de las columnas mediante la siguiente instrucción:
+
+```{r}
+print(tempImp.mice$method)
+```
+
+Como se puede ver, nos indica que en todos los casps hemos usado `pmm` o **Predictive Mean Matching**, ya que este es el método preferido por defecto.
+
+Hacemos efectiva la imputación en el conjunto de datos original mediante la siguiente instrucción:
+
+```{r}
+hepatitis.imp2 <- complete(tempImp.mice, 1)
+```
+
+### Ejercicio 8
+
+#### Ejercicio 8.1
+
+En primer lugar calculamos el porcentage de valores `NA` en cada una de las columnas y lo imprimimos por pantalla:
+
+```{r}
+hepatitis.porcentage.na <- apply(is.na(hepatitis), 2, mean)
+hepatitis.porcentage.na <- hepatitis.porcentage.na * 100
+
+print(hepatitis.porcentage.na)
+```
+
+Ahora usamos las funciones del paquete `VIM` para visualizar la distribución de los valores ausentes:
+
+```{r}
+aggr(
+  hepatitis,
+  numbers = TRUE,
+  prop = FALSE,
+  cex.axis = 0.7
+)
+```
+
+### Ejercicio 8.2
+
+Utilizamos la función `impute()` para imputar los valores ausentes en los atributos SGOT y FOSFATOalc mediante tanto la mediana (`median`) como la media (`mean`). Esto lo hacemos en la siguiente celda de código:
+
+```{r}
+# Utilizando el método `median`
+hepatitis.medianImpute <- hepatitis
+hepatitis.medianImpute$SGOT <- impute(hepatitis$SGOT, fun = median)
+hepatitis.medianImpute$FOSFATOalc <- impute(hepatitis$FOSFATOalc, fun = median)
+
+# Utilizando el método `mean`
+hepatitis.meanImpute <- hepatitis
+hepatitis.meanImpute$SGOT <- impute(hepatitis$SGOT, fun = mean)
+hepatitis.meanImpute$FOSFATOalc <- impute(hepatitis$FOSFATOalc, fun = mean)
+```
+
+Analizamos los datos para ver qué cambios apreciamos en el conjunto de datos. Para esto analizamos las distribuciones de las columnas que acabamos de imputar
+
+```{r, echo=FALSE, message=FALSE}
+# Una fila, dos columnas
+par(mfrow = c(2, 2))
+
+# 1. Gráfico de la esquina superior izquierda
+
+hist(hepatitis.medianImpute$SGOT, main="SGOT - Median", xlab="Values")
+
+# 2. Gráfico de la esquina superior derecha
+
+hist(hepatitis.meanImpute$SGOT, main="SGOT - Mean", xlab="Values")
+
+# 2. Gráfico de la esquina inferior izquierda
+
+hist(hepatitis.medianImpute$FOSFATOalc, main="FOSFATOalc - Median", xlab="Values")
+
+# 2. Gráfico de la esquina superior derecha
+
+hist(hepatitis.meanImpute$FOSFATOalc, main="FOSFATOalc - Mean", xlab="Values")
+
+# Volvemos al estado original
+par(mfrow = c(1, 1))
+```
+
+Como se puede observar los valores para la variable SGOT son prácticamente los mismos se haya usado la media como la mediana para calcular los valores a imputar. Esto probablemente se deba a que la media y la mediana se encuentren en el mismo *bin*. Por otra parte no ocurre lo mismo para la variable FOSFATOalc ya que la media y la mediana no se encuentran en el mismo *bin* en este caso.
+
+### Ejercicio 8.3
+
+En primer lugar calculamos las imputaciones tanto con la función `mice()` con el método `pnm` como con la función `kNN`. Esto lo hacemos a continuación:
+
+```{r, warning=FALSE}
+# Mediante `mice()`
+hepatitis.pmmImpute <- mice(hepatitis, m = 5, method = "pmm", seed = 123)
+hepatitis.pmmImpute <- complete(hepatitis.pmmImpute, 1)
+
+# Mediante `kNN`
+hepatitis.kNNImpute <- kNN(hepatitis, variable = c("SGOT", "FOSFATOalc"))
+```
+
+Representamos la distribución de las variables SGOT y FOSFATOalc al igual que antes para comprobar la distribución de los datos al usar estos otros dos métodos de imputación de las variables ausentes:
+
+```{r, echo=FALSE, message=FALSE}
+# Dos filas, dos columnas
+par(mfrow = c(2, 2))
+
+# 1. Gráfico de la esquina superior izquierda
+
+hist(hepatitis.pmmImpute$SGOT, main="SGOT - PMM", xlab="Values")
+
+# 2. Gráfico de la esquina superior derecha
+
+hist(hepatitis.kNNImpute$SGOT, main="SGOT - kNN", xlab="Values")
+
+# 2. Gráfico de la esquina inferior izquierda
+
+hist(hepatitis.pmmImpute$FOSFATOalc, main="FOSFATOalc - PMM", xlab="Values")
+
+# 2. Gráfico de la esquina superior derecha
+
+hist(hepatitis.kNNImpute$FOSFATOalc, main="FOSFATOalc - kNN", xlab="Values")
+
+# Volvemos al estado original
+par(mfrow = c(1, 1))
+```
+
+Mediante estas funciones los resultados que se obtienen siguen una distribución muy similar.
+
+### Ejercicio 8.4
+
+Escribimos a cuatro ficheros los datasets generados anteriormente. Como estos ficheros sólo deben contener la información relevante para iniciar las tareas de minería de datos, los almacenamos sin las columnas que acaben en '_imp':
+
+```{r}
+# Median
+hepatitis.medianImpute$SGOT_imp <- NULL
+hepatitis.medianImpute$FOSFATOalc_imp <- NULL
+write.csv(
+  hepatitis.medianImpute,
+  file = './output/hepatitis.medianImpute.csv',
+  row.names = FALSE)
+
+# Mean
+hepatitis.meanImpute$SGOT_imp <- NULL
+hepatitis.meanImpute$FOSFATOalc_imp <- NULL
+write.csv(
+  hepatitis.meanImpute, 
+  file = './output/hepatitis.meanImpute.csv', 
+  row.names = FALSE)
+
+# PMM
+hepatitis.pmmImpute$SGOT_imp <- NULL
+hepatitis.pmmImpute$FOSFATOalc_imp <- NULL
+write.csv(
+  hepatitis.pmmImpute, 
+  file = './output/hepatitis.pmmImpute.csv', 
+  row.names = FALSE)
+
+# kNN
+hepatitis.kNNImpute$SGOT_imp <- NULL
+hepatitis.kNNImpute$FOSFATOalc_imp <- NULL
+write.csv(
+  hepatitis.kNNImpute, 
+  file = './output/hepatitis.kNNImpute.csv', 
+  row.names = FALSE)
+```
+
+# Clases desbalanceadas
+
+En este apartado lo primero será cargar la librería `ROSE` y la librería `DMwR` que debemos usar.
+
+```{r, warning=FALSE}
+library(ROSE)
+library(DMwR)
+```
+
+Probamos el uso de la librería `caret` para hacer un sobremuestreo:
+
+```{r}
+set.seed(123)
+hepatitis.upSample <- upSample(
+  x = hepatitis[, -ncol(hepatitis)],
+  y = hepatitis$PRONOSTICO,
+  yname = "PRONOSTICO")
+```
+
+Comparamos los resultados para comprobar el efecto de aplicar esta función:
+
+```{r}
+table(hepatitis$PRONOSTICO)
+```
+
+```{r}
+table(hepatitis.upSample$PRONOSTICO)
+```
+
+Ahora probamos a hacer uso de la función `SMOTE()`:
+
+```{r}
+set.seed(123)
+hepatitis.smote <- SMOTE(PRONOSTICO ~ ., data = hepatitis)
+```
+
+Y comprobamos el resultado:
+
+```{r}
+table(hepatitis.smote$PRONOSTICO)
+```
+
+## Ejercicio 9
+
+### Ejercicio 9.1
+
+Generamos nuevos conjunto de datos con cada una de las técnicas de muestreo vistas anteriormente (`SMOTE()`, `ROSE()`, `downSample()` y `upSample()`) para resolver el problema del desbalanceo de clases:
+
+```{r}
+set.seed(123)
+
+# Submuestreo
+hepatitis.downSample <- downSample(
+  x = hepatitis[,-ncol(hepatitis)],
+  y = hepatitis$PRONOSTICO,
+  yname = "PRONOSTICO")
+
+# Sobremuestreo
+hepatitis.upSample <- upSample(
+  x = hepatitis[, -ncol(hepatitis)],
+  y = hepatitis$PRONOSTICO,
+  yname = "PRONOSTICO")
+
+# SMOTE
+hepatitis.smote <- SMOTE(PRONOSTICO ~ ., data = hepatitis)
+
+hepatitis.rose <- hepatitis
+hepatitis.rose[, c(3:13, 19)] = sapply(hepatitis.rose[, c(3:13, 19)], as.numeric)
+
+# ROSE
+hepatitis.rose <- ROSE(PRONOSTICO ~ ., data = hepatitis.rose)$data
+```
+
+### Ejercicio 9.2
+
+La distribución original es la siguiente:
+
+```{r}
+table(hepatitis$PRONOSTICO)
+```
+
+Ahora probaremos a ver la distribución de las clases con cada uno de los métodos de muestreo utilizados anteriormente.
+
+```{r}
+table(hepatitis.downSample$PRONOSTICO)
+```
+
+Mediante el método de `downSample()` podemos ver que se escogen de forma aleatoria datos de manera que todas las clases tengan la misma frecuencia que la clase minoritaria, en este caso la clase 'FALLECE'.
+
+```{r}
+table(hepatitis.upSample$PRONOSTICO)
+```
+
+La función `upSample()` realiza un muestreo con reemplazo para igualr las distribuciones de las clases a la clase mayoritaria.
+
+```{r}
+table(hepatitis.smote$PRONOSTICO)
+```
+
+La función `SMOTE()` lo que hace es generar de forma sintética nuevos ejemplos de la clase minoritaria a partir de los vecinos más cercanos de este clase para igualar el número de muestras de esta clase con la clase mayoritaria.
+
+```{r}
+table(hepatitis.rose$PRONOSTICO)
+```
+
+Finalmente, la función `ROSE()` usa una técnica basada en bootstrap que ayuda en la tarea de generar ejemplos artificiales cercanos a las muestras de la clase minoritaria.
+

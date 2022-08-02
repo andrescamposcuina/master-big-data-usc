@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+
+<html lang="es" xml:lang="es">
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="José Tomás Palma Méndez" />
+
+
+<title>Reglas de asociación</title>
+
+<script src="ReglasAsociacion_files/header-attrs-2.3/header-attrs.js"></script>
+<script src="ReglasAsociacion_files/jquery-1.12.4/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="ReglasAsociacion_files/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="ReglasAsociacion_files/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="ReglasAsociacion_files/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="ReglasAsociacion_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="ReglasAsociacion_files/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="ReglasAsociacion_files/navigation-1.1/tabsets.js"></script>
+<link href="ReglasAsociacion_files/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/highlightjs-9.12.0/highlight.js"></script>
+<script src="ReglasAsociacion_files/htmlwidgets-1.5.3/htmlwidgets.js"></script>
+<link href="ReglasAsociacion_files/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/datatables-binding-0.14/datatables.js"></script>
+<link href="ReglasAsociacion_files/dt-core-1.10.20/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="ReglasAsociacion_files/dt-core-1.10.20/css/jquery.dataTables.extra.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/dt-core-1.10.20/js/jquery.dataTables.min.js"></script>
+<link href="ReglasAsociacion_files/nouislider-7.0.10/jquery.nouislider.min.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/nouislider-7.0.10/jquery.nouislider.min.js"></script>
+<link href="ReglasAsociacion_files/selectize-0.12.0/selectize.bootstrap3.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/selectize-0.12.0/selectize.min.js"></script>
+<link href="ReglasAsociacion_files/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
+<script src="ReglasAsociacion_files/plotly-binding-4.9.2.1/plotly.js"></script>
+<script src="ReglasAsociacion_files/typedarray-0.1/typedarray.min.js"></script>
+<link href="ReglasAsociacion_files/plotly-htmlwidgets-css-1.52.2/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="ReglasAsociacion_files/plotly-main-1.52.2/plotly-latest.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Reglas de asociación</h1>
+<h4 class="author">José Tomás Palma Méndez</h4>
+<h4 class="date">5 de abril de 2022</h4>
+
+</div>
+
+
+<div id="introducción" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introducción</h1>
+<p>En esta sesión prácticas vamos a ver cómo vamos a trabajar con reglas de asociación. Para ello vamos a utilizar los paquetes: <code>arules</code>y <code>arulesViz</code>:</p>
+<pre class="r"><code>library(arules)</code></pre>
+<pre><code>## Loading required package: Matrix</code></pre>
+<pre><code>## 
+## Attaching package: &#39;arules&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:car&#39;:
+## 
+##     recode</code></pre>
+<pre><code>## The following objects are masked from &#39;package:base&#39;:
+## 
+##     abbreviate, write</code></pre>
+<pre class="r"><code>library(arulesViz)</code></pre>
+<pre><code>## Loading required package: grid</code></pre>
+<pre><code>## Registered S3 method overwritten by &#39;seriation&#39;:
+##   method         from 
+##   reorder.hclust gclus</code></pre>
+</div>
+<div id="manipulación-de-conjuntos-de-datos" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Manipulación de conjuntos de datos</h1>
+<p>El paquete <code>arules</code> nos ofrece diferentes funciones que permiten leer y escribir bases de datos de transacciones: <code>read.transactions()</code> y <code>write()</code>. La función <code>read.transactions()</code> nos permite leer ficheros de transacciones en los dos formatos que comúnmente se suelen utilizar: una transacción por linea (cesta de la compra) o una linea por artículo o item. Esta función tiene los siguientes parámetros:</p>
+<ul>
+<li><strong>file</strong>: nombre del fichero a leer.</li>
+<li><strong>format</strong> string indicando el formato de la base de datos de transacciones, <code>basket</code> o <code>single</code>.</li>
+<li><strong>sep</strong>: para indicar qué carácter hace de separador de los campos (por defecto un espacio).</li>
+<li><strong>cols</strong>: para el formato <code>basket</code> es un entero indicando la columna que contiene los identificadores de las transacciones. Para el formato <code>single</code> pueden sor los nombres de las dos columnas, o dos números indicando cuál es la columna con las transacciones y cuál con los items, respectivamente.</li>
+<li><strong>rm.duplicates</strong>: valor lógico indicando si se eliminan los items duplicados en una misma transacción.</li>
+<li><strong>quote</strong>: caracter que se utiliza como comillas.</li>
+<li><strong>skip</strong>: número de líneas que hay que saltar desde el comienzo del fichero.</li>
+</ul>
+<p>Por ejemplo, si queremos leer un fichero con el formato cesta de la compra, bastaría con la siguiente instrucción:</p>
+<pre class="r"><code>transacciones &lt;- read.transactions(&quot;1000i.csv&quot;, format = &quot;basket&quot;, 
+                                   sep = &quot;,&quot; , rm.duplicates = TRUE)</code></pre>
+<p>Donde el objeto <code>transacciones</code> es de tipo <code>transactions</code>.</p>
+<div class="alert alert-info">
+<p><strong>Ejercicio 1: Examina el contenido de los ficheros <code>titanic1</code> y <code>titanic2</code>:</strong></p>
+<ol style="list-style-type: decimal">
+<li>¿En qué formato están almacenados los datos en cada fichero?</li>
+<li>Crea dos objetos llamados <code>titanic.basket</code> y <code>titanic.single</code> que contengan los datos de los ficheros anteriormente mencionados.</li>
+</ol>
+</div>
+<p>Además de poder leer bases de datos de transacciones a través de la función <code>read.transactions()</code>, el paquete <code>arules</code> nos permite transformar un objeto de la clase <code>data.frame</code> en un objeto de la clase <code>transactions</code>. Por ejemplo, si queremos convertir el <code>data frame</code> <code>tabla</code> en un objeto de la clase <code>transactions</code> podemos utilizar la siguiente instrucción:</p>
+<pre class="r"><code>mush &lt;- read.csv(&quot;mushrooms.data&quot;)
+mush.trans &lt;- as(mush,&quot;transactions&quot;)</code></pre>
+<p>Los objetos de la clase <code>transactions</code> sólo trabajan con información booleana, es decir, con la presencia o no de cada uno de los items en la transacción. Esto nos obliga a qué, en principio, el <code>data.frame</code> sólo contenga atributos booleanos. Por lo tanto, si tenemos datos numéricos estos deben ser discretizados. Una vez discretizados, estos atributos y los categóricos son transformados automáticamente meidante la creación de las corresondientes variables <em>dummies</em>. Por ejemplo, si tenemos un atributo <code>fiebre</code> que puede tomar los valores <code>alta</code>, <code>normal</code> y <code>baja</code>, se crearan los siguientes atributos binarios: <code>fiebre=alta</code>, <code>fiebre=normal</code> y <code>fiebre=baja</code>.</p>
+<p>Para poder discretizar un atributo numérico, el paquete <code>arules</code> nos ofrece la función <code>discretize()</code>, que tiene los siguientes parámetros:</p>
+<ul>
+<li><strong>x:</strong> Un vector numérico y una variable continua.</li>
+<li><strong>method:</strong> para indicar el tipo de discretización: <code>interval</code> para intervalos de la misma anchura, <code>frecuency</code> para intervalos con la misma frecuencia, <code>cluster</code> para discretizar mediante el <em>k-medias</em> y <code>fixed</code> para discretizar definiendo los puntos de corte de cada intervalo.</li>
+<li><strong>breaks:</strong> un entero para indicar el número de categorías o un vector de enteros indicando los límites de cada intervalo (para <code>method = fixed</code>).</li>
+<li><strong>labels:</strong> vector de caracteres para definir las etiquetas para cada una de las categorías.</li>
+<li><strong>ordered:</strong> TRUE si queremos que indicar que las categorías definidas tiene un orden.</li>
+<li><strong>onlycuts:</strong> TRUE si queremos que la función devuelva sólo los puntos de corte.</li>
+</ul>
+<p>Por ejemplo, si quiere discretizar el atributo fiebre en tres categorías, utilizando el algoritmo <em>k-medias</em> podemos utilizar la siguiente instrucción:</p>
+<pre class="r"><code>fiebre_dis &lt;- discretize(tabla$fiebre, 
+                         method = &quot;cluster&quot;,
+                         categories = 3,
+                         ordered = TRUE)</code></pre>
+<div class="alert alert-info">
+<p><strong>Ejercicio 2: Lee el fichero <code>titanic.csv</code> y examina los atributos que tiene y el tipo de cada uno de ellos.</strong></p>
+<ol style="list-style-type: decimal">
+<li>Elimina la columna <code>tarifa</code>, esa información la tenemos discretizada en el atributo <code>clase</code>.</li>
+<li>Discretiza el atributo <code>edad</code> en tres categorías: <code>Child</code> (menor que 18), <code>Adult</code> (entre 18 y 65) y <code>Old</code> (mayor que 65).</li>
+<li>Recodifica el atributo <code>superviviente</code> a <code>Si</code> para el valor 1 y <code>No</code> para el valor 0.</li>
+<li>Crea un objeto de la clase <code>transactions</code>, llamado ’titanic.trans<code>, a partir del</code>data frame<code></code>titanic`.</li>
+</ol>
+</div>
+<p>Para hacer una primera inspección visual sobre los objetos de la clase <code>transactions</code> tenemos las funciones <code>itemFrequency()</code> y <code>itemFrequencyPlot()</code> que muestran la frecuencia de cada uno de los items en una base de transacciones. La función <code>itemFrequencyPlot()</code> permite especificar una serie de parámetros para indicar como queremos la gráfica. Por ejemplo, con el parámetro <code>type</code> podemos indicar si queremos que muestra las frecuencias absolutas (<code>absolute</code>) o relativas (<code>relative</code> que es el valor por defecto)</p>
+<pre class="r"><code>item.list &lt;- itemFrequency(titanic.trans)
+item.list</code></pre>
+<pre><code>##        clase=primera        clase=segunda 
+##           0.27037392           0.25023969 
+##        clase=tercera     superviviente=No 
+##           0.47938639           0.59252157 
+##     superviviente=Si           sexo=mujer 
+##           0.40747843           0.37008629 
+##          sexo=hombre           edad=Child 
+##           0.62991371           0.14765101 
+##           edad=Adult             edad=Old 
+##           0.83988495           0.01246405 
+## embarque=Southampton   embarque=Cherbourg 
+##           0.74880153           0.20325983 
+##  embarque=Queenstown 
+##           0.04793864</code></pre>
+<pre class="r"><code>itemFrequencyPlot(titanic.trans, topN = length(item.list), col = &quot;lightcyan2&quot;,
+                  xlab=&quot;Items&quot;, main = &quot;Frecuencia relativa de los items&quot;)</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-8-1.png" width="672" style="display: block; margin: auto;" /> Por último, el paquete <code>arules</code> nos proporciona la función <code>write()</code> para generar ficheros que contengan la información sobre las transacciones y los items. La función <code>write()</code> tiene los siguientes parámetros:</p>
+<ul>
+<li>El objeto de tipo <code>transactions</code> que se va a exportar.</li>
+<li><strong>file</strong>: nombre del fichero que se va a generar.</li>
+<li><strong>format</strong>: string indicando el formato de exportación de la base de datos de transacciones, <code>basket</code> o <code>single</code>.</li>
+<li><strong>sep</strong>: para indicar qué caraácter hace de separador de los campos (por defecto un espacio).</li>
+<li>**quote*: <code>TRUE</code> si queremos que los campos aparezcan entre comillas.</li>
+</ul>
+<p>Por ejemplo, con <code>quote=TRUE</code> y <code>sep=","</code>, estaríamos generando un fichero en con el formato <code>csv</code>.</p>
+<div class="alert alert-info">
+<p><strong>Ejercicio 3: Utilizando la función <code>write()</code> genera dos ficheros en formato <code>csv</code> denominados <code>titanic.basket</code> y <code>titanic.single</code>, cada uno conteniendo las transacciones en los formatos indicados en su nombre.</strong></p>
+</div>
+<pre class="r"><code>write(titanic.trans, file = &quot;Datos/titanic.single&quot;, format = &quot;single&quot;)
+write(titanic.trans, file = &quot;Datos/titanic.basket&quot;, format = &quot;basket&quot;)</code></pre>
+</div>
+<div id="descubrimiento-de-reglas-de-asociación" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Descubrimiento de reglas de asociación</h1>
+<p>El paquete <code>arules</code> nos ofrece dos funciones para descubrir itemsets frecuentes y reglas de asociación: <code>apriori()</code><span class="citation">[@AgrawalIS93]</span> y <code>eclat()</code><span class="citation">[@ZakiPOL97]</span>. Ambas funciones se basan en las implementaciones desarrolladas por Christian Borgelt <span class="citation">[@borgelt2003efficient]</span>. La función <code>eclat()</code> sólo nos devuelve los itemsets frecuentes, con lo que es necesario utilizar la función <code>ruleInduction()</code> para generar las reglas de asociación a partir del conjunto de itemsets frecuentes. La función <code>apriori()</code> nos permite obtener tanto reglas de asociación como itemsets frecuentes.</p>
+<p>La función <code>apriori()</code> tiene los siguientes parámetros:</p>
+<ul>
+<li>Un objeto del tipo <code>transactions</code> con la base de datos de transacciones.</li>
+<li><strong>parameter</strong>: lista en la que se indican los distintos parámetros del algoritmo.</li>
+<li><strong>appearance</strong>: lista que nos permite definir patrones de reglas para restringir el espacio de búsqueda de reglas.</li>
+<li><strong>control</strong>: lista que nos permite modificar la forma en la que se ejecuta el algoritmo.</li>
+</ul>
+<p>A través del parámetro <code>parameter</code> podemos indicar el soporte, número máximo/mínimos de items en cada itemsets, el objeto del algoritmo (<code>itemsets</code>, <code>rules</code>, …), generar medidas de calidad adicionales, etc. El parámetro <code>appearance</code> nos permite definir qué items pueden aparecer (no aparecer) en los itemsets o reglas. El parámetro <code>control</code> nos permite definir aspectos internos de algoritmo, como la ordenación de los itemsets, si se construye un árbol con las transacciones, aspectos relacionados con el uso de memoria, etc.</p>
+<p>Por ejemplo, para generar el conjunto de itemsets frecuentes, podemos utilizar el siguiente código:</p>
+<pre class="r"><code>titanic.itemsets &lt;- apriori(titanic.trans, 
+                            parameter = list(target = &quot;frequent itemset&quot;))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval
+##          NA    0.1    1 none FALSE
+##  originalSupport maxtime support minlen maxlen
+##             TRUE       5     0.1      1     10
+##             target  ext
+##  frequent itemsets TRUE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 104 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[13 item(s), 1043 transaction(s)] done [0.00s].
+## sorting and recoding items ... [11 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 done [0.00s].
+## sorting transactions ... done [0.00s].
+## writing ... [87 set(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<p>Si lo que queremos es generar reglas de asociaciones con un <em>soporte</em> superior a 0.2, hubiera sido suficiente con:</p>
+<pre class="r"><code>titanic.rules &lt;- apriori(titanic.trans, 
+                         parameter = list(support = 0.2))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval
+##         0.8    0.1    1 none FALSE
+##  originalSupport maxtime support minlen maxlen
+##             TRUE       5     0.2      1     10
+##  target  ext
+##   rules TRUE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 208 
+## 
+## set item appearances ...[0 item(s)] done [0.00s].
+## set transactions ...[13 item(s), 1043 transaction(s)] done [0.00s].
+## sorting and recoding items ... [10 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 done [0.00s].
+## writing ... [43 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<p>Supongamos qué solo nos interesan generar reglas que solo contengan en el consecuente la información relativa a la supervivencia:</p>
+<pre class="r"><code>reglas.sup &lt;- apriori(titanic.trans,
+                      appearance = list(rhs=c(&quot;superviviente=Si&quot;,
+                                              &quot;superviviente=No&quot;),
+                                        default=&quot;lhs&quot;))</code></pre>
+<pre><code>## Apriori
+## 
+## Parameter specification:
+##  confidence minval smax arem  aval
+##         0.8    0.1    1 none FALSE
+##  originalSupport maxtime support minlen maxlen
+##             TRUE       5     0.1      1     10
+##  target  ext
+##   rules TRUE
+## 
+## Algorithmic control:
+##  filter tree heap memopt load sort verbose
+##     0.1 TRUE TRUE  FALSE TRUE    2    TRUE
+## 
+## Absolute minimum support count: 104 
+## 
+## set item appearances ...[2 item(s)] done [0.00s].
+## set transactions ...[13 item(s), 1043 transaction(s)] done [0.00s].
+## sorting and recoding items ... [11 item(s)] done [0.00s].
+## creating transaction tree ... done [0.00s].
+## checking subsets of size 1 2 3 4 5 done [0.00s].
+## writing ... [13 rule(s)] done [0.00s].
+## creating S4 object  ... done [0.00s].</code></pre>
+<p>Con <code>rhs=c("superviviente=Si", "superviviente=No")</code> estamos diciendo que sólo queremos las reglas que contengan los items <code>superviviente=Si</code> y <code>superviviente=No</code> en el consecuente (<code>rhs</code>, right-hand side). Con <code>default="lhs"</code> estamos indicando que el resto de items que no se han incluido de forma explícita sólo pueden aparecer en el antecedente (<code>lhs</code>, left-hand side). Otro términos que se pueden utilizar son <code>none</code>, <code>both</code> y <code>items</code>.</p>
+<div class="alert alert-info">
+<p><strong>Ejercicio 4: Partiendo de la base de transacciones <code>titanic.trans</code> obtenida en el ejercicio 2:</strong></p>
+<ol style="list-style-type: decimal">
+<li>Aplica las funciones <code>apriori()</code> y <code>eclat()</code> y genera los objetos <code>titanic.rules</code> y <code>titanic.eclat</code> respectivamente.</li>
+<li>Indica cuáles son los valores de los parámetros por defecto.</li>
+<li>Genera una tabla en R en la que en cada fila indique un valor real entre 0 y 1 (empezando por 0.1 y con incrementos de 0.1), el número de reglas generadas para un soporte igual a dicho número en la segunda columna y lo mismo pero para la confianza en la tercera columna. Para poder realizar esta cuestión hay que utilizar la función <code>length()</code> sobre el conjunto de reglas.<br />
+</li>
+<li>Representa gráficamente la tabla anterior.</li>
+<li>Genera un conjunto de reglas de asociación para determinar qué items están relacionados con el sexo.</li>
+</ol>
+</div>
+</div>
+<div id="análisis-de-resultados" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Análisis de resultados</h1>
+<p>Existen muchas formas de explotar los resultados devueltos por las funciones <code>apriori()</code> y <code>eclat()</code>. Esto lo podemos hacer mediante las funciones <code>inspect()</code> y <code>subset()</code>. La función <code>inspect()</code>, simplemente nos muestra por pantalla el conjunto de reglas/itemsets generados. Mediante los parámetros que nos ofrece podemos modificar la apariencia de las reglas (se peuede definir que caracteres utilizar para separar items, para separar el antecedente del consecuente y para forzar saltos de líneas en el caso de que las reglas no quepan en una línea).</p>
+<pre class="r"><code>inspect(titanic.rules[1:5])</code></pre>
+<pre><code>##     lhs                     rhs                      support confidence  coverage      lift count
+## [1] {}                   =&gt; {edad=Adult}           0.8398849  0.8398849 1.0000000 1.0000000   876
+## [2] {embarque=Cherbourg} =&gt; {edad=Adult}           0.1706616  0.8396226 0.2032598 0.9996877   178
+## [3] {clase=segunda}      =&gt; {embarque=Southampton} 0.2224353  0.8888889 0.2502397 1.1870821   232
+## [4] {clase=segunda}      =&gt; {edad=Adult}           0.2166826  0.8659004 0.2502397 1.0309750   226
+## [5] {clase=primera}      =&gt; {edad=Adult}           0.2483221  0.9184397 0.2703739 1.0935304   259</code></pre>
+<pre class="r"><code>titanic.rules</code></pre>
+<pre><code>## set of 80 rules</code></pre>
+<p>Para visualizar las reglas o itemsets podemos utilizar también la función <code>inspectDT()</code>del paquete <code>arulesViz</code>.</p>
+<pre class="r"><code>inspectDT(titanic.rules)</code></pre>
+<div id="htmlwidget-0d9b7c8b08d01c9103b6" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-0d9b7c8b08d01c9103b6">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.103547459252157\" data-max=\"0.839884947267498\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.8\" data-max=\"0.967213114754099\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.116970278044103\" data-max=\"1\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.952511415525114\" data-max=\"2.37365477338476\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"108\" data-max=\"876\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["[1]","[2]","[3]","[4]","[5]","[6]","[7]","[8]","[9]","[10]","[11]","[12]","[13]","[14]","[15]","[16]","[17]","[18]","[19]","[20]","[21]","[22]","[23]","[24]","[25]","[26]","[27]","[28]","[29]","[30]","[31]","[32]","[33]","[34]","[35]","[36]","[37]","[38]","[39]","[40]","[41]","[42]","[43]","[44]","[45]","[46]","[47]","[48]","[49]","[50]","[51]","[52]","[53]","[54]","[55]","[56]","[57]","[58]","[59]","[60]","[61]","[62]","[63]","[64]","[65]","[66]","[67]","[68]","[69]","[70]","[71]","[72]","[73]","[74]","[75]","[76]","[77]","[78]","[79]","[80]"],["{}","{embarque=Cherbourg}","{clase=segunda}","{clase=segunda}","{clase=primera}","{sexo=mujer}","{superviviente=Si}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{sexo=hombre}","{embarque=Southampton}","{clase=primera,embarque=Cherbourg}","{superviviente=Si,embarque=Cherbourg}","{clase=segunda,superviviente=No}","{clase=segunda,sexo=hombre}","{clase=segunda,superviviente=No}","{clase=segunda,superviviente=No}","{clase=segunda,sexo=hombre}","{clase=segunda,sexo=hombre}","{clase=segunda,embarque=Southampton}","{clase=segunda,edad=Adult}","{clase=primera,sexo=mujer}","{clase=primera,sexo=mujer}","{clase=primera,superviviente=Si}","{clase=primera,sexo=hombre}","{clase=primera,embarque=Southampton}","{superviviente=Si,sexo=mujer}","{sexo=mujer,embarque=Southampton}","{superviviente=Si,embarque=Southampton}","{clase=tercera,sexo=hombre}","{clase=tercera,superviviente=No}","{clase=tercera,superviviente=No}","{clase=tercera,sexo=hombre}","{clase=tercera,sexo=hombre}","{clase=tercera,embarque=Southampton}","{clase=tercera,edad=Adult}","{superviviente=No,sexo=hombre}","{superviviente=No,embarque=Southampton}","{sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre}","{superviviente=No,edad=Adult}","{sexo=hombre,edad=Adult}","{superviviente=No,embarque=Southampton}","{superviviente=No,edad=Adult}","{sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,edad=Adult}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,superviviente=No,edad=Adult}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=primera,superviviente=Si,sexo=mujer}","{clase=primera,sexo=mujer,edad=Adult}","{superviviente=Si,sexo=mujer,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,sexo=hombre,edad=Adult}","{clase=tercera,superviviente=No,embarque=Southampton}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult}","{superviviente=No,sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre,edad=Adult}","{superviviente=No,edad=Adult,embarque=Southampton}","{sexo=hombre,edad=Adult,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,edad=Adult,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,edad=Adult}","{clase=tercera,superviviente=No,edad=Adult,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}"],["{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{superviviente=Si}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{superviviente=Si}","{edad=Adult}","{embarque=Southampton}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}"],[0.839884947267498,0.170661553211889,0.222435282837967,0.216682646212848,0.248322147651007,0.300095877277085,0.327900287631831,0.500479386385427,0.480345158197507,0.511984659635666,0.539789069990412,0.63183125599233,0.115052732502397,0.103547459252157,0.129434324065197,0.129434324065197,0.12751677852349,0.134228187919463,0.135186960690316,0.135186960690316,0.193672099712368,0.193672099712368,0.120805369127517,0.116970278044104,0.157238734419942,0.131351869606903,0.13039309683605,0.229146692233941,0.206136145733461,0.214765100671141,0.277085330776606,0.292425695110259,0.286673058485139,0.277085330776606,0.273250239693193,0.307766059443912,0.307766059443912,0.407478427612656,0.407478427612656,0.407478427612656,0.441035474592522,0.441035474592522,0.441035474592522,0.417066155321189,0.417066155321189,0.425695110258869,0.116970278044104,0.116970278044104,0.116970278044104,0.123681687440077,0.123681687440077,0.123681687440077,0.12176414189837,0.12176414189837,0.119846596356663,0.119846596356663,0.11313518696069,0.11313518696069,0.150527325023969,0.232981783317354,0.232981783317354,0.230105465004794,0.230105465004794,0.230105465004794,0.239693192713327,0.239693192713327,0.230105465004794,0.230105465004794,0.361457334611697,0.361457334611697,0.361457334611697,0.361457334611697,0.111217641418984,0.111217641418984,0.111217641418984,0.111217641418984,0.196548418024928,0.196548418024928,0.196548418024928,0.196548418024928],[0.839884947267498,0.839622641509434,0.888888888888889,0.865900383141762,0.918439716312057,0.810880829015544,0.804705882352941,0.844660194174757,0.810679611650485,0.864077669902913,0.856925418569254,0.843790012804097,0.9375,0.818181818181818,0.924657534246575,0.854430379746835,0.910958904109589,0.958904109589041,0.892405063291139,0.892405063291139,0.870689655172414,0.893805309734513,0.961832061068702,0.931297709923664,0.916201117318436,0.907284768211921,0.900662251655629,0.824137931034483,0.814393939393939,0.8,0.830459770114943,0.826558265582656,0.81029810298103,0.830459770114943,0.818965517241379,0.806532663316583,0.820971867007673,0.814176245210728,0.848303393213573,0.822050290135397,0.881226053639847,0.861423220973783,0.817051509769094,0.868263473053892,0.814606741573034,0.858800773694391,0.903703703703704,0.917293233082707,0.865248226950355,0.955555555555556,0.921428571428571,0.914893617021277,0.954887218045113,0.907142857142857,0.886524822695035,0.886524822695035,0.936507936507937,0.967213114754098,0.835106382978723,0.84083044982699,0.84083044982699,0.830449826989619,0.802675585284281,0.842105263157895,0.819672131147541,0.836120401337793,0.830449826989619,0.842105263157895,0.887058823529412,0.819565217391304,0.866666666666667,0.849099099099099,0.950819672131147,0.89922480620155,0.913385826771654,0.928,0.843621399176955,0.854166666666667,0.82,0.854166666666667],[1,0.203259827420901,0.250239693192713,0.250239693192713,0.270373921380633,0.370086289549377,0.407478427612656,0.592521572387344,0.592521572387344,0.592521572387344,0.629913710450623,0.748801534036433,0.122722914669223,0.126558005752637,0.139980824544583,0.151486097794823,0.139980824544583,0.139980824544583,0.151486097794823,0.151486097794823,0.222435282837967,0.216682646212848,0.125599232981783,0.125599232981783,0.171620325982742,0.144774688398849,0.144774688398849,0.278044103547459,0.253116011505273,0.268456375838926,0.333652924256951,0.353787152444871,0.353787152444871,0.333652924256951,0.333652924256951,0.381591562799616,0.374880153403643,0.500479386385427,0.480345158197507,0.49568552253116,0.500479386385427,0.511984659635666,0.539789069990412,0.480345158197507,0.511984659635666,0.49568552253116,0.129434324065197,0.12751677852349,0.135186960690316,0.129434324065197,0.134228187919463,0.135186960690316,0.12751677852349,0.134228187919463,0.135186960690316,0.135186960690316,0.120805369127517,0.116970278044104,0.180249280920422,0.277085330776606,0.277085330776606,0.277085330776606,0.286673058485139,0.273250239693193,0.292425695110259,0.286673058485139,0.277085330776606,0.273250239693193,0.407478427612656,0.441035474592522,0.417066155321189,0.425695110258869,0.116970278044104,0.123681687440077,0.12176414189837,0.119846596356663,0.232981783317354,0.230105465004794,0.239693192713327,0.230105465004794],[1,0.999687688463858,1.18708208849054,1.03097499956262,1.0935303928236,0.965466557834717,0.958114423851732,1.34091412865186,1.0826361523066,1.02880480560358,1.02028905430106,1.00464952437748,1.11622431506849,0.974159402241594,1.46791142803528,1.44202408750154,1.2165558732219,1.14170888847188,1.19177782460007,1.06253251257153,1.03667729491419,1.19364780800653,2.36044903457566,1.10883962494336,1.09086502895334,1.08024887356739,1.07236384529317,0.981250984096993,0.969649405008994,0.952511415525114,1.40156883532344,1.10384157618785,0.964772741334719,1.10905190810485,0.975092505117304,0.960289461003648,1.09638112328938,1.08730579225965,1.34669777644103,1.38737613691136,1.04922234468763,1.36752575262657,1.37893968396305,1.03378858720914,1.08788070609561,1.02252192575713,1.20686678996538,1.45622045982536,1.46028139273337,1.13772196854389,1.46278538812785,1.54406803002135,1.13692621965874,1.21145966709347,1.05553126720425,1.18392495527647,1.1150431253171,2.37365477338476,0.994310453706402,1.12290161225295,1.41907145496691,0.988766175285586,1.2742627632443,1.4212229603134,0.975933827382289,1.11661149628082,0.988766175285586,1.12460408383314,1.05616706956755,1.09450258865446,1.37584982242516,1.43302647307502,1.13208323976346,1.20088536858927,1.45001737796474,1.56618770226537,1.00444876637165,1.14071169440888,1.30176560121766,1.44157901833873],[876,178,232,226,259,313,342,522,501,534,563,659,120,108,135,135,133,140,141,141,202,202,126,122,164,137,136,239,215,224,289,305,299,289,285,321,321,425,425,425,460,460,460,435,435,444,122,122,122,129,129,129,127,127,125,125,118,118,157,243,243,240,240,240,250,250,240,240,377,377,377,377,116,116,116,116,205,205,205,205]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>LHS<\/th>\n      <th>RHS<\/th>\n      <th>support<\/th>\n      <th>confidence<\/th>\n      <th>coverage<\/th>\n      <th>lift<\/th>\n      <th>count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":4,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":5,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":6,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":7,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":8,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"className":"dt-right","targets":[3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render"],"jsHooks":[]}</script>
+<p>Utilizando la función <code>subset()</code> o accediendo directamente al objeto que contiene las reglas podemos seleccionar un subconjunto de las reglas de acuerdo con algún criterio. La función <code>subset()</code> requiere como primer parámetro el conjunto de reglas y el parámetro <code>subset</code> que consiste en una expresión lógica indicando la condición que tienen que cumplir las reglas/itemsets seleccionados. En la siguiente tabla se pueden apreciar los operadores permitidos:</p>
+<table>
+<thead>
+<tr class="header">
+<th align="center">Operador</th>
+<th align="left">Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="center"><code>&amp;</code></td>
+<td align="left">AND</td>
+</tr>
+<tr class="even">
+<td align="center"><code>||</code></td>
+<td align="left">OR</td>
+</tr>
+<tr class="odd">
+<td align="center"><code>%in%</code></td>
+<td align="left">¿contiene cualquiera de estos elementos?</td>
+</tr>
+<tr class="even">
+<td align="center"><code>%ain%</code></td>
+<td align="left">¿contiene todos estos elementos?</td>
+</tr>
+<tr class="odd">
+<td align="center"><code>%pin%</code></td>
+<td align="left">¿contiene parcialmente estos elementos?</td>
+</tr>
+</tbody>
+</table>
+<p>Por ejemplo, para encontrar el conjunto de reglas que nos permitan determinar cuál fue el destino de las personas qué embarcaron en Southampton, podemos utilizar el siguiente código:</p>
+<pre class="r"><code>reglas.sub = subset(titanic.rules,
+                    subset = lhs %pin% &quot;Southampton&quot; &amp; 
+                             rhs %pin% &quot;superviviente&quot;)
+inspectDT(reglas.sub)</code></pre>
+<div id="htmlwidget-e6d0fdc325545165b6e2" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e6d0fdc325545165b6e2">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"disabled\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.111217641418983\" data-max=\"0.407478427612656\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.822050290135396\" data-max=\"0.928\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.119846596356663\" data-max=\"0.495685522531161\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"1.38737613691136\" data-max=\"1.56618770226537\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"116\" data-max=\"425\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["[1]","[2]","[3]","[4]","[5]","[6]"],["{sexo=hombre,embarque=Southampton}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=tercera,sexo=hombre,embarque=Southampton}","{sexo=hombre,edad=Adult,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}"],["{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No}"],[0.407478427612656,0.116970278044104,0.232981783317354,0.361457334611697,0.111217641418984,0.196548418024928],[0.822050290135397,0.865248226950355,0.84083044982699,0.849099099099099,0.928,0.854166666666667],[0.49568552253116,0.135186960690316,0.277085330776606,0.425695110258869,0.119846596356663,0.230105465004794],[1.38737613691136,1.46028139273337,1.41907145496691,1.43302647307502,1.56618770226537,1.44157901833873],[425,122,243,377,116,205]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>LHS<\/th>\n      <th>RHS<\/th>\n      <th>support<\/th>\n      <th>confidence<\/th>\n      <th>coverage<\/th>\n      <th>lift<\/th>\n      <th>count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":4,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":5,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":6,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":7,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":8,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"className":"dt-right","targets":[3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render"],"jsHooks":[]}</script>
+<p>Si quisiera saber cuál es fue el destino de los hombres adultos con un <em>lift</em> superior a 1.4, tendríamos que utilizar el siguiente código:</p>
+<pre class="r"><code>reglas.sub2 = subset(titanic.rules,
+                    subset = lhs %ain% c(&quot;sexo=hombre&quot;,&quot;edad=Adult&quot;) &amp; 
+                             rhs %pin% &quot;superviviente&quot; &amp;
+                             lift &gt; 1.4)
+inspectDT(reglas.sub2)</code></pre>
+<div id="htmlwidget-10f90f201995289cbf9e" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-10f90f201995289cbf9e">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"disabled\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.111217641418983\" data-max=\"0.361457334611698\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.842105263157894\" data-max=\"0.928\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.119846596356663\" data-max=\"0.425695110258869\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"1.4212229603134\" data-max=\"1.56618770226537\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"116\" data-max=\"377\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["[1]","[2]","[3]","[4]","[5]"],["{clase=segunda,sexo=hombre,edad=Adult}","{clase=tercera,sexo=hombre,edad=Adult}","{sexo=hombre,edad=Adult,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}"],["{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No}"],[0.123681687440077,0.230105465004794,0.361457334611697,0.111217641418984,0.196548418024928],[0.914893617021277,0.842105263157895,0.849099099099099,0.928,0.854166666666667],[0.135186960690316,0.273250239693193,0.425695110258869,0.119846596356663,0.230105465004794],[1.54406803002135,1.4212229603134,1.43302647307502,1.56618770226537,1.44157901833873],[129,240,377,116,205]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>LHS<\/th>\n      <th>RHS<\/th>\n      <th>support<\/th>\n      <th>confidence<\/th>\n      <th>coverage<\/th>\n      <th>lift<\/th>\n      <th>count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":4,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":5,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":6,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":7,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":8,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"className":"dt-right","targets":[3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render"],"jsHooks":[]}</script>
+<p>Algunas operaciones de selección también se pueden hacer también operando directamente sobre el conjunto de reglas. Por ejemplo, las siguientes instrucciones son equivalentes:</p>
+<pre class="r"><code>reglas.sop1 &lt;- subset(titanic.rules, subset = support &gt; 0.5)
+reglas.sop2 &lt;- titanic.rules[quality(titanic.rules)$support &gt; 0.5]
+match(reglas.sop1,reglas.sop2)</code></pre>
+<pre><code>## [1] 1 2 3 4 5</code></pre>
+<pre class="r"><code>setequal(reglas.sop1,reglas.sop2)</code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<p>La función <code>match()</code> nos indica qué reglas/itemsets son idénticas en los dos conjuntos. Funciones parecidas a esta que nos permiten manipular conjuntos de reglas son: <code>union()</code>, <code>intersect()</code>, <code>setequal()</code>, <code>setdiff()</code> y <code>is.element()</code>. Para manipular conjuntos de itemsets tenemos las funciones: <code>itemUnion()</code>, <code>itemSetdiff()</code> e <code>itemIntersect()</code>. Otra función interesante es la función <code>sort()</code> que nos permite ordenar las reglas por las diferentes medidas de calidad. Por ejemplo, para ordenar en orden decreciente las reglas según su soporte:</p>
+<pre class="r"><code>reglas.ord &lt;- sort(titanic.rules, by = &quot;support&quot;)
+inspectDT(reglas.ord)</code></pre>
+<div id="htmlwidget-3470c4276c577f3cb712" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-3470c4276c577f3cb712">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.103547459252157\" data-max=\"0.839884947267498\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.8\" data-max=\"0.967213114754099\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.116970278044103\" data-max=\"1\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.952511415525114\" data-max=\"2.37365477338476\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"108\" data-max=\"876\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["[1]","[2]","[3]","[4]","[5]","[6]","[7]","[8]","[9]","[10]","[11]","[12]","[13]","[14]","[15]","[16]","[17]","[18]","[19]","[20]","[21]","[22]","[23]","[24]","[25]","[26]","[27]","[28]","[29]","[30]","[31]","[32]","[33]","[34]","[35]","[36]","[37]","[38]","[39]","[40]","[41]","[42]","[43]","[44]","[45]","[46]","[47]","[48]","[49]","[50]","[51]","[52]","[53]","[54]","[55]","[56]","[57]","[58]","[59]","[60]","[61]","[62]","[63]","[64]","[65]","[66]","[67]","[68]","[69]","[70]","[71]","[72]","[73]","[74]","[75]","[76]","[77]","[78]","[79]","[80]"],["{}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{superviviente=No,sexo=hombre}","{superviviente=No,edad=Adult}","{sexo=hombre,edad=Adult}","{sexo=hombre,embarque=Southampton}","{superviviente=No,embarque=Southampton}","{superviviente=No,edad=Adult}","{superviviente=No,sexo=hombre}","{superviviente=No,embarque=Southampton}","{sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre,edad=Adult}","{superviviente=No,edad=Adult,embarque=Southampton}","{sexo=hombre,edad=Adult,embarque=Southampton}","{superviviente=Si}","{clase=tercera,embarque=Southampton}","{clase=tercera,edad=Adult}","{sexo=mujer}","{clase=tercera,superviviente=No}","{clase=tercera,superviviente=No}","{clase=tercera,sexo=hombre}","{clase=tercera,sexo=hombre}","{clase=tercera,sexo=hombre}","{clase=primera}","{clase=tercera,superviviente=No,embarque=Southampton}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,sexo=hombre,edad=Adult}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult}","{superviviente=Si,sexo=mujer}","{clase=segunda}","{clase=segunda}","{superviviente=Si,embarque=Southampton}","{sexo=mujer,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,edad=Adult}","{clase=tercera,superviviente=No,edad=Adult,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}","{clase=segunda,embarque=Southampton}","{clase=segunda,edad=Adult}","{embarque=Cherbourg}","{clase=primera,superviviente=Si}","{superviviente=Si,sexo=mujer,embarque=Southampton}","{clase=segunda,sexo=hombre}","{clase=segunda,sexo=hombre}","{clase=segunda,superviviente=No}","{clase=primera,sexo=hombre}","{clase=primera,embarque=Southampton}","{clase=segunda,superviviente=No}","{clase=segunda,sexo=hombre}","{clase=segunda,superviviente=No}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,edad=Adult}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,superviviente=No,edad=Adult}","{clase=primera,sexo=mujer}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=primera,sexo=mujer}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=primera,embarque=Cherbourg}","{clase=primera,superviviente=Si,sexo=mujer}","{clase=primera,sexo=mujer,edad=Adult}","{clase=segunda,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,edad=Adult,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}","{superviviente=Si,embarque=Cherbourg}"],["{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{embarque=Southampton}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{embarque=Southampton}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{superviviente=Si}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{edad=Adult}","{superviviente=Si}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}"],[0.839884947267498,0.63183125599233,0.539789069990412,0.511984659635666,0.500479386385427,0.480345158197507,0.441035474592522,0.441035474592522,0.441035474592522,0.425695110258869,0.417066155321189,0.417066155321189,0.407478427612656,0.407478427612656,0.407478427612656,0.361457334611697,0.361457334611697,0.361457334611697,0.361457334611697,0.327900287631831,0.307766059443912,0.307766059443912,0.300095877277085,0.292425695110259,0.286673058485139,0.277085330776606,0.277085330776606,0.273250239693193,0.248322147651007,0.239693192713327,0.239693192713327,0.232981783317354,0.232981783317354,0.230105465004794,0.230105465004794,0.230105465004794,0.230105465004794,0.230105465004794,0.229146692233941,0.222435282837967,0.216682646212848,0.214765100671141,0.206136145733461,0.196548418024928,0.196548418024928,0.196548418024928,0.196548418024928,0.193672099712368,0.193672099712368,0.170661553211889,0.157238734419942,0.150527325023969,0.135186960690316,0.135186960690316,0.134228187919463,0.131351869606903,0.13039309683605,0.129434324065197,0.129434324065197,0.12751677852349,0.123681687440077,0.123681687440077,0.123681687440077,0.12176414189837,0.12176414189837,0.120805369127517,0.119846596356663,0.119846596356663,0.116970278044104,0.116970278044104,0.116970278044104,0.116970278044104,0.115052732502397,0.11313518696069,0.11313518696069,0.111217641418984,0.111217641418984,0.111217641418984,0.111217641418984,0.103547459252157],[0.839884947267498,0.843790012804097,0.856925418569254,0.864077669902913,0.844660194174757,0.810679611650485,0.881226053639847,0.861423220973783,0.817051509769094,0.858800773694391,0.868263473053892,0.814606741573034,0.814176245210728,0.848303393213573,0.822050290135397,0.887058823529412,0.819565217391304,0.866666666666667,0.849099099099099,0.804705882352941,0.806532663316583,0.820971867007673,0.810880829015544,0.826558265582656,0.81029810298103,0.830459770114943,0.830459770114943,0.818965517241379,0.918439716312057,0.819672131147541,0.836120401337793,0.84083044982699,0.84083044982699,0.830449826989619,0.802675585284281,0.842105263157895,0.830449826989619,0.842105263157895,0.824137931034483,0.888888888888889,0.865900383141762,0.8,0.814393939393939,0.843621399176955,0.854166666666667,0.82,0.854166666666667,0.870689655172414,0.893805309734513,0.839622641509434,0.916201117318436,0.835106382978723,0.892405063291139,0.892405063291139,0.958904109589041,0.907284768211921,0.900662251655629,0.924657534246575,0.854430379746835,0.910958904109589,0.955555555555556,0.921428571428571,0.914893617021277,0.954887218045113,0.907142857142857,0.961832061068702,0.886524822695035,0.886524822695035,0.931297709923664,0.903703703703704,0.917293233082707,0.865248226950355,0.9375,0.936507936507937,0.967213114754098,0.950819672131147,0.89922480620155,0.913385826771654,0.928,0.818181818181818],[1,0.748801534036433,0.629913710450623,0.592521572387344,0.592521572387344,0.592521572387344,0.500479386385427,0.511984659635666,0.539789069990412,0.49568552253116,0.480345158197507,0.511984659635666,0.500479386385427,0.480345158197507,0.49568552253116,0.407478427612656,0.441035474592522,0.417066155321189,0.425695110258869,0.407478427612656,0.381591562799616,0.374880153403643,0.370086289549377,0.353787152444871,0.353787152444871,0.333652924256951,0.333652924256951,0.333652924256951,0.270373921380633,0.292425695110259,0.286673058485139,0.277085330776606,0.277085330776606,0.277085330776606,0.286673058485139,0.273250239693193,0.277085330776606,0.273250239693193,0.278044103547459,0.250239693192713,0.250239693192713,0.268456375838926,0.253116011505273,0.232981783317354,0.230105465004794,0.239693192713327,0.230105465004794,0.222435282837967,0.216682646212848,0.203259827420901,0.171620325982742,0.180249280920422,0.151486097794823,0.151486097794823,0.139980824544583,0.144774688398849,0.144774688398849,0.139980824544583,0.151486097794823,0.139980824544583,0.129434324065197,0.134228187919463,0.135186960690316,0.12751677852349,0.134228187919463,0.125599232981783,0.135186960690316,0.135186960690316,0.125599232981783,0.129434324065197,0.12751677852349,0.135186960690316,0.122722914669223,0.120805369127517,0.116970278044104,0.116970278044104,0.123681687440077,0.12176414189837,0.119846596356663,0.126558005752637],[1,1.00464952437748,1.02028905430106,1.02880480560358,1.34091412865186,1.0826361523066,1.04922234468763,1.36752575262657,1.37893968396305,1.02252192575713,1.03378858720914,1.08788070609561,1.08730579225965,1.34669777644103,1.38737613691136,1.05616706956755,1.09450258865446,1.37584982242516,1.43302647307502,0.958114423851732,0.960289461003648,1.09638112328938,0.965466557834717,1.10384157618785,0.964772741334719,1.40156883532344,1.10905190810485,0.975092505117304,1.0935303928236,0.975933827382289,1.11661149628082,1.12290161225295,1.41907145496691,0.988766175285586,1.2742627632443,1.4212229603134,0.988766175285586,1.12460408383314,0.981250984096993,1.18708208849054,1.03097499956262,0.952511415525114,0.969649405008994,1.00444876637165,1.14071169440888,1.30176560121766,1.44157901833873,1.03667729491419,1.19364780800653,0.999687688463858,1.09086502895334,0.994310453706402,1.19177782460007,1.06253251257153,1.14170888847188,1.08024887356739,1.07236384529317,1.46791142803528,1.44202408750154,1.2165558732219,1.13772196854389,1.46278538812785,1.54406803002135,1.13692621965874,1.21145966709347,2.36044903457566,1.05553126720425,1.18392495527647,1.10883962494336,1.20686678996538,1.45622045982536,1.46028139273337,1.11622431506849,1.1150431253171,2.37365477338476,1.13208323976346,1.20088536858927,1.45001737796474,1.56618770226537,0.974159402241594],[876,659,563,534,522,501,460,460,460,444,435,435,425,425,425,377,377,377,377,342,321,321,313,305,299,289,289,285,259,250,250,243,243,240,240,240,240,240,239,232,226,224,215,205,205,205,205,202,202,178,164,157,141,141,140,137,136,135,135,133,129,129,129,127,127,126,125,125,122,122,122,122,120,118,118,116,116,116,116,108]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>LHS<\/th>\n      <th>RHS<\/th>\n      <th>support<\/th>\n      <th>confidence<\/th>\n      <th>coverage<\/th>\n      <th>lift<\/th>\n      <th>count<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":4,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":5,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":6,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":7,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":8,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"className":"dt-right","targets":[3,4,5,6,7]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render"],"jsHooks":[]}</script>
+<p>Para ordenar en orden decreciente sólo habría que incluir el parámetro <code>decreasing=FALSE</code>.</p>
+<p>Como se puede observar, por defecto sólo se trabajo con tres medidas de calidad: soporte, confianza y <em>lift.</em> Sin embargo, gracias a la función <code>interestMeasures()</code> podemos obtener muchas más medidas. Por ejemplo, si queremos obtener las medidas para los índices de <em>jacaard</em>, <em>coseno</em>, <em>kappa</em> y el <em>índice de correlación</em> hay que ejecutar la siguiente instrucción:</p>
+<pre class="r"><code>head(interestMeasure(titanic.rules,
+                c(&quot;jaccard&quot;, &quot;cosine&quot;, &quot;kappa&quot;, &quot;phi&quot;), 
+                titanic.trans))</code></pre>
+<pre><code>##     jaccard    cosine         kappa           phi
+## 1 0.8398849 0.9164524  0.0000000000            NA
+## 2 0.1956044 0.4130475 -0.0001519598 -0.0003612844
+## 3 0.2864198 0.5138569  0.1123064418  0.1866052929
+## 4 0.2480790 0.4726462  0.0194395150  0.0409847229
+## 5 0.2880979 0.5211025  0.0647443711  0.1304003634
+## 6 0.3298209 0.5382681 -0.0364909671 -0.0606240093</code></pre>
+<p>Si queremos añadir dichas medidas al conjunto de medidas ya registradas en el conjunto de reglas, bastaría con la siguiente instrucción:</p>
+<pre class="r"><code>quality(titanic.rules) &lt;- cbind(quality(titanic.rules),
+                                coseno = interestMeasure(titanic.rules,
+                                            c(&quot;cosine&quot;), 
+                                            titanic.trans))
+inspectDT(titanic.rules)</code></pre>
+<div id="htmlwidget-8a82b845762b8948a840" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-8a82b845762b8948a840">{"x":{"filter":"top","filterHTML":"<tr>\n  <td><\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"character\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.103547459252157\" data-max=\"0.839884947267498\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.8\" data-max=\"0.967213114754099\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.116970278044103\" data-max=\"1\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.952511415525114\" data-max=\"2.37365477338476\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"integer\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"108\" data-max=\"876\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n  <td data-type=\"number\" style=\"vertical-align: top;\">\n    <div class=\"form-group has-feedback\" style=\"margin-bottom: auto;\">\n      <input type=\"search\" placeholder=\"All\" class=\"form-control\" style=\"width: 100%;\"/>\n      <span class=\"glyphicon glyphicon-remove-circle form-control-feedback\"><\/span>\n    <\/div>\n    <div style=\"display: none; position: absolute; width: 200px;\">\n      <div data-min=\"0.317603102958263\" data-max=\"0.9164523704304\" data-scale=\"15\"><\/div>\n      <span style=\"float: left;\"><\/span>\n      <span style=\"float: right;\"><\/span>\n    <\/div>\n  <\/td>\n<\/tr>","data":[["[1]","[2]","[3]","[4]","[5]","[6]","[7]","[8]","[9]","[10]","[11]","[12]","[13]","[14]","[15]","[16]","[17]","[18]","[19]","[20]","[21]","[22]","[23]","[24]","[25]","[26]","[27]","[28]","[29]","[30]","[31]","[32]","[33]","[34]","[35]","[36]","[37]","[38]","[39]","[40]","[41]","[42]","[43]","[44]","[45]","[46]","[47]","[48]","[49]","[50]","[51]","[52]","[53]","[54]","[55]","[56]","[57]","[58]","[59]","[60]","[61]","[62]","[63]","[64]","[65]","[66]","[67]","[68]","[69]","[70]","[71]","[72]","[73]","[74]","[75]","[76]","[77]","[78]","[79]","[80]"],["{}","{embarque=Cherbourg}","{clase=segunda}","{clase=segunda}","{clase=primera}","{sexo=mujer}","{superviviente=Si}","{superviviente=No}","{superviviente=No}","{superviviente=No}","{sexo=hombre}","{embarque=Southampton}","{clase=primera,embarque=Cherbourg}","{superviviente=Si,embarque=Cherbourg}","{clase=segunda,superviviente=No}","{clase=segunda,sexo=hombre}","{clase=segunda,superviviente=No}","{clase=segunda,superviviente=No}","{clase=segunda,sexo=hombre}","{clase=segunda,sexo=hombre}","{clase=segunda,embarque=Southampton}","{clase=segunda,edad=Adult}","{clase=primera,sexo=mujer}","{clase=primera,sexo=mujer}","{clase=primera,superviviente=Si}","{clase=primera,sexo=hombre}","{clase=primera,embarque=Southampton}","{superviviente=Si,sexo=mujer}","{sexo=mujer,embarque=Southampton}","{superviviente=Si,embarque=Southampton}","{clase=tercera,sexo=hombre}","{clase=tercera,superviviente=No}","{clase=tercera,superviviente=No}","{clase=tercera,sexo=hombre}","{clase=tercera,sexo=hombre}","{clase=tercera,embarque=Southampton}","{clase=tercera,edad=Adult}","{superviviente=No,sexo=hombre}","{superviviente=No,embarque=Southampton}","{sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre}","{superviviente=No,edad=Adult}","{sexo=hombre,edad=Adult}","{superviviente=No,embarque=Southampton}","{superviviente=No,edad=Adult}","{sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre}","{clase=segunda,superviviente=No,edad=Adult}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,embarque=Southampton}","{clase=segunda,superviviente=No,edad=Adult}","{clase=segunda,sexo=hombre,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult}","{clase=primera,superviviente=Si,sexo=mujer}","{clase=primera,sexo=mujer,edad=Adult}","{superviviente=Si,sexo=mujer,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,sexo=hombre,edad=Adult}","{clase=tercera,superviviente=No,embarque=Southampton}","{clase=tercera,superviviente=No,edad=Adult}","{clase=tercera,sexo=hombre,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult}","{superviviente=No,sexo=hombre,embarque=Southampton}","{superviviente=No,sexo=hombre,edad=Adult}","{superviviente=No,edad=Adult,embarque=Southampton}","{sexo=hombre,edad=Adult,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=segunda,superviviente=No,sexo=hombre,edad=Adult}","{clase=segunda,superviviente=No,edad=Adult,embarque=Southampton}","{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,embarque=Southampton}","{clase=tercera,superviviente=No,sexo=hombre,edad=Adult}","{clase=tercera,superviviente=No,edad=Adult,embarque=Southampton}","{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}"],["{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{superviviente=Si}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{edad=Adult}","{superviviente=No}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{edad=Adult}","{embarque=Southampton}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{superviviente=Si}","{edad=Adult}","{embarque=Southampton}","{superviviente=No}","{edad=Adult}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}","{edad=Adult}","{embarque=Southampton}","{sexo=hombre}","{superviviente=No}"],[0.839884947267498,0.170661553211889,0.222435282837967,0.216682646212848,0.248322147651007,0.300095877277085,0.327900287631831,0.500479386385427,0.480345158197507,0.511984659635666,0.539789069990412,0.63183125599233,0.115052732502397,0.103547459252157,0.129434324065197,0.129434324065197,0.12751677852349,0.134228187919463,0.135186960690316,0.135186960690316,0.193672099712368,0.193672099712368,0.120805369127517,0.116970278044104,0.157238734419942,0.131351869606903,0.13039309683605,0.229146692233941,0.206136145733461,0.214765100671141,0.277085330776606,0.292425695110259,0.286673058485139,0.277085330776606,0.273250239693193,0.307766059443912,0.307766059443912,0.407478427612656,0.407478427612656,0.407478427612656,0.441035474592522,0.441035474592522,0.441035474592522,0.417066155321189,0.417066155321189,0.425695110258869,0.116970278044104,0.116970278044104,0.116970278044104,0.123681687440077,0.123681687440077,0.123681687440077,0.12176414189837,0.12176414189837,0.119846596356663,0.119846596356663,0.11313518696069,0.11313518696069,0.150527325023969,0.232981783317354,0.232981783317354,0.230105465004794,0.230105465004794,0.230105465004794,0.239693192713327,0.239693192713327,0.230105465004794,0.230105465004794,0.361457334611697,0.361457334611697,0.361457334611697,0.361457334611697,0.111217641418984,0.111217641418984,0.111217641418984,0.111217641418984,0.196548418024928,0.196548418024928,0.196548418024928,0.196548418024928],[0.839884947267498,0.839622641509434,0.888888888888889,0.865900383141762,0.918439716312057,0.810880829015544,0.804705882352941,0.844660194174757,0.810679611650485,0.864077669902913,0.856925418569254,0.843790012804097,0.9375,0.818181818181818,0.924657534246575,0.854430379746835,0.910958904109589,0.958904109589041,0.892405063291139,0.892405063291139,0.870689655172414,0.893805309734513,0.961832061068702,0.931297709923664,0.916201117318436,0.907284768211921,0.900662251655629,0.824137931034483,0.814393939393939,0.8,0.830459770114943,0.826558265582656,0.81029810298103,0.830459770114943,0.818965517241379,0.806532663316583,0.820971867007673,0.814176245210728,0.848303393213573,0.822050290135397,0.881226053639847,0.861423220973783,0.817051509769094,0.868263473053892,0.814606741573034,0.858800773694391,0.903703703703704,0.917293233082707,0.865248226950355,0.955555555555556,0.921428571428571,0.914893617021277,0.954887218045113,0.907142857142857,0.886524822695035,0.886524822695035,0.936507936507937,0.967213114754098,0.835106382978723,0.84083044982699,0.84083044982699,0.830449826989619,0.802675585284281,0.842105263157895,0.819672131147541,0.836120401337793,0.830449826989619,0.842105263157895,0.887058823529412,0.819565217391304,0.866666666666667,0.849099099099099,0.950819672131147,0.89922480620155,0.913385826771654,0.928,0.843621399176955,0.854166666666667,0.82,0.854166666666667],[1,0.203259827420901,0.250239693192713,0.250239693192713,0.270373921380633,0.370086289549377,0.407478427612656,0.592521572387344,0.592521572387344,0.592521572387344,0.629913710450623,0.748801534036433,0.122722914669223,0.126558005752637,0.139980824544583,0.151486097794823,0.139980824544583,0.139980824544583,0.151486097794823,0.151486097794823,0.222435282837967,0.216682646212848,0.125599232981783,0.125599232981783,0.171620325982742,0.144774688398849,0.144774688398849,0.278044103547459,0.253116011505273,0.268456375838926,0.333652924256951,0.353787152444871,0.353787152444871,0.333652924256951,0.333652924256951,0.381591562799616,0.374880153403643,0.500479386385427,0.480345158197507,0.49568552253116,0.500479386385427,0.511984659635666,0.539789069990412,0.480345158197507,0.511984659635666,0.49568552253116,0.129434324065197,0.12751677852349,0.135186960690316,0.129434324065197,0.134228187919463,0.135186960690316,0.12751677852349,0.134228187919463,0.135186960690316,0.135186960690316,0.120805369127517,0.116970278044104,0.180249280920422,0.277085330776606,0.277085330776606,0.277085330776606,0.286673058485139,0.273250239693193,0.292425695110259,0.286673058485139,0.277085330776606,0.273250239693193,0.407478427612656,0.441035474592522,0.417066155321189,0.425695110258869,0.116970278044104,0.123681687440077,0.12176414189837,0.119846596356663,0.232981783317354,0.230105465004794,0.239693192713327,0.230105465004794],[1,0.999687688463858,1.18708208849054,1.03097499956262,1.0935303928236,0.965466557834717,0.958114423851732,1.34091412865186,1.0826361523066,1.02880480560358,1.02028905430106,1.00464952437748,1.11622431506849,0.974159402241594,1.46791142803528,1.44202408750154,1.2165558732219,1.14170888847188,1.19177782460007,1.06253251257153,1.03667729491419,1.19364780800653,2.36044903457566,1.10883962494336,1.09086502895334,1.08024887356739,1.07236384529317,0.981250984096993,0.969649405008994,0.952511415525114,1.40156883532344,1.10384157618785,0.964772741334719,1.10905190810485,0.975092505117304,0.960289461003648,1.09638112328938,1.08730579225965,1.34669777644103,1.38737613691136,1.04922234468763,1.36752575262657,1.37893968396305,1.03378858720914,1.08788070609561,1.02252192575713,1.20686678996538,1.45622045982536,1.46028139273337,1.13772196854389,1.46278538812785,1.54406803002135,1.13692621965874,1.21145966709347,1.05553126720425,1.18392495527647,1.1150431253171,2.37365477338476,0.994310453706402,1.12290161225295,1.41907145496691,0.988766175285586,1.2742627632443,1.4212229603134,0.975933827382289,1.11661149628082,0.988766175285586,1.12460408383314,1.05616706956755,1.09450258865446,1.37584982242516,1.43302647307502,1.13208323976346,1.20088536858927,1.45001737796474,1.56618770226537,1.00444876637165,1.14071169440888,1.30176560121766,1.44157901833873],[876,178,232,226,259,313,342,522,501,534,563,659,120,108,135,135,133,140,141,141,202,202,126,122,164,137,136,239,215,224,289,305,299,289,285,321,321,425,425,425,460,460,460,435,435,444,122,122,122,129,129,129,127,127,125,125,118,118,157,243,243,240,240,240,250,250,240,240,377,377,377,377,116,116,116,116,205,205,205,205],[0.916452370430399,0.413047519832821,0.513856925715007,0.472646158436222,0.521102500154822,0.538268087160197,0.560505125012421,0.819206860507913,0.721137319690262,0.72576323841077,0.742119181629587,0.796723898737524,0.358363861925622,0.317603102958263,0.435887741827324,0.432027097589368,0.393867091602088,0.391470963458499,0.401388617085489,0.378999394470743,0.448079756773466,0.480807942211534,0.533998985887243,0.360140638134527,0.414157260681975,0.37668648659572,0.373936950197211,0.474183948755253,0.447079177619913,0.452289962353424,0.623180683543527,0.56814755144094,0.525903368026405,0.554348279338592,0.51618239096887,0.543640049424811,0.580886303818106,0.665622756945777,0.740776816871081,0.751881537727826,0.680253096091731,0.77661275377575,0.779846983677635,0.656626401755398,0.673586092151106,0.659759489456039,0.375722695594032,0.412716018685106,0.413291084504194,0.37512047785632,0.4253466411838,0.437004507385582,0.372071022169832,0.384073361232098,0.355670957097238,0.376682062529661,0.355176874883462,0.518212192607449,0.386873225798574,0.511483743742284,0.57499373755976,0.476991090634931,0.541493144623848,0.571866391876989,0.483657621631457,0.517343381675995,0.476991090634931,0.508701823917229,0.617866760613107,0.628980117667198,0.705202814543289,0.719706835722502,0.354834648556836,0.365458121142581,0.401581265491529,0.41735800251747,0.44432287361494,0.473502987275265,0.505826026968364,0.532296980559166]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>LHS<\/th>\n      <th>RHS<\/th>\n      <th>support<\/th>\n      <th>confidence<\/th>\n      <th>coverage<\/th>\n      <th>lift<\/th>\n      <th>count<\/th>\n      <th>coseno<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"columnDefs":[{"targets":3,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":4,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":5,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":6,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":7,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":8,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"targets":9,"render":"function(data, type, row, meta) { return DTWidget.formatRound(data, 3, 3, \",\", \".\"); }"},{"className":"dt-right","targets":[3,4,5,6,7,8]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"orderCellsTop":true}},"evals":["options.columnDefs.0.render","options.columnDefs.1.render","options.columnDefs.2.render","options.columnDefs.3.render","options.columnDefs.4.render","options.columnDefs.5.render","options.columnDefs.6.render"],"jsHooks":[]}</script>
+<p>Otro conjunto importante de funciones son aquellas que nos permiten determinar el tipo de las reglas/itemsets. Para ello tenemos las siguientes funciones booleanas: <code>is.subset()</code>, <code>is.superset()</code>, <code>is.maximal()</code>, <code>is.redundant()</code>, <code>is.significant()</code> e <code>is.close()</code>.</p>
+<div class="alert alert-info">
+<p><strong>Ejercicio 5: Partiendo del del conjunto de reglas generado por el algoritmo <em>apriori</em> en el ejercicio 4.1:</strong></p>
+<ol style="list-style-type: decimal">
+<li>Selecciona el conjunto de reglas que permitan determinar si se sobrevive a partir de la ciudad de embarque ¿Cuántas reglas se han seleccionado?.</li>
+<li>Del conjunto anterior, selecciona las reglas con una confianza superior al 0.83.</li>
+<li>Calcula el índice gini, hyperlift e hyperConfidence. Agrégalos al conjunto de reglas <code>titanic.rules</code> y muestra por pantalla, para cada índice, las 5 reglas que lo tengan más alto.</li>
+<li>Genera diferentes conjuntos de reglas para las reglas no redundantes y maximales.</li>
+<li>Genera los conjuntos de los itemsets frecuentes maximales y cerrados.</li>
+</ol>
+</div>
+</div>
+<div id="visualización" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Visualización</h1>
+<p>El paquete <code>aruleViz</code> nos ofrece un gran abanico de posiblidades de analizar visualmente un conjunto de reglas de asociación. Los distintos gráficos que podemos generar se realizan a través de la función <code>plot()</code>:</p>
+<pre class="r"><code>plot(x ,method = ... , measure = &quot;suport&quot;, shading = &quot;lift&quot;,
+    engine = &#39;default&#39; , data = ..., control = ....)</code></pre>
+<p>donde:</p>
+<ul>
+<li><strong>x</strong> es el conjunto de reglas a visualizar.</li>
+<li><strong>method</strong> es la técnica de visualización que vamos a utilizar.</li>
+<li><strong>interactive</strong> indica si queremos realizar una exploración interactiva de las reglas o simplemente las queremos mostrar.</li>
+<li><strong>data</strong> es la base de datos de transacciones (sólo necesaria para algunas técnicas)</li>
+<li><strong>control</strong> agrupa a diferentes parámetros para personalizar el gráfico.</li>
+</ul>
+<div id="gráficos-de-dispersión" class="section level2" number="5.1">
+<h2><span class="header-section-number">5.1</span> Gráficos de dispersión</h2>
+<p>Es la forma más directa de visualizar un conjunto de reglas. Se representan las reglas en un gráfico bidimensional con una medida de calidad en cada eje. También se puede incorporar una tercera medida, que se representa mediante un código de colores:</p>
+<pre class="r"><code>plot(titanic.rules)</code></pre>
+<pre><code>## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-24-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Cualquier medida almacenada junto a las reglas (lo podemos saber con la instrucción <code>head(quality(titanic.rules))</code>) puede ser utiliza en el gráfico.</p>
+<pre class="r"><code>plot(titanic.rules, measure = c(&quot;support&quot;, &quot;lift&quot;), shading = &quot;coseno&quot;)</code></pre>
+<pre><code>## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-25-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Un tipo interesante de gráfico de dispersión es el gráfico de dos claves (<em>two-key plot</em>), en el que el código de color se utiliza para indicar el número de items de la regla. Para obtener este gráfico basta con indicar <code>shading = "order"</code>.</p>
+<pre class="r"><code>plot(titanic.rules, measure = c(&quot;support&quot;, &quot;lift&quot;), shading = &quot;order&quot;)</code></pre>
+<pre><code>## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-26-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Los gráficos de dispersión también permiten la inspección interactiva.</p>
+<pre class="r"><code>plot(titanic.rules, measure = c(&quot;support&quot;, &quot;lift&quot;), 
+     shading = &quot;order&quot;,
+     engine=&quot;htmlwidget&quot;)</code></pre>
+<pre><code>## To reduce overplotting, jitter is added! Use jitter = 0 to prevent jitter.</code></pre>
+<pre><code>## Warning: `arrange_()` is deprecated as of dplyr 0.7.0.
+## Please use `arrange()` instead.
+## See vignette(&#39;programming&#39;) for more help
+## This warning is displayed once every 8 hours.
+## Call `lifecycle::last_warnings()` to see where this warning was generated.</code></pre>
+<div id="htmlwidget-efe13fd9ca191a6623d6" style="width:672px;height:480px;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-efe13fd9ca191a6623d6">{"x":{"visdat":{"1d5440fa6e11":["function () ","plotlyVisDat"]},"cur_data":"1d5440fa6e11","attrs":{"1d5440fa6e11":{"x":[0.839898122848567,0.170668709531162,0.222430920702373,0.216691605105949,0.248324220186089,0.300077690073743,0.327906468677593,0.500479755173809,0.480335895819319,0.512003606164222,0.539773985938438,0.631841598196528,0.11503758715431,0.103552016125849,0.129453586697561,0.129424256073452,0.127525100252029,0.134220518570337,0.135193219048871,0.135187321764609,0.193677172795216,0.193683810340043,0.120801702905803,0.116961829583564,0.157225583752981,0.13136296394874,0.130399919509365,0.2291320087329,0.206143617963834,0.214763915355647,0.277086985012988,0.292422422616703,0.286688304523678,0.277095239481224,0.273253831626071,0.307766545122124,0.307759979334649,0.407494118841286,0.407473227161667,0.407484342654045,0.441017514220821,0.441044638836281,0.441040692599201,0.417083343321989,0.417052122040028,0.425691305207264,0.116982309587908,0.11697703318462,0.116954314507845,0.123684626474507,0.123677860874902,0.123684616394635,0.121762778599906,0.121775522480598,0.119842264014087,0.119840619159458,0.113153769252284,0.113144941661258,0.15051515386692,0.232998724636862,0.232983615793593,0.230102452304042,0.230094451901247,0.230088475262621,0.239708973110729,0.239699821447824,0.230110663709255,0.230102594664018,0.361439418858888,0.361474735616606,0.361449165578943,0.361460666252069,0.111231915859932,0.111224137263156,0.111200696578685,0.111227376238953,0.196565319070677,0.196556062138947,0.19654519478052,0.19655897711644],"y":[0.99999576230472,0.99970678743961,1.18708545105359,1.03098731285166,1.09353813932322,0.965478177968553,0.95809784338692,1.34093317625639,1.08264777341147,1.02878685093119,1.02026915202447,1.0046480902345,1.1162172240577,0.974178277787267,1.46790128768315,1.44203489196587,1.21653646646728,1.14171350334785,1.19178160562582,1.06254358681753,1.03668706193324,1.19364120404753,2.36044679595362,1.10885788216548,1.09087406444713,1.0802635274748,1.07237516296819,0.981235300906179,0.969659744867489,0.952514735965168,1.40155410086177,1.10382771225456,0.964772570185141,1.10905628666458,0.975110649083726,0.960306759857064,1.09638341115639,1.08730707775912,1.34670932231553,1.38738655879766,1.04921638118007,1.36754245086025,1.37892478466744,1.03380448567171,1.08787043028995,1.02250273890927,1.20686385892054,1.45620871586608,1.46028817560012,1.13773141236465,1.46276607678373,1.54405717043457,1.13694328354192,1.21147932283416,1.05551555628101,1.18393651665616,1.11502617875269,2.37364150558521,0.99429151167932,1.12289676440704,1.41907092353827,0.988758980437115,1.27424637265352,1.42123233510191,0.975920754138325,1.11659707922519,0.988782845032391,1.12460409028246,1.05618567242026,1.09450084371813,1.37585013398086,1.43301263363655,1.13207005241856,1.20089974310707,1.44999821670817,1.56619875532473,1.0044422019347,1.14071545967671,1.30178057105541,1.44158086912706],"hoverinfo":"text","text":["[1]<BR> <B>{}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.84 <BR>lift: 1 <BR>order: 1","[2]<BR> <B>{embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.171 <BR>lift: 1 <BR>order: 2","[3]<BR> <B>{clase=segunda}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.222 <BR>lift: 1.19 <BR>order: 2","[4]<BR> <B>{clase=segunda}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.217 <BR>lift: 1.03 <BR>order: 2","[5]<BR> <B>{clase=primera}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.248 <BR>lift: 1.09 <BR>order: 2","[6]<BR> <B>{sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.3 <BR>lift: 0.965 <BR>order: 2","[7]<BR> <B>{superviviente=Si}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.328 <BR>lift: 0.958 <BR>order: 2","[8]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.5 <BR>lift: 1.34 <BR>order: 2","[9]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.48 <BR>lift: 1.08 <BR>order: 2","[10]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.512 <BR>lift: 1.03 <BR>order: 2","[11]<BR> <B>{sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.54 <BR>lift: 1.02 <BR>order: 2","[12]<BR> <B>{embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.632 <BR>lift: 1 <BR>order: 2","[13]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.115 <BR>lift: 1.12 <BR>order: 3","[14]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.104 <BR>lift: 0.974 <BR>order: 3","[15]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.129 <BR>lift: 1.47 <BR>order: 3","[16]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.129 <BR>lift: 1.44 <BR>order: 3","[17]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.128 <BR>lift: 1.22 <BR>order: 3","[18]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.134 <BR>lift: 1.14 <BR>order: 3","[19]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.135 <BR>lift: 1.19 <BR>order: 3","[20]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.135 <BR>lift: 1.06 <BR>order: 3","[21]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.194 <BR>lift: 1.04 <BR>order: 3","[22]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.194 <BR>lift: 1.19 <BR>order: 3","[23]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=Si}<\/B> <BR><BR>support: 0.121 <BR>lift: 2.36 <BR>order: 3","[24]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.11 <BR>order: 3","[25]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;superviviente=Si}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.157 <BR>lift: 1.09 <BR>order: 3","[26]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.131 <BR>lift: 1.08 <BR>order: 3","[27]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.13 <BR>lift: 1.07 <BR>order: 3","[28]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.229 <BR>lift: 0.981 <BR>order: 3","[29]<BR> <B>{sexo=mujer,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.206 <BR>lift: 0.97 <BR>order: 3","[30]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.215 <BR>lift: 0.953 <BR>order: 3","[31]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.277 <BR>lift: 1.4 <BR>order: 3","[32]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.292 <BR>lift: 1.1 <BR>order: 3","[33]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.287 <BR>lift: 0.965 <BR>order: 3","[34]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.277 <BR>lift: 1.11 <BR>order: 3","[35]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.273 <BR>lift: 0.975 <BR>order: 3","[36]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.308 <BR>lift: 0.96 <BR>order: 3","[37]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.308 <BR>lift: 1.1 <BR>order: 3","[38]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.09 <BR>order: 3","[39]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.35 <BR>order: 3","[40]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.39 <BR>order: 3","[41]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.05 <BR>order: 3","[42]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.37 <BR>order: 3","[43]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.38 <BR>order: 3","[44]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.417 <BR>lift: 1.03 <BR>order: 3","[45]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.417 <BR>lift: 1.09 <BR>order: 3","[46]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.426 <BR>lift: 1.02 <BR>order: 3","[47]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.21 <BR>order: 4","[48]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.46 <BR>order: 4","[49]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.46 <BR>order: 4","[50]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.14 <BR>order: 4","[51]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.46 <BR>order: 4","[52]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.54 <BR>order: 4","[53]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.122 <BR>lift: 1.14 <BR>order: 4","[54]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.122 <BR>lift: 1.21 <BR>order: 4","[55]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.12 <BR>lift: 1.06 <BR>order: 4","[56]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.12 <BR>lift: 1.18 <BR>order: 4","[57]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.113 <BR>lift: 1.12 <BR>order: 4","[58]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=Si}<\/B> <BR><BR>support: 0.113 <BR>lift: 2.37 <BR>order: 4","[59]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.151 <BR>lift: 0.994 <BR>order: 4","[60]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.233 <BR>lift: 1.12 <BR>order: 4","[61]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.233 <BR>lift: 1.42 <BR>order: 4","[62]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.23 <BR>lift: 0.989 <BR>order: 4","[63]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.27 <BR>order: 4","[64]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.42 <BR>order: 4","[65]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.24 <BR>lift: 0.976 <BR>order: 4","[66]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.24 <BR>lift: 1.12 <BR>order: 4","[67]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.23 <BR>lift: 0.989 <BR>order: 4","[68]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.12 <BR>order: 4","[69]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.06 <BR>order: 4","[70]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.09 <BR>order: 4","[71]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.38 <BR>order: 4","[72]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.43 <BR>order: 4","[73]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.13 <BR>order: 5","[74]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.2 <BR>order: 5","[75]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.45 <BR>order: 5","[76]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.57 <BR>order: 5","[77]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.197 <BR>lift: 1 <BR>order: 5","[78]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.14 <BR>order: 5","[79]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.3 <BR>order: 5","[80]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.44 <BR>order: 5"],"mode":"markers","marker":[],"color":["1","2","2","2","2","2","2","2","2","2","2","2","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","3","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","4","5","5","5","5","5","5","5","5"],"alpha_stroke":1,"sizes":[10,100],"spans":[1,20],"type":"scatter"}},"layout":{"margin":{"b":40,"l":60,"t":25,"r":10},"hovermode":"closest","xaxis":{"domain":[0,1],"automargin":true,"title":"support"},"yaxis":{"domain":[0,1],"automargin":true,"title":"lift"},"showlegend":true},"source":"A","config":{"showSendToCloud":false},"data":[{"x":[0.111231915859932,0.111224137263156,0.111200696578685,0.111227376238953,0.196565319070677,0.196556062138947,0.19654519478052,0.19655897711644],"y":[1.13207005241856,1.20089974310707,1.44999821670817,1.56619875532473,1.0044422019347,1.14071545967671,1.30178057105541,1.44158086912706],"hoverinfo":["text","text","text","text","text","text","text","text"],"text":["[73]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.13 <BR>order: 5","[74]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.2 <BR>order: 5","[75]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.45 <BR>order: 5","[76]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.111 <BR>lift: 1.57 <BR>order: 5","[77]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.197 <BR>lift: 1 <BR>order: 5","[78]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.14 <BR>order: 5","[79]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.3 <BR>order: 5","[80]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.197 <BR>lift: 1.44 <BR>order: 5"],"mode":"markers","type":"scatter","name":"5","marker":{"color":"rgba(253,231,37,1)","line":{"color":"rgba(253,231,37,1)"}},"textfont":{"color":"rgba(253,231,37,1)"},"error_y":{"color":"rgba(253,231,37,1)"},"error_x":{"color":"rgba(253,231,37,1)"},"line":{"color":"rgba(253,231,37,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.116982309587908,0.11697703318462,0.116954314507845,0.123684626474507,0.123677860874902,0.123684616394635,0.121762778599906,0.121775522480598,0.119842264014087,0.119840619159458,0.113153769252284,0.113144941661258,0.15051515386692,0.232998724636862,0.232983615793593,0.230102452304042,0.230094451901247,0.230088475262621,0.239708973110729,0.239699821447824,0.230110663709255,0.230102594664018,0.361439418858888,0.361474735616606,0.361449165578943,0.361460666252069],"y":[1.20686385892054,1.45620871586608,1.46028817560012,1.13773141236465,1.46276607678373,1.54405717043457,1.13694328354192,1.21147932283416,1.05551555628101,1.18393651665616,1.11502617875269,2.37364150558521,0.99429151167932,1.12289676440704,1.41907092353827,0.988758980437115,1.27424637265352,1.42123233510191,0.975920754138325,1.11659707922519,0.988782845032391,1.12460409028246,1.05618567242026,1.09450084371813,1.37585013398086,1.43301263363655],"hoverinfo":["text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text"],"text":["[47]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.21 <BR>order: 4","[48]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.46 <BR>order: 4","[49]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.46 <BR>order: 4","[50]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.14 <BR>order: 4","[51]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.46 <BR>order: 4","[52]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.124 <BR>lift: 1.54 <BR>order: 4","[53]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.122 <BR>lift: 1.14 <BR>order: 4","[54]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.122 <BR>lift: 1.21 <BR>order: 4","[55]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.12 <BR>lift: 1.06 <BR>order: 4","[56]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.12 <BR>lift: 1.18 <BR>order: 4","[57]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.113 <BR>lift: 1.12 <BR>order: 4","[58]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=Si}<\/B> <BR><BR>support: 0.113 <BR>lift: 2.37 <BR>order: 4","[59]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.151 <BR>lift: 0.994 <BR>order: 4","[60]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.233 <BR>lift: 1.12 <BR>order: 4","[61]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.233 <BR>lift: 1.42 <BR>order: 4","[62]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.23 <BR>lift: 0.989 <BR>order: 4","[63]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.27 <BR>order: 4","[64]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.42 <BR>order: 4","[65]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.24 <BR>lift: 0.976 <BR>order: 4","[66]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.24 <BR>lift: 1.12 <BR>order: 4","[67]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.23 <BR>lift: 0.989 <BR>order: 4","[68]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.23 <BR>lift: 1.12 <BR>order: 4","[69]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.06 <BR>order: 4","[70]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.09 <BR>order: 4","[71]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.38 <BR>order: 4","[72]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.361 <BR>lift: 1.43 <BR>order: 4"],"mode":"markers","type":"scatter","name":"4","marker":{"color":"rgba(93,200,99,1)","line":{"color":"rgba(93,200,99,1)"}},"textfont":{"color":"rgba(93,200,99,1)"},"error_y":{"color":"rgba(93,200,99,1)"},"error_x":{"color":"rgba(93,200,99,1)"},"line":{"color":"rgba(93,200,99,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.11503758715431,0.103552016125849,0.129453586697561,0.129424256073452,0.127525100252029,0.134220518570337,0.135193219048871,0.135187321764609,0.193677172795216,0.193683810340043,0.120801702905803,0.116961829583564,0.157225583752981,0.13136296394874,0.130399919509365,0.2291320087329,0.206143617963834,0.214763915355647,0.277086985012988,0.292422422616703,0.286688304523678,0.277095239481224,0.273253831626071,0.307766545122124,0.307759979334649,0.407494118841286,0.407473227161667,0.407484342654045,0.441017514220821,0.441044638836281,0.441040692599201,0.417083343321989,0.417052122040028,0.425691305207264],"y":[1.1162172240577,0.974178277787267,1.46790128768315,1.44203489196587,1.21653646646728,1.14171350334785,1.19178160562582,1.06254358681753,1.03668706193324,1.19364120404753,2.36044679595362,1.10885788216548,1.09087406444713,1.0802635274748,1.07237516296819,0.981235300906179,0.969659744867489,0.952514735965168,1.40155410086177,1.10382771225456,0.964772570185141,1.10905628666458,0.975110649083726,0.960306759857064,1.09638341115639,1.08730707775912,1.34670932231553,1.38738655879766,1.04921638118007,1.36754245086025,1.37892478466744,1.03380448567171,1.08787043028995,1.02250273890927],"hoverinfo":["text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text","text"],"text":["[13]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.115 <BR>lift: 1.12 <BR>order: 3","[14]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.104 <BR>lift: 0.974 <BR>order: 3","[15]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.129 <BR>lift: 1.47 <BR>order: 3","[16]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.129 <BR>lift: 1.44 <BR>order: 3","[17]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.128 <BR>lift: 1.22 <BR>order: 3","[18]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.134 <BR>lift: 1.14 <BR>order: 3","[19]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.135 <BR>lift: 1.19 <BR>order: 3","[20]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.135 <BR>lift: 1.06 <BR>order: 3","[21]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.194 <BR>lift: 1.04 <BR>order: 3","[22]<BR> <B>{clase=segunda,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.194 <BR>lift: 1.19 <BR>order: 3","[23]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=Si}<\/B> <BR><BR>support: 0.121 <BR>lift: 2.36 <BR>order: 3","[24]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.117 <BR>lift: 1.11 <BR>order: 3","[25]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;superviviente=Si}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.157 <BR>lift: 1.09 <BR>order: 3","[26]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.131 <BR>lift: 1.08 <BR>order: 3","[27]<BR> <B>{clase=primera,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.13 <BR>lift: 1.07 <BR>order: 3","[28]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.229 <BR>lift: 0.981 <BR>order: 3","[29]<BR> <B>{sexo=mujer,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.206 <BR>lift: 0.97 <BR>order: 3","[30]<BR> <B>{superviviente=Si,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.215 <BR>lift: 0.953 <BR>order: 3","[31]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.277 <BR>lift: 1.4 <BR>order: 3","[32]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.292 <BR>lift: 1.1 <BR>order: 3","[33]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.287 <BR>lift: 0.965 <BR>order: 3","[34]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.277 <BR>lift: 1.11 <BR>order: 3","[35]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.273 <BR>lift: 0.975 <BR>order: 3","[36]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.308 <BR>lift: 0.96 <BR>order: 3","[37]<BR> <B>{clase=tercera,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.308 <BR>lift: 1.1 <BR>order: 3","[38]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.09 <BR>order: 3","[39]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.35 <BR>order: 3","[40]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.407 <BR>lift: 1.39 <BR>order: 3","[41]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.05 <BR>order: 3","[42]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.37 <BR>order: 3","[43]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{superviviente=No}<\/B> <BR><BR>support: 0.441 <BR>lift: 1.38 <BR>order: 3","[44]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.417 <BR>lift: 1.03 <BR>order: 3","[45]<BR> <B>{superviviente=No,<BR>&nbsp;&nbsp;edad=Adult}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.417 <BR>lift: 1.09 <BR>order: 3","[46]<BR> <B>{sexo=hombre,<BR>&nbsp;&nbsp;embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.426 <BR>lift: 1.02 <BR>order: 3"],"mode":"markers","type":"scatter","name":"3","marker":{"color":"rgba(33,144,140,1)","line":{"color":"rgba(33,144,140,1)"}},"textfont":{"color":"rgba(33,144,140,1)"},"error_y":{"color":"rgba(33,144,140,1)"},"error_x":{"color":"rgba(33,144,140,1)"},"line":{"color":"rgba(33,144,140,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.170668709531162,0.222430920702373,0.216691605105949,0.248324220186089,0.300077690073743,0.327906468677593,0.500479755173809,0.480335895819319,0.512003606164222,0.539773985938438,0.631841598196528],"y":[0.99970678743961,1.18708545105359,1.03098731285166,1.09353813932322,0.965478177968553,0.95809784338692,1.34093317625639,1.08264777341147,1.02878685093119,1.02026915202447,1.0046480902345],"hoverinfo":["text","text","text","text","text","text","text","text","text","text","text"],"text":["[2]<BR> <B>{embarque=Cherbourg}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.171 <BR>lift: 1 <BR>order: 2","[3]<BR> <B>{clase=segunda}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.222 <BR>lift: 1.19 <BR>order: 2","[4]<BR> <B>{clase=segunda}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.217 <BR>lift: 1.03 <BR>order: 2","[5]<BR> <B>{clase=primera}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.248 <BR>lift: 1.09 <BR>order: 2","[6]<BR> <B>{sexo=mujer}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.3 <BR>lift: 0.965 <BR>order: 2","[7]<BR> <B>{superviviente=Si}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.328 <BR>lift: 0.958 <BR>order: 2","[8]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{sexo=hombre}<\/B> <BR><BR>support: 0.5 <BR>lift: 1.34 <BR>order: 2","[9]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{embarque=Southampton}<\/B> <BR><BR>support: 0.48 <BR>lift: 1.08 <BR>order: 2","[10]<BR> <B>{superviviente=No}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.512 <BR>lift: 1.03 <BR>order: 2","[11]<BR> <B>{sexo=hombre}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.54 <BR>lift: 1.02 <BR>order: 2","[12]<BR> <B>{embarque=Southampton}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.632 <BR>lift: 1 <BR>order: 2"],"mode":"markers","type":"scatter","name":"2","marker":{"color":"rgba(59,82,139,1)","line":{"color":"rgba(59,82,139,1)"}},"textfont":{"color":"rgba(59,82,139,1)"},"error_y":{"color":"rgba(59,82,139,1)"},"error_x":{"color":"rgba(59,82,139,1)"},"line":{"color":"rgba(59,82,139,1)"},"xaxis":"x","yaxis":"y","frame":null},{"x":[0.839898122848567],"y":[0.99999576230472],"hoverinfo":"text","text":"[1]<BR> <B>{}<\/B><BR>&nbsp;&nbsp; => <B>{edad=Adult}<\/B> <BR><BR>support: 0.84 <BR>lift: 1 <BR>order: 1","mode":"markers","type":"scatter","name":"1","marker":{"color":"rgba(68,1,84,1)","line":{"color":"rgba(68,1,84,1)"}},"textfont":{"color":"rgba(68,1,84,1)"},"error_y":{"color":"rgba(68,1,84,1)"},"error_x":{"color":"rgba(68,1,84,1)"},"line":{"color":"rgba(68,1,84,1)"},"xaxis":"x","yaxis":"y","frame":null}],"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+</div>
+<div id="gráficos-basados-en-matrices" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> Gráficos basados en matrices</h2>
+<p>En este tipo de gráficos, los itemsets antecedentes y consecuentes se colocan en los ejes <em>x</em> e <em>y</em> respectivamente. Si dos itemsets forman parte de una regla, esto se marca en el gráfico con una indicación de la medida de calidad utilizada. Este gráfico permite utilizar dos medidas calidad diferentes.</p>
+<pre class="r"><code>plot(titanic.rules, method = &quot;matrix&quot;,measure = &quot;lift&quot;)</code></pre>
+<pre><code>## Itemsets in Antecedent (LHS)
+##  [1] &quot;{clase=primera,sexo=mujer,edad=Adult}&quot;                            
+##  [2] &quot;{clase=primera,sexo=mujer}&quot;                                       
+##  [3] &quot;{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}&quot;      
+##  [4] &quot;{clase=segunda,superviviente=No,edad=Adult,embarque=Southampton}&quot; 
+##  [5] &quot;{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}&quot;      
+##  [6] &quot;{sexo=hombre,edad=Adult,embarque=Southampton}&quot;                    
+##  [7] &quot;{sexo=hombre,edad=Adult}&quot;                                         
+##  [8] &quot;{superviviente=No,edad=Adult,embarque=Southampton}&quot;               
+##  [9] &quot;{clase=segunda,sexo=hombre,edad=Adult}&quot;                           
+## [10] &quot;{clase=segunda,superviviente=No,edad=Adult}&quot;                      
+## [11] &quot;{clase=tercera,superviviente=No,edad=Adult,embarque=Southampton}&quot; 
+## [12] &quot;{clase=segunda,superviviente=No,embarque=Southampton}&quot;            
+## [13] &quot;{clase=segunda,superviviente=No}&quot;                                 
+## [14] &quot;{clase=tercera,sexo=hombre,edad=Adult}&quot;                           
+## [15] &quot;{clase=segunda,sexo=hombre,embarque=Southampton}&quot;                 
+## [16] &quot;{clase=segunda,sexo=hombre}&quot;                                      
+## [17] &quot;{superviviente=No,edad=Adult}&quot;                                    
+## [18] &quot;{sexo=hombre,embarque=Southampton}&quot;                               
+## [19] &quot;{clase=tercera,sexo=hombre,embarque=Southampton}&quot;                 
+## [20] &quot;{clase=segunda,superviviente=No,sexo=hombre,edad=Adult}&quot;          
+## [21] &quot;{clase=tercera,superviviente=No,edad=Adult}&quot;                      
+## [22] &quot;{clase=segunda,edad=Adult}&quot;                                       
+## [23] &quot;{superviviente=No,embarque=Southampton}&quot;                          
+## [24] &quot;{clase=segunda,superviviente=No,sexo=hombre}&quot;                     
+## [25] &quot;{clase=tercera,sexo=hombre}&quot;                                      
+## [26] &quot;{superviviente=No}&quot;                                               
+## [27] &quot;{clase=tercera,superviviente=No,sexo=hombre,edad=Adult}&quot;          
+## [28] &quot;{clase=segunda,superviviente=No,sexo=hombre,embarque=Southampton}&quot;
+## [29] &quot;{clase=primera,embarque=Cherbourg}&quot;                               
+## [30] &quot;{clase=primera,superviviente=Si,sexo=mujer}&quot;                      
+## [31] &quot;{clase=segunda}&quot;                                                  
+## [32] &quot;{clase=tercera,edad=Adult}&quot;                                       
+## [33] &quot;{superviviente=No,sexo=hombre,edad=Adult}&quot;                        
+## [34] &quot;{clase=primera}&quot;                                                  
+## [35] &quot;{clase=primera,superviviente=Si}&quot;                                 
+## [36] &quot;{clase=primera,sexo=hombre}&quot;                                      
+## [37] &quot;{clase=primera,embarque=Southampton}&quot;                             
+## [38] &quot;{superviviente=No,sexo=hombre}&quot;                                   
+## [39] &quot;{superviviente=No,sexo=hombre,embarque=Southampton}&quot;              
+## [40] &quot;{clase=tercera,superviviente=No,sexo=hombre}&quot;                     
+## [41] &quot;{clase=segunda,embarque=Southampton}&quot;                             
+## [42] &quot;{clase=tercera,superviviente=No}&quot;                                 
+## [43] &quot;{sexo=hombre}&quot;                                                    
+## [44] &quot;{embarque=Southampton}&quot;                                           
+## [45] &quot;{clase=tercera,superviviente=No,sexo=hombre,embarque=Southampton}&quot;
+## [46] &quot;{}&quot;                                                               
+## [47] &quot;{embarque=Cherbourg}&quot;                                             
+## [48] &quot;{superviviente=Si,sexo=mujer,embarque=Southampton}&quot;               
+## [49] &quot;{superviviente=Si,sexo=mujer}&quot;                                    
+## [50] &quot;{clase=tercera,superviviente=No,embarque=Southampton}&quot;            
+## [51] &quot;{superviviente=Si,embarque=Cherbourg}&quot;                            
+## [52] &quot;{sexo=mujer,embarque=Southampton}&quot;                                
+## [53] &quot;{sexo=mujer}&quot;                                                     
+## [54] &quot;{clase=tercera,embarque=Southampton}&quot;                             
+## [55] &quot;{superviviente=Si}&quot;                                               
+## [56] &quot;{superviviente=Si,embarque=Southampton}&quot;                          
+## Itemsets in Consequent (RHS)
+## [1] &quot;{edad=Adult}&quot;          
+## [2] &quot;{embarque=Southampton}&quot;
+## [3] &quot;{sexo=hombre}&quot;         
+## [4] &quot;{superviviente=No}&quot;    
+## [5] &quot;{superviviente=Si}&quot;</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-28-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Este tipo de representación también se puede hacer en 3 dimensiones con la opción <code>method = "matrix3D"</code>. Para evitar una excesiva fragmentación se puede utilizar la opción <code>control = list(reorder=TRUE)</code>. Sólo la versión en dos dimensiones admite la inspección interactiva.</p>
+<pre class="r"><code>plot(titanic.rules, method = &quot;matrix3D&quot;,measure = &quot;lift&quot;)</code></pre>
+<pre><code>## Warning in plot.rules(titanic.rules, method =
+## &quot;matrix3D&quot;, measure = &quot;lift&quot;): method &#39;matrix3D&#39;
+## is deprecated use method &#39;matrix&#39; with engine &#39;3d&#39;</code></pre>
+<pre><code>## Itemsets in Antecedent (LHS)
+##  [1] &quot;{clase=primera,sexo=mujer,edad=Adult}&quot;                            
+##  [2] &quot;{clase=primera,sexo=mujer}&quot;                                       
+##  [3] &quot;{clase=segunda,sexo=hombre,edad=Adult,embarque=Southampton}&quot;      
+##  [4] &quot;{clase=segunda,superviviente=No,edad=Adult,embarque=Southampton}&quot; 
+##  [5] &quot;{clase=tercera,sexo=hombre,edad=Adult,embarque=Southampton}&quot;      
+##  [6] &quot;{sexo=hombre,edad=Adult,embarque=Southampton}&quot;                    
+##  [7] &quot;{sexo=hombre,edad=Adult}&quot;                                         
+##  [8] &quot;{superviviente=No,edad=Adult,embarque=Southampton}&quot;               
+##  [9] &quot;{clase=segunda,sexo=hombre,edad=Adult}&quot;                           
+## [10] &quot;{clase=segunda,superviviente=No,edad=Adult}&quot;                      
+## [11] &quot;{clase=tercera,superviviente=No,edad=Adult,embarque=Southampton}&quot; 
+## [12] &quot;{clase=segunda,superviviente=No,embarque=Southampton}&quot;            
+## [13] &quot;{clase=segunda,superviviente=No}&quot;                                 
+## [14] &quot;{clase=tercera,sexo=hombre,edad=Adult}&quot;                           
+## [15] &quot;{clase=segunda,sexo=hombre,embarque=Southampton}&quot;                 
+## [16] &quot;{clase=segunda,sexo=hombre}&quot;                                      
+## [17] &quot;{superviviente=No,edad=Adult}&quot;                                    
+## [18] &quot;{sexo=hombre,embarque=Southampton}&quot;                               
+## [19] &quot;{clase=tercera,sexo=hombre,embarque=Southampton}&quot;                 
+## [20] &quot;{clase=segunda,superviviente=No,sexo=hombre,edad=Adult}&quot;          
+## [21] &quot;{clase=tercera,superviviente=No,edad=Adult}&quot;                      
+## [22] &quot;{clase=segunda,edad=Adult}&quot;                                       
+## [23] &quot;{superviviente=No,embarque=Southampton}&quot;                          
+## [24] &quot;{clase=segunda,superviviente=No,sexo=hombre}&quot;                     
+## [25] &quot;{clase=tercera,sexo=hombre}&quot;                                      
+## [26] &quot;{superviviente=No}&quot;                                               
+## [27] &quot;{clase=tercera,superviviente=No,sexo=hombre,edad=Adult}&quot;          
+## [28] &quot;{clase=segunda,superviviente=No,sexo=hombre,embarque=Southampton}&quot;
+## [29] &quot;{clase=primera,embarque=Cherbourg}&quot;                               
+## [30] &quot;{clase=primera,superviviente=Si,sexo=mujer}&quot;                      
+## [31] &quot;{clase=segunda}&quot;                                                  
+## [32] &quot;{clase=tercera,edad=Adult}&quot;                                       
+## [33] &quot;{superviviente=No,sexo=hombre,edad=Adult}&quot;                        
+## [34] &quot;{clase=primera}&quot;                                                  
+## [35] &quot;{clase=primera,superviviente=Si}&quot;                                 
+## [36] &quot;{clase=primera,sexo=hombre}&quot;                                      
+## [37] &quot;{clase=primera,embarque=Southampton}&quot;                             
+## [38] &quot;{superviviente=No,sexo=hombre}&quot;                                   
+## [39] &quot;{superviviente=No,sexo=hombre,embarque=Southampton}&quot;              
+## [40] &quot;{clase=tercera,superviviente=No,sexo=hombre}&quot;                     
+## [41] &quot;{clase=segunda,embarque=Southampton}&quot;                             
+## [42] &quot;{clase=tercera,superviviente=No}&quot;                                 
+## [43] &quot;{sexo=hombre}&quot;                                                    
+## [44] &quot;{embarque=Southampton}&quot;                                           
+## [45] &quot;{clase=tercera,superviviente=No,sexo=hombre,embarque=Southampton}&quot;
+## [46] &quot;{}&quot;                                                               
+## [47] &quot;{embarque=Cherbourg}&quot;                                             
+## [48] &quot;{superviviente=Si,sexo=mujer,embarque=Southampton}&quot;               
+## [49] &quot;{superviviente=Si,sexo=mujer}&quot;                                    
+## [50] &quot;{clase=tercera,superviviente=No,embarque=Southampton}&quot;            
+## [51] &quot;{superviviente=Si,embarque=Cherbourg}&quot;                            
+## [52] &quot;{sexo=mujer,embarque=Southampton}&quot;                                
+## [53] &quot;{sexo=mujer}&quot;                                                     
+## [54] &quot;{clase=tercera,embarque=Southampton}&quot;                             
+## [55] &quot;{superviviente=Si}&quot;                                               
+## [56] &quot;{superviviente=Si,embarque=Southampton}&quot;                          
+## Itemsets in Consequent (RHS)
+## [1] &quot;{edad=Adult}&quot;          
+## [2] &quot;{embarque=Southampton}&quot;
+## [3] &quot;{sexo=hombre}&quot;         
+## [4] &quot;{superviviente=No}&quot;    
+## [5] &quot;{superviviente=Si}&quot;</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-29-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gráficos-basados-en-grafos" class="section level2" number="5.3">
+<h2><span class="header-section-number">5.3</span> Gráficos basados en grafos</h2>
+<p>En las gráficas basadas en grafos, los itemsets se representan mediante vértices y los arcos indican los itemsets que están incluidos en cada regla. En este caso, las medidas de calidad se representan como vértices que unen el antecedente y el consecuente. Otros herramientas representan las medidas de calidad mediante etiquetas, colores o anchura de los arcos. Sin embargo, sólo son viables para un conjunto reducido de reglas. Para crear este gráfico debemos utilizar la opción `method = “graph”.</p>
+<pre class="r"><code>titanic.rules2 &lt;- subset(titanic.rules, subset = support &gt; 0.4)
+plot(titanic.rules2, method = &quot;graph&quot;)</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-30-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Este tipo de gráficos también permite la visualización interactiva. Además, se permite la exportación del grafo en el formato <code>GraphML</code> para poder utilizar herramientas específicas para la visualización de redes y grafos. Para ello, se podría utilizar la función <code>saveAsGraph()</code>.</p>
+<pre class="r"><code>saveAsGraph(titanic.rules, file=&quot;reglas.graphml&quot;)</code></pre>
+<p>Este tipo de gráficos también permite una versión interactiva <code>engine = 'interactive'</code>, pero utiliza la librería <code>tkplot</code> y lo hace en una ventana externa.</p>
+</div>
+<div id="gráficos-de-coordenadas-paralelas" class="section level2" number="5.4">
+<h2><span class="header-section-number">5.4</span> Gráficos de coordenadas paralelas</h2>
+<p>Este tipo de gráficos permite la visualización en dos dimensiones de datos multidimensionales, representando cada dimensión en el eje <em>X</em> y compartiendo todas ellas el mismo eje <em>Y</em>. Este tipo de gráficas ya las analizamos cuando vimos técnicas de visualización de agrupamientos. En este caso, en el eje <em>Y</em> se representa cada uno de los items y en el eje <em>X</em> su posición dentro de la regla. De esta forma, cada regla queda representada mediante una recta que va de izquierda a derecha, quedando representada la confianza de la regla por el color. Para crear este gráfico debemos utilizar la opción `method = “paracoord”}.</p>
+<pre class="r"><code>titanic.rules3 &lt;- head(sort(titanic.rules, by = &quot;confidence&quot;,), n=10)
+plot(titanic.rules3, method = &quot;paracoord&quot;)</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-32-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Con la opción de <code>control=list(reorder=TRUE)</code> podemos reducir el número de cruces. Este tipo de gráficos no admite la versión interactiva.</p>
+<pre class="r"><code>plot(titanic.rules3, method = &quot;paracoord&quot;, control=list(reorder=TRUE))</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-33-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+<div id="gráficos-de-mosaicos" class="section level2" number="5.5">
+<h2><span class="header-section-number">5.5</span> Gráficos de mosaicos</h2>
+<p>Los gráficos de mosaicos (<em>double-decker plots</em>) permiten representar una matriz de contingencia, usando rectángulos dentro del mosaico cuya área es proporcional al valor correspondiente en la tabla de contingencia. En este caso, nos permite visualizar una sola regla y representar la frecuencia de cada subconjunto de items en el antecedente y en el consecuente en el conjunto de transacciones. Los items en el antecedentes se utilizan para realizar las particiones verticales y el item del consecuente para el horizontal. Para crear este gráfico debemos utilizar la opción <code>method = "doubledecker"</code> y indicar cuál es el conjunto de transacciones sobre el que calcular las frecuencias. En este gráfico, el área de cada rectángulo es proporcional al soporte y la altura del bloque marcado como <code>yes</code> es proporcional a la confianza de la regla que contiene dicho item.</p>
+<p>Por ejemplo, para mostrar la regla con el soporte más alto podemo utilizar el siguiente código:</p>
+<pre class="r"><code>reglas &lt;- sort(titanic.rules, by = &quot;confidence&quot;)
+regla &lt;- inspect(reglas[1])</code></pre>
+<pre><code>##     lhs                rhs                  support confidence  coverage     lift count    coseno       gini hyperLift hyperConfidence
+## [1] {clase=primera,                                                                                                                   
+##      sexo=mujer,                                                                                                                      
+##      edad=Adult}    =&gt; {superviviente=Si} 0.1131352  0.9672131 0.1169703 2.373655   118 0.5182122 0.08300316  1.903226               1</code></pre>
+<pre class="r"><code>plot(reglas[1], method = &quot;doubledecker&quot;, data = titanic.trans)</code></pre>
+<p><img src="ReglasAsociacion_files/figure-html/unnamed-chunk-34-1.png" width="672" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

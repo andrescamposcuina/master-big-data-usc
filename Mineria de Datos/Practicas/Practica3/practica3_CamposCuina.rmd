@@ -1,0 +1,160 @@
+---
+title: 'Entrega 3 - Comparación de Clasificadores'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Practica3/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(nortest)
+library(coin)
+library(car)
+library(ez)
+library(PMCMRplus)
+```
+
+# Ejercicios
+
+## Ejercicio 1
+
+**Se quiere comprobar si existen diferencias significativas en el comportamiento de dos clasificadores: `SVM` y un `análisis lineal discriminante (LDA)`. Para tal fin, disponemos de los resultados de la precisión para cada uno de los pliegues para ambos clasificadores (fichero `ejercicio1.dat`). También se dispone de los objetos generados por la función `train()` correspondientes a los dos clasificadores (ficheros `SVMFit` y `LDAFit`) así como las base de datos sobre la que se ha hecho el experimento (el último atributo es la clase que es un factor, el primero es real y el resto enteros). Realizar las comprobaciones necesarias para llegar a una conclusión.**
+
+En primer lugar se tienen que cargar los resultados de precisión para cada uno de los pliegues para ambos clasificadores (`SVM` y `LDA`) a partir del fichero `ejercicio1.dat`:
+
+```{r}
+ejercicio1 <- read.csv("./data/ejercicio1.dat")
+ejercicio1
+```
+
+Estamos ante el caso de dos clasificadores en un mismo dominio. Además, sabemos que estos modelos son **no paramétricos** ya que no presuponen una forma concreta en el modelo a generar, resultando más flexibles a costa de requerir más datos para su entrenamiento.
+
+Ahora comprobamos las condiciones de aplicabilidad del *test t de Student con medidas pareadas*. En primer lugar comprobamos la normalidad de la muestra. Como tenemos un número de muestras menor que 50 se recomienda el *test de Shapiro-Wilk* por encima del *test de Kolmogorov-Smirnov con la corrección Lilliefors*:
+
+```{r}
+test.shapiro <- shapiro.test(ejercicio1$SVM - ejercicio1$LDA)
+test.shapiro
+```
+
+Por el resultado que vemos **sí** podemos rechazar la hipótesis nula de que la muestra procede de una distribución normal, con un 95% de confianza (*W*=0.84, *p-value*=0.04). Por lo tanto, no podemos aplicar el *test t de Student para muestras pareadas*. En este caso tendremos que aplicar alguno de los test no paramétricos como el *test de McNemar* o el *test de la suma de rangos de Wilcoxon para muestras pareadas*.
+
+Para poder utilizar el *test de McNemar* nos hace falta la matriz de confusión, pero aunque el anunciado nos dice que tenemos esta información, en el `.zip` con la información a utilizar para resolver estos ejercicios no venía. Por lo tanto usaremos la otra medida que podemos usar para comprobar si hay diferencias significativas entre los modelos, esta medida es el *test de Wilcoxon*. El *test de Wilcoxon* compara las medianas de las dos muestras en lugar de las medias. 
+
+```{r}
+test.wilcox <- wilcox.test(ejercicio1$SVM, ejercicio1$LDA, paired = TRUE)
+test.wilcox
+```
+
+Igual que ocurre en el ejemplo2 del enunciado de esta práctica, nos indica que no se puede calcular el *p-value* excato debido a que se producen empates entre las dos muestras. En esta situación debemos utilizar la función `wilcox_test()` del paquete `coin` que corrige este defecto:
+
+```{r}
+datos <- stack(list(svm = ejercicio1$SVM, lda = ejercicio1$LDA))
+test.wilcox.exact <-
+  wilcox_test(values ~ ind, data = datos, paired = TRUE)
+test.wilcox.exact
+```
+
+Observando estos resultados, podemos afirmar que **no** podemos rechazar la hipótesis nula de que las medianas de las muestras sean iguales con un 95% de confianza (*Z*= -0.65, *p-value*= 0.516 > 0.05). Por lo tanto la diferencia entre los dos clasificadores no es estadísticamente significativa.
+
+
+## Ejercicio 2
+
+**Se quiere comprobar si existen diferencias significativas en el comportamiento de cuatro regresores: `RegA`, `RegB`, `RegC`y `RegD`. Para tal fin, disponemos de los resultados del error cuadrático medio de cada regresor medido sobre nueve conjuntos de datos (fichero `ejercicio2.dat`). Realizar las comprobaciones necesarias para llegar a una conclusión.**
+
+Para comenzar este segundo ejercicio, cargamos los datos del fichero `ejercicio2.dat`:
+
+```{r}
+ejercicio2 <- read.csv("data/ejercicio2.dat")
+ejercicio2
+```
+
+En este caso, al comparar múltiples predictores en múltiples dominios, debemos aplicar el *test ANOVA de una vía para medidas pareadas* o su equivalente no paramétrico el *test de Friedman*. Para ello debemos comprobar las condiciones de aplicabilidad para el *test ANOVA*: normalidad y esfericidad.
+
+En primer lugar, transformamos los datos para que nos sea más cómodo trabajar con las funciones que vamos a utilizar:
+
+```{r}
+df2.stack <- stack(ejercicio2)
+df2.stack$DataSet <-
+  as.factor(rep(row.names(ejercicio2), times = 4))
+names(df2.stack) <- c("ECM", "Method", "DataSet")
+df2.stack
+```
+
+Para la condición de normalidad, debemos comprobar que la muestra de cada uno de los grupos procede de una población con distribución normal. Como hicimos en el ejercicio anterior, esto se puede hacer mediante el *test de Shapiro-Wilkins*:
+
+```{r}
+test.shapiro <- tapply(df2.stack$ECM, df2.stack$Method, shapiro.test)
+test.shapiro
+```
+
+De estos datos se puede deducir, los errores cuadráticos medios de cada regresor en cada uno de los conjuntos de datos procede de una distribución normal con un 95% de confianza, menos en el caso de `regA` en el que su *p-value* < 0.05. Por lo tanto, para el caso de `regA` **sí** de podemos rechazar la hipótesis nula de que su conjunto de datos asociado proviene de una distribución normal y por tanto no se cumple una de las condiciones de aplicabilidad para el *test ANOVA*. Por lo tanto, procedemos a ejecutar el *test de Friedman* para ver si existen diferencias significativas entre los regresores.
+
+```{r}
+test.friedman <- friedman.test(ECM ~ Method | DataSet, data = df2.stack)
+test.friedman
+```
+
+Como se puede observar, podemos afirmar con un 95% de confianza que existent diferencias significativas entre los errores cuadráticos medios de los 4 regresores en los conjuntos de datos utilizados (*F*=9.3, *p-value*= 0.025 < 0.05). Para comprobar dónde se encuentran estas diferencias entre los regresores, tenemos que aplicar el *test post hoc de Nemenyi*:
+
+```{r}
+nemenyi.test <-
+  frdAllPairsNemenyiTest(ECM ~ Method | DataSet, data = df2.stack)
+nemenyi.test
+```
+
+Observando los resultados podemos observar con un 95% de confianza las siguientes conclusiones sobre las diferencias entre los regresores:
+
+**NO** hay diferencias significativas entre:
+
+   - `RegB` y `RegA`: *p-value = 0.261 > 0.05*
+   
+   - `RegC` y `RegA`: *p-value = 0.983 > 0.05*
+   
+   - `RegD` y `RegA`: *p-value = 0.692 > 0.05*
+   
+   - `RegC` y `RegB`: *p-value = 0.126 > 0.05*
+   
+   - `RegD` y `RegC`: *p-value = 0.885 > 0.05*
+   
+**SÍ** hay diferencias significativas entre:
+
+   - `RegD` y `RegB`: *p-value = 0.018 < 0.05*
+   
+Estos resultados ta,bién pueden ser analizados de forma gráfica:
+
+```{r}
+plot(nemenyi.test)
+```
+

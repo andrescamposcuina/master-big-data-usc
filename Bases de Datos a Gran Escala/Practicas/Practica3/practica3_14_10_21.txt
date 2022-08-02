@@ -1,0 +1,34 @@
+-- Para crear las máquinas virtuales:
+
+Configurar el administrador de red de anfitrión (en Archivo en VBox):
+- crear una tarjeta de red virtual
+- si ya existe -> cambiar propiedades, si no crear
+- configurar adapatdor manualmente
+- poner un IP (192.168.56.1) y en máscara (255.255.255.0)
+- en la segunda pestaña poner una dirección del servidor
+- poner el rango de direcciones que pueden tomar las máquinas
+
+En cada uno de los clusters, en la configuracion de red hay que tener:
+- Un adaptador de red de tipo NAT (de tipo 10.0.algo)
+- Uno como solo anfitrion (de tipo 192.algo)
+
+Esta último adaptador es el que utilizaremos para comunicar las máquinas entre sí y con el host. 
+
+En greiBD -> ifconfig hay que tener una IP en el mismo rango que las otras (si no apagar y configurar correctamente)
+
+En DBeaver hacer una nueva conexion del tipo Postgres, dónde pone localhost -> conectar con el usuarios postgres y cambiar la IP
+debería añadirse un item nuevo 
+
+En el localhost usar el usuario postgres también, ahí están las tablas de metadatos de citus. Creamos otra más para la segunda 
+
+Ejecutar en public postgres (cambiando las IPs):
+SELECT * from citus_add_node('192.168.56.9', 5432);
+SELECT * from citus_add_node('192.168.56.10', 5432);
+
+-- Direcciones IP:
+192.168.56.105 -> cluster1
+192.168.56.106 -> cluster2
+192.168.56.107 -> cluster3
+192.168.56.108 -> greiBD_BDGE
+
+

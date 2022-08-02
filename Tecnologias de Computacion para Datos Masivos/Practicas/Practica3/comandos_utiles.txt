@@ -1,0 +1,19 @@
+# Ejecutar una tarea en la cola 'urgent'
+yarn jar target/wordcount-0.0.1-SNAPSHOT.jar -Dmapred.job.queue.name=urgent libros/p* new_output/wordcount-out
+
+# Ejercicio 1:
+yarn jar target/citingpatents-0.0.1-SNAPSHOT.jar -Dmapred.job.queue.name=urgent patentes/cite75_99.txt new_output/citingpatents-out
+
+# Ejercicio 2:
+export HADOOP_CLASSPATH="./src/resources/citingpatents-0.0.1-SNAPSHOT.jar"
+yarn jar target/citationnumberbypatent_chained-0.0.1-SNAPSHOT.jar -Dmapred.job.queue.name=urgent -libjars $HADOOP_CLASSPATH patentes/cite75_99.txt new_output/citationnumberbypatent_chained-out
+
+# Ejercicio 3:
+yarn jar target/creasequencefile-0.0.1-SNAPSHOT.jar -Dmapred.job.queue.name=urgent -files ../country_codes.txt patentes/apat63_99.txt new_output/creasequencefile-out
+
+# Ejercicio 4:
+yarn jar /opt/cloudera/parcels/CDH-6.1.1-1.cdh6.1.1.p0.875250/lib/hadoop-mapreduce/hadoop-streaming.jar -D mapreduce.job.reduces=2 -Dmapred.job.queue.name=urgent -files CBPMapper.py,CBPReducer.py -input patentes/apat63_99.txt -output new_output/avgclaimsbypatent-out -mapper CBPMapper.py -reducer CBPReducer.py
+
+# Útil:
+sed -i -e 's/\r$//' ./*.py
+chmod 700 *.py

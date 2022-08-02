@@ -1,0 +1,513 @@
+---
+title: 'Boletín 1 - Preprocesamiento de datos'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+# Establecer el directorio de trabajo apropiado en esta celda
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Boletin1/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(MASS)
+library(foreign)
+library(car)
+library(Hmisc)
+library(VIM)
+library(mice)
+library(ggplot2)
+library(reshape)
+```
+
+# Ejercicios
+
+## Importación de la tabla
+
+Lo primero será cargar la tabla que se encuentra en el fichero 'echocardiogram.data', para esto hacemos uso de la función `read_csv` con los valores adecuados para los parámetros de entrada:
+
+```{r}
+echocardiogram_df = read.csv(
+  file = './data/echocardiogram.data', 
+  header = FALSE, 
+  na.strings = '?'
+)
+```
+
+Mostramos el contenido de las primeras 10 filas del DataFrame que acabamos de cargar a partir del fichero 'echocardiogram.data':
+
+```{r}
+head(echocardiogram_df, 10)
+```
+
+Como se puede observar para que el DataFrame quede importado correctamente aún se debe llevar a cabo un preprocesamiento de este. Este proceso será explicado a continuación.
+
+Como dice el enunciado, el primer preprocesamiento que debemos hacer es asignarle a cada una de las columnas el nombre adecuado:
+
+```{r}
+column_names <- c(
+  "Survival", 
+  "StillAlive", 
+  "AgeAttack", 
+  "PericardEffu", 
+  "FracShort", 
+  "EPSS", 
+  "LVDD", 
+  "WMS",
+  "WMI", 
+  "Mult", 
+  "Name", 
+  "Group", 
+  "AliveAt1"
+  )
+
+colnames(echocardiogram_df) <- column_names
+```
+
+A continuación comprobamos el tipo de variables de cada una de las columnas de nuestro DataFrame:
+
+```{r}
+str(echocardiogram_df)
+```
+
+Como nos indica el fichero `echocardiogram.names` las columnas Survival, StillAlive, PericardialEffu y AliveAt1 son variables binarias por lo que debemos transformar su tipo de datos a `logical`:
+
+```{r}
+echocardiogram_df$StillAlive <- as.logical(echocardiogram_df$StillAlive)
+echocardiogram_df$PericardEffu <- as.logical(echocardiogram_df$PericardEffu)
+echocardiogram_df$AliveAt1 <- as.logical(echocardiogram_df$AliveAt1)
+```
+
+Mostramos la estructura de nuestro DataFrame tal y como se nos indica en el enunciado:
+
+```{r}
+str(echocardiogram_df)
+```
+
+Ahora podemos considerar que el DataFrame está correctamente importado y transformado. Antes de continuar y escribir este DataFrame a un fichero `.csv` podemos comprobar el número de filas en el fichero `echocardiogram.data` que cuenta con algún valor ausente:
+
+```{r}
+sum(!complete.cases(echocardiogram_df))
+```
+
+Como se puede observar, de las 132 instancias con las que cuenta nuestro DataFrame, en 71 de ellas hay algún valor que está ausente.
+
+## Generación del fichero `.csv`
+
+Ahora se nos pide que generemos un fichero `.csv` con la tabla importada y transformada correctamente. Este fichero tendrá el mismo nombre y la extensión será `.csv`:
+
+```{r}
+dir.create("./output/", showWarnings = FALSE)
+
+write.csv(
+  echocardiogram_df, 
+  "./output/echocardiogram.csv",
+  row.names = FALSE
+  )
+```
+
+## Distribución de los valores ausentes
+
+Leemos nuestro DataFrame del fichero que acabamos de escribir:
+
+```{r}
+echocardiogram_df = read.csv(
+  file = './output/echocardiogram.csv'
+)
+```
+
+Ahora debemos mostrar la distribución de los valores ausentes, en el caso de que existan, tanto por columnas como por filas.
+
+En primer lugar comprobaremos la distribución de valores ausentes por columnas. Mostramos el número de valores ausentes por columnas:
+
+```{r}
+na_by_column <- apply(echocardiogram_df, 2, function(x){sum(is.na(x))})
+na_by_column
+```
+
+Ahora mostramos el número de valores ausentes en cada una de las filas:
+
+```{r}
+na_by_row <- apply(echocardiogram_df, 1, function(x){sum(is.na(x))})
+na_by_row
+```
+
+Para visualizar la distribución de valores ausentes por columnas y las combinaciones de qué valores hay ausentes en cierto número de filas podemos usar la función `aggr()` del paquete `VIM`:
+
+```{r message = FALSE, out.width='100%'}
+aggr(
+  echocardiogram_df,
+  numbers = TRUE,
+  prop = FALSE,
+  cex.axis = 0.7
+  )
+```
+
+Como se puede ver ninguna columna supera los 20 valores ausentes a excepción de la columna Group, que como dice el fichero `echocardiogram.names` puede ser ignorada; y la columna AliveAt1, que podemos calcularla a partir de las dos primeras columnas para rellenar los valores ausentes.
+
+Finalmente, mostramos una gráfica con el número de valores ausentes por fila:
+
+```{r out.width='100%'}
+barplot(na_by_row, seq(1,132), xlab="Filas", ylab = "Valores Ausentes")
+```
+
+Como se puede observar hay una fila que cuenta con más de 8 valores ausentes.
+
+## Cálculo de los valores ausentes en la columna AliveAt1
+
+Como nos indica el fichero `echocardiogram.names` la columna AliveAt1 se puede calcular a partir de las columnas Survival y StillAlive. La columna AliveAt1 toma el valor booleano `FALSE` en caso de que el paciente estuviese muerto después de 1 año de haber tenido el ataque al corazón o que se le haya hecho un siguimiento durante menos de un año y toma el valor booleano `TRUE` en caso de que el paciente durase un año entero vivo después del ataque al corazón y siga vivo actualmente. 
+
+Por lo tanto, calculamos el valor de la columna AliveAt1:
+
+```{r}
+echocardiogram_df <- transform(
+  echocardiogram_df, 
+  AliveAt1 = ifelse(Survival >= 12 & StillAlive, TRUE, FALSE)
+  )
+```
+
+Comprobamos ahora cuantos valores de esta columna siguen sin estar definidos:
+
+```{r}
+sum(is.na(echocardiogram_df$AliveAt1))
+```
+
+Este resultado tiene sentido ya que también faltan 2 valores de la columna Survival, por lo que no se puede calcular para estas filas el valor de la columna AliveAt1 correspondiente.
+
+## Limpieza del DataFrame
+
+Ahora, en función de la distribución de valores `NA's`, indicamos si sería conveniente eliminar alguna instancia (fila) o atibuto (columna). Para esto lo primero será eliminar las columnas que no son relevantes según se indica en el fichero `echocardiogra.names`. Estas columnas son las columnas WMS, Mult, Name y Group:
+
+```{r}
+echocardiogram_df$WMS <- NULL
+echocardiogram_df$Mult <- NULL
+echocardiogram_df$Name <- NULL
+echocardiogram_df$Group <- NULL
+```
+
+Tras eliminar estas columnas en nuestro DataFrame quedan las siguientes columnas:
+
+```{r}
+ncol(echocardiogram_df)
+```
+Por lo tanto, eliminaremos las filas del DataFrame que tengan más de la mitad de sus valores ausentes, es decir, aquellas instancias con 5 o más valores ausentes de entre estas 9 columnas finales:
+
+```{r}
+indices_to_keep <-
+  apply(echocardiogram_df, 1, function(x) {
+    sum(is.na(x)) < 5
+  })
+echocardiogram_df <- echocardiogram_df[indices_to_keep,]
+echocardiogram_df
+```
+
+De esta manera hemos eliminado las columnas que no eran relevantes de nuestro DataFrame y también las filas con una cantidad de valores ausentes mayor que la de valores presentes, por lo que la calidad de estas filas para predecir la salidad se basaría en la calidad de las imputaciones, algo que es mejor evitar.
+
+## Imputación de los valores ausentes
+
+### Imputación
+
+En este apartado se nos pide que imputemos los valores ausentes en el DataFrame `echocardiogram_df` mediante las técnicas de imputación que nos proporciona el paquete `VIM` (imputación kNN), las proporcionadas por el paquete `Hmisc` (media o mediana) y también mediante alguna que nos sea proporcionada por el paquete `mice`.
+
+Para comenzar, btenemos las columnas con valores ausentes:
+
+```{r}
+na_by_column <- apply(echocardiogram_df, 2, function(x){sum(is.na(x))})
+na_by_column
+```
+
+Como se puede observar, las columnas con valores ausentes son Survival, AgeAttack, FracShort, EPSS, LVDD, WMI y AliveAt1; por lo que imputaremos los valores faltantes en estas columnas. Empezamos con el imputo mediante la media.
+
+#### Imputo mediante la mediana
+
+```{r}
+echocar.medianImpute <- echocardiogram_df
+echocar.medianImpute$Survival <- impute(echocar.medianImpute$Survival, fun = median)
+echocar.medianImpute$AgeAttack <- impute(echocar.medianImpute$AgeAttack, fun = median)
+echocar.medianImpute$FracShort <- impute(echocar.medianImpute$FracShort, fun = median)
+echocar.medianImpute$EPSS <- impute(echocar.medianImpute$EPSS, fun = median)
+echocar.medianImpute$LVDD <- impute(echocar.medianImpute$LVDD, fun = median)
+echocar.medianImpute$WMI <- impute(echocar.medianImpute$WMI, fun = median)
+echocar.medianImpute$AliveAt1 <- impute(echocar.medianImpute$AliveAt1, fun = median)
+```
+
+Volvemos a convertir a tipo boolean las columnas que representan valores binarios:
+
+```{r}
+echocar.medianImpute$StillAlive <- as.logical(echocar.medianImpute$StillAlive)
+echocar.medianImpute$PericardEffu <- as.logical(echocar.medianImpute$PericardEffu)
+echocar.medianImpute$AliveAt1 <- as.logical(echocar.medianImpute$AliveAt1)
+```
+
+
+Continuamos con el impute mediante kNN.
+
+#### Imputo mediante kNN
+
+```{r}
+echocar.knnImpute <- echocardiogram_df
+echocar.knnImpute <- kNN(echocar.knnImpute)
+```
+
+Finalizamos con una imputación mediante el método **Predictive Mean Matching** del paquete `mice`.
+
+#### Imputo mediante **Predictive Mean Matching**
+
+```{r message=FALSE}
+echocar.pmmImpute <- echocardiogram_df
+echocar.pmmImpute <- mice(echocar.pmmImpute, m = 5, method = "pmm", seed = 123)
+echocar.pmmImpute <- complete(echocar.pmmImpute, 1)
+```
+
+### Representación gráfica de las imputaciones
+
+Mostramos mediante gráficas de barras las diferencias entre las diferentes técnicas de imputación utilizadas (kNN, mediana y pmm) para ver las diferencias entre las imputaciones de los valores ausentes llevadas a cabo por cada una de estas técnicas.
+
+Para esto lo que haremos es representar en una gráfica de barras, para cada una de las columnas (atributos de nuestro DataFrame), el valor imputado por cada técnica para los valores ausentes en el DataFrame original.
+
+Empezamos por el atributo Survival:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo Survival
+
+echocar.survivalImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$Survival)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.survivalImpute$median <- echocar.medianImpute[echocar.knnImpute$Survival_imp, ]$Survival
+echocar.survivalImpute$knn <- echocar.knnImpute[echocar.knnImpute$Survival_imp, ]$Survival
+echocar.survivalImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$Survival_imp, ]$Survival
+echocar.survivalImpute$row <- seq.int(nrow(echocar.survivalImpute))
+
+echocar.survivalImpute.molten <- melt(echocar.survivalImpute, id="row")
+
+ggplot(
+  data = echocar.survivalImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo Survival") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+Seguimos por el atributo AgeAttack:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo AgeAttack
+
+echocar.ageAttackImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$AgeAttack)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.ageAttackImpute$median <- echocar.medianImpute[echocar.knnImpute$AgeAttack_imp, ]$AgeAttack
+echocar.ageAttackImpute$knn <- echocar.knnImpute[echocar.knnImpute$AgeAttack_imp, ]$AgeAttack
+echocar.ageAttackImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$AgeAttack_imp, ]$AgeAttack
+echocar.ageAttackImpute$row <- seq.int(nrow(echocar.ageAttackImpute))
+
+echocar.ageAttackImpute.molten <- melt(echocar.ageAttackImpute, id="row")
+
+ggplot(
+  data = echocar.ageAttackImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo AgeAttack") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+Seguimos con el atributo FracShort:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo FracShort
+
+echocar.fracShortImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$FracShort)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.fracShortImpute$median <- echocar.medianImpute[echocar.knnImpute$FracShort_imp, ]$FracShort
+echocar.fracShortImpute$knn <- echocar.knnImpute[echocar.knnImpute$FracShort_imp, ]$FracShort
+echocar.fracShortImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$FracShort_imp, ]$FracShort
+echocar.fracShortImpute$row <- seq.int(nrow(echocar.fracShortImpute))
+
+echocar.fracShortImpute.molten <- melt(echocar.fracShortImpute, id="row")
+
+ggplot(
+  data = echocar.fracShortImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo FracShort") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+
+Seguimos con el atributo EPSS:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo EPSS
+
+echocar.EPSSImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$EPSS)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.EPSSImpute$median <- echocar.medianImpute[echocar.knnImpute$EPSS_imp, ]$EPSS
+echocar.EPSSImpute$knn <- echocar.knnImpute[echocar.knnImpute$EPSS_imp, ]$EPSS
+echocar.EPSSImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$EPSS_imp, ]$EPSS
+echocar.EPSSImpute$row <- seq.int(nrow(echocar.EPSSImpute))
+
+echocar.EPSSImpute.molten <- melt(echocar.EPSSImpute, id="row")
+
+ggplot(
+  data = echocar.EPSSImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo EPSS") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+En este caso observamos bastante variabilidad entre los valores imputados por el método PMM y las otras dos técnicas de imputación, asignándole el método PMM valores mayores a los valores ausentes que las otras técnicas.
+
+Seguimos con el atributo LVDD:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo LVDD
+
+echocar.LVDDImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$LVDD)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.LVDDImpute$median <- echocar.medianImpute[echocar.knnImpute$LVDD_imp, ]$LVDD
+echocar.LVDDImpute$knn <- echocar.knnImpute[echocar.knnImpute$LVDD_imp, ]$LVDD
+echocar.LVDDImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$LVDD_imp, ]$LVDD
+echocar.LVDDImpute$row <- seq.int(nrow(echocar.LVDDImpute))
+
+echocar.LVDDImpute.molten <- melt(echocar.LVDDImpute, id="row")
+
+ggplot(
+  data = echocar.LVDDImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo LVDD") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+
+Seguimos con el atributo WMI:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo WMI
+
+echocar.WMIImpute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$WMI)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.WMIImpute$median <- echocar.medianImpute[echocar.knnImpute$WMI_imp, ]$WMI
+echocar.WMIImpute$knn <- echocar.knnImpute[echocar.knnImpute$WMI_imp, ]$WMI
+echocar.WMIImpute$pmm <- echocar.pmmImpute[echocar.knnImpute$WMI_imp, ]$WMI
+echocar.WMIImpute$row <- seq.int(nrow(echocar.WMIImpute))
+
+echocar.WMIImpute.molten <- melt(echocar.WMIImpute, id="row")
+
+ggplot(
+  data = echocar.LVDDImpute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo WMI") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+
+Finalizamos con el atributo AliveAt1:
+
+```{r warning=FALSE, message=FALSE, out.width='100%'}
+# Atributo AliveAt1
+
+echocar.AliveAt1Impute <- setNames(
+  data.frame(matrix(ncol=4, nrow=sum(is.na(echocardiogram_df$AliveAt1)))), 
+  c("row", "median", "knn", "pmm")
+  )
+
+echocar.AliveAt1Impute$median <- echocar.medianImpute[echocar.knnImpute$AliveAt1_imp, ]$AliveAt1
+echocar.AliveAt1Impute$knn <- echocar.knnImpute[echocar.knnImpute$AliveAt1_imp, ]$AliveAt1
+echocar.AliveAt1Impute$pmm <- echocar.pmmImpute[echocar.knnImpute$AliveAt1_imp, ]$AliveAt1
+echocar.AliveAt1Impute$row <- seq.int(nrow(echocar.AliveAt1Impute))
+
+echocar.AliveAt1Impute.molten <- melt(echocar.AliveAt1Impute, id="row")
+
+ggplot(
+  data = echocar.AliveAt1Impute.molten, 
+  aes(x = row, y = value, fill = variable, color = variable, alpha = variable)
+  ) +
+  geom_bar(stat = "identity", position = "identity") +
+  scale_colour_manual(values = c("green", "red", "lightblue")) +
+  scale_fill_manual(values = c("green", "red", "lightblue")) +
+  scale_alpha_manual(values = c(0.4, 0.4, 0.4)) +
+  ggtitle("Comparación de los valores imputados para el atributo AliveAt1") +
+  labs(x = "Filas con Valores Ausentes", y = "Valor Imputado")
+```
+
+En este último caso todo los métodos imputan el mismo valor.
+
+## Generación de los ficheros resultado
+
+Terminamos este boletín generando los distintos ficheros `.csv` resultado de aplicar las tres técnicas de imputación anteriores:
+
+```{r warning=FALSE}
+dir.create("./output/", showWarnings = FALSE)
+
+write.csv(echocar.medianImpute, "./output/echocar.medianImpute.csv", row.names = FALSE)
+write.csv(echocar.knnImpute, "./output/echocar.knnImpute.csv", row.names = FALSE)
+write.csv(echocar.pmmImpute, "./output/echocar.pmmImpute.csv", row.names = FALSE)
+```

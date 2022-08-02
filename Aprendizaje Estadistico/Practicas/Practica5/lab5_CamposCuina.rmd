@@ -1,0 +1,34 @@
+---
+title: 'Laboratorio 5: Análisis de Componentes Principales con R'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: no
+  html_document:
+    df_print: paged
+    toc: no
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+\pagenumbering{gobble} 
+
+<style>
+  body {
+    text-align : justify
+  }
+</style>
+
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+
+\pagenumbering{arabic} 
+
+# Análisis de componentes principales con princomp
+

@@ -1,0 +1,74 @@
+---
+title: 'Laboratorio 4: Modelos Lineales de Clasificación con R'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  pdf_document:
+    number_sections: yes
+    toc: no
+  html_document:
+    df_print: paged
+    toc: no
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+\pagenumbering{gobble} 
+
+<style>
+  body {
+    text-align : justify
+  }
+</style>
+
+\cleardoublepage
+\tableofcontents
+\cleardoublepage
+
+\pagenumbering{arabic} 
+
+# Carga de las librerías necesarias
+
+Primero cargamos las librerías necesarias:
+
+```{r, message=FALSE}
+library(scatterplot3d)
+library(tidyverse)
+library(lattice)
+library(Hmisc)
+```
+
+# Ajuste de un modelo de regresión logística con R
+
+```{r}
+npoints = 25
+
+# Simulate data from a normal distribution
+data1 = rnorm(npoints, mean=3, sd=1)
+data2 = rnorm(npoints, mean=5, 1.5)
+labels = factor(rep(c(1,2),each=npoints))
+data = data.frame(value=c(data1, data2), label=labels)
+head(data)
+
+
+```
+
+```{r}
+# Es necesario el paquete Hmisc para el cálculo de los estadísticos
+library(Hmisc)
+ggplot(data, aes(x=label,y=value)) + geom_point() + stat_summary(fun.data = mean_cl_normal, col='blue')
+
+```
+
+
+
+
+
+
+
+
+
+

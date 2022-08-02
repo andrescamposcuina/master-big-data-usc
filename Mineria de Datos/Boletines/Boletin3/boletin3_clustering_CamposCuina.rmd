@@ -1,0 +1,883 @@
+---
+title: 'Boletín 3 - Clustering y Reglas de Asociación'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: '3'
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Boletin3/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(cluster)
+library(dbscan)
+library(fpc)
+library(factoextra)
+library(gridExtra)
+library(reshape)
+library(arules)
+library(arulesViz)
+library(car)
+```
+
+# Cargar los datos
+
+Lo primero será cargar los datos y hacer un preprocesado de los mismos en caso de que sea necesario.
+
+```{r}
+countries <- read.csv("./data/countries.csv", row.names = 1)
+```
+
+Comprobamos el contenido y la estructura de este DataFrame.
+
+```{r}
+str(countries)
+```
+
+Comprobamos cuántas regiones hay presentes en el DataFrame y cuáles son.
+
+```{r}
+unique(countries$Region)
+```
+
+Cómo podemos ver, hay 11 regiones definidas. Esto nos puede dar una idea del número de clusters que pueden aparecer tras aplicar las técnicas vistas en clase. El nombre de la región a la que pertenece cada país no es información relevante para poder llevar a cabo el clustering, por lo que la quitamos.
+
+```{r}
+countries$Region <- NULL
+```
+
+Comprovamos si hay valores faltantes en el DataFrame.
+
+```{r}
+apply(countries, 2, function(x){ sum(is.na(x)) })
+```
+
+Como se puede ver, no los hay. Por último escalamos y centramos los datos para mejorar el rendimiento de los algoritmos de clustering. Esto lo podemos hacer mediante la función `scale()`. 
+
+```{r}
+countries.scaled <- as.data.frame(scale(countries))
+```
+
+Comprobamos mediante un diagrama de cajas que este preprocesamiento se ha ejecutado correctamente.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+countries.scaled.stacked <- stack(countries.scaled)
+
+p <- ggplot(
+  data = countries.scaled.stacked,
+  aes(
+    x = ind,
+    y = values,
+    color = ind
+  )
+) +
+geom_boxplot() +
+labs(
+  title = "Datos escalados",
+  x = "Variables",
+  y = "Valores",
+  color = 'Variables'
+)
+
+p
+```
+
+# Ejercicio 1: Clustering Jerárquico
+
+**Apartado 1**
+
+**1. Aplica las técnicas de clustering aglomerativo. Prueba con las diferentes medidas de distancia entre elementos y entre clusters vistas en clase.**
+
+Utilizaremos tanto las funciones `hclust()` y `agnes()` vistas en el enunciado de la práctica de clustering y que permiten ejecutar clustering aglomerativo.
+
+**Función `hclust()`**
+
+Empezaremos haciendo uso de la función `hclust()`. Al igual que en la práctica de clustering, probamos con los métodos para llevar a cabo el clustering y con las distintas distancias entre elementos. En primer lugar definimos los métodos a probar y las distancias. 
+
+```{r}
+hclust.methods <- c("average", "single", "complete")
+hclust.dists <- c("euclidean", "manhattan", "minkowski", "maximum", "canberra", "binary")
+```
+
+Como se puede ver probamos con tres métodos para llevar a cabo el clusterings y con todas las distancias que están soportadas por la función `dist()`. Ahora generamos los clusters con cada una de las combinaciones de los hiperparámetros anteriores.
+
+Los resultados se almacenarán en una lista para poder ser utilizados más adelante en caso de que sea necesario.
+
+```{r}
+# Generamos el grid que vamos a utilizar para obtener los clusterings
+hclust.grid <- expand.grid(hclust.methods, hclust.dists)
+
+# Lista para almacenar los resultados
+hclust.results <- list()
+
+# Para cada combinación de los hiperparámetros, generamos los clusters
+for (i in 1:nrow(hclust.grid)){
+  
+  hclust.method <- hclust.grid[i, 1]
+  hclust.dist <- hclust.grid[i, 2]
+  
+  # Le asignamos un nombre a cada combinación del método y distancia
+  hclust.name <- sprintf("hclust.%s.%s", hclust.method, hclust.dist)
+  
+  # Generamos el cluster
+  hclust.aux <- hclust(
+    dist(countries.scaled, method = hclust.dist),
+    method = hclust.method
+  )
+  
+  # Guardamos los resultados en una lista
+  hclust.results[[hclust.name]] = c(hclust.results[[hclust.name]], hclust.aux)
+}
+```
+
+
+**Función `agnes()`**
+
+Al igual que antes, definimos los métodos y las distancias a utilizar
+
+```{r}
+agnes.methods <- c("average", "single", "complete")
+agnes.dists <- c("euclidean", "manhattan", "minkowski", "maximum", "canberra", "binary")
+```
+
+Ahora generamos los clusters con cada una de las combinaciones de los hiperparámetros anteriores.
+
+```{r}
+# Generamos el grid que vamos a utilizar para obtener los clusterings
+agnes.grid <- expand.grid(agnes.methods, agnes.dists)
+
+# Lista para almacenar los resultados
+agnes.results <- list()
+
+# Para cada combinación de los hiperparámetros, generamos los clusters
+for (i in 1:nrow(agnes.grid)){
+  
+  agnes.method <- agnes.grid[i, 1]
+  agnes.dist <- agnes.grid[i, 2]
+  
+  agnes.name <- sprintf("agnes.%s.%s", agnes.method, agnes.dist)
+  
+  # Generamos el cluster
+  agnes.aux <- agnes(
+    countries.scaled,
+    metric = agnes.dist,
+    method = agnes.method
+  )
+  
+  
+  # Guardamos los resultados en una lista
+  agnes.results[[agnes.name]] = c(agnes.results[[agnes.name]], agnes.aux)
+}
+```
+
+**Apartado 2**
+
+**2. Calcula los índices siluetas para cada una de las técnicas aplicadas en el apartado anterior, teniendo en cuenta un número amplio de posibles particiones.**
+
+En primer lugar, definimos el número máximo de clusters a utilizar a partir del número número mínimo de elementos en un cluster, que fijaremos en 4 elementos.
+
+```{r}
+k.max <- floor(length(row.names(countries.scaled)) / 4)
+```
+
+**Función `hclust()`**
+
+Calculamos los índices silueta para cada una de las técnicas aplicadas en el apartado anterior, mediante el uso de la función `hclust()`. Esto lo haremos iterando sobre la lista de resultados generada anteriormente.
+
+```{r}
+# Definimos una lista para guardar los resultados de nuevo
+sil.hclust.results <- list()
+
+# Iteramos sobre la lista generada en el apartado anterior
+for (hclust.name in names(hclust.results)) {
+  
+  # Sacamos la distancia a usar a partir del nombre
+  dist <- tail(strsplit(hclust.name, split = ".", fixed = TRUE)[[1]], n = 1)
+    
+  for (k in 2:k.max){
+    
+    sil.name <- sprintf("sil.%d.%s", k, hclust.name)
+    
+    sil.aux <- silhouette(
+      cutree(hclust.results[[hclust.name]], k = k), 
+      dist(countries.scaled, method = dist)
+    )
+    
+    # Guardamos los resultados en una lista
+    sil.hclust.results[[sil.name]] = rbind(sil.hclust.results[[sil.name]], sil.aux)
+  }
+}
+```
+
+Los resultados están almacenados en la lista `sil.hclust.results` y el nombre de cada elemento en esta lista _named_ nos indica el número de clusters usado para calcular el índice silueta correspondiente.
+
+**Función `agnes()`**
+
+Hacemos lo mismo que acabamos de hacer pero para la función agnes.
+
+```{r}
+# Definimos una lista para guardar los resultados de nuevo
+sil.agnes.results <- list()
+
+# Iteramos sobre la lista generada en el apartado anterior
+for (agnes.name in names(agnes.results)) {
+  
+  # Sacamos la distancia a usar a partir del nombre
+  dist <- tail(strsplit(agnes.name, split = ".", fixed = TRUE)[[1]], n = 1)
+    
+  for (k in 2:k.max){
+    
+    sil.name <- sprintf("sil.%d.%s", k, agnes.name)
+    
+    sil.aux <- silhouette(
+      cutree(agnes.results[[agnes.name]], k = k), 
+      dist(countries.scaled, method = dist)
+    )
+    
+    # Guardamos los resultados en una lista
+    sil.agnes.results[[sil.name]] = rbind(sil.agnes.results[[sil.name]], sil.aux)
+  }
+}
+```
+
+
+**Apartado 3**
+
+**3. Genera un array para cada técnica en el que se almacene el índice silueta medio para cada posible partición. A partir de dichos arrays genera una gráfica en la que se represente la evolución, de forma conjunta, de los índices silueta medios de todas las técnicas utilizadas.**
+
+Calculamos el índice silueta medio para cada posible partición, para cada una de las técnicas generadas en los apartados anteriores. Después, estos resultados los almacenaremos en un DataFrame, en el cual cada columna representa una técnica y cada fila un valor de k (el número de la fila será igual a `k-1`).
+
+Igual que antes, dividimos los cálculos entre los que usaron la función `hclust()` y los que usaron la función `agnes()`.
+
+**Función `hclust()`**
+
+```{r}
+# Definimos el DataFrame en el que almacenar los resultados
+sil.hclust.avg.df <- data.frame(matrix(0, nrow = k.max - 1))
+
+# Iteramos para cada técnica
+for (hclust.name in names(hclust.results)){
+  # Definimos la lista para guardar el índice silueta medio para cada particion
+  sil.hclust.avg <- list()
+  
+  # Iteramos para cada resultado generado en el apartado anterior
+  for (sil.name in names(sil.hclust.results)) {
+    
+    # Obtenemos el valor de k a partir del nombre
+    k <- strsplit(sil.name, split = ".", fixed = TRUE)[[1]][2]
+    
+    # Si la técnica coincide, calculamos el valor del índice silueta medio
+    if (grepl(hclust.name, sil.name, fixed = TRUE) == TRUE) {
+      sil.avg <-  mean(sil.hclust.results[[sil.name]][, 3])
+      
+      # Lo almacenamos en una lista
+      sil.hclust.avg[[k]] <- c(sil.hclust.avg[[k]], sil.avg)
+    }
+  }
+  
+  # Almacenamos como una columna del DataFrame
+  sil.hclust.avg.df[hclust.name] <- stack(sil.hclust.avg)$values
+  
+}
+
+# Eliminamos la primera columna, que no nos hace falta
+sil.hclust.avg.df <- sil.hclust.avg.df[, -1]
+
+# Añadimos nombres a las filas
+rownames(sil.hclust.avg.df) <- c(2:k.max)
+```
+
+Mostramos las primeras filas de nuestro DataFrame resultado.
+
+```{r}
+head(sil.hclust.avg.df)
+```
+
+**Función `agnes`**
+
+Hacemos los mismos pasos para la función `agnes()`.
+
+```{r}
+# Definimos el DataFrame en el que almacenar los resultados
+sil.agnes.avg.df <- data.frame(matrix(0, nrow = k.max - 1))
+
+# Iteramos para cada técnica
+for (agnes.name in names(agnes.results)){
+  # Definimos la lista para guardar el índice silueta medio para cada particion
+  sil.agnes.avg <- list()
+  
+  # Iteramos para cada resultado generado en el apartado anterior
+  for (sil.name in names(sil.agnes.results)) {
+    
+    # Obtenemos el valor de k a partir del nombre
+    k <- strsplit(sil.name, split = ".", fixed = TRUE)[[1]][2]
+    
+    # Si la técnica coincide, calculamos el valor del índice silueta medio
+    if (grepl(agnes.name, sil.name, fixed = TRUE) == TRUE) {
+      sil.avg <-  mean(sil.agnes.results[[sil.name]][, 3])
+      
+      # Lo almacenamos en una lista
+      sil.agnes.avg[[k]] <- c(sil.agnes.avg[[k]], sil.avg)
+    }
+  }
+  
+  # Almacenamos como una columna del DataFrame
+  sil.agnes.avg.df[agnes.name] <- stack(sil.agnes.avg)$values
+  
+}
+
+# Eliminamos la primera columna, que no nos hace falta
+sil.agnes.avg.df <- sil.agnes.avg.df[, -1]
+
+# Añadimos nombres a las filas
+rownames(sil.agnes.avg.df) <- c(2:k.max)
+```
+
+Mostramos las primeras filas de nuestro DataFrame resultado.
+
+```{r}
+head(sil.agnes.avg.df)
+```
+
+**Gráficas**
+
+Ahora generaremos las gráficas en la que se represente la evolución, de forma conjunta, de los índices silueta medios de todas las técnicas utilizadas. Representaremos una gráfica para cada método de generar los clusters.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Unimos los dos DataFrames generados anteriormente en uno sólo
+sil.avg.df <- cbind(sil.hclust.avg.df, sil.agnes.avg.df)
+
+# Dividimos en tres DataFrames en función del método utilizado
+average.sil.avg.df <- sil.avg.df %>% select(matches("average"))
+single.sil.avg.df <- sil.avg.df %>% select(matches("single"))
+complete.sil.avg.df <- sil.avg.df %>% select(matches("complete"))
+
+# Para las gráficas
+sil.avg.df.melted <- melt(as.matrix(sil.avg.df), c("k", "tecnica"))
+
+for (hclust.method in hclust.methods) {
+  
+  df.name <- sprintf("%s.sil.avg.df", hclust.method)
+  df <- get(df.name)
+  df.melted <-  melt(as.matrix(df), c("k", "tecnica"))
+
+  p <- ggplot(df.melted, aes(k, value)) +
+    geom_line(aes(colour = tecnica)) +
+    geom_point(aes(colour = tecnica)) +
+    scale_x_continuous(breaks = seq(2, k.max, 2), name="valor de k") +
+    ggtitle(sprintf("Método: %s", hclust.method))
+
+  print(p)
+}
+```
+
+# Ejercicio 2: Clustering Particional
+
+**Apartado 1**
+
+**Utilizando el índice gap, calcula el número óptimo de clusters para las técnicas kmedias y kmedoides. En el caso del kmedias compara los resultados con el número que se obtiene con la regla del codo.**
+
+Para utilizar la técnica kmedoides podemos utilizar la función `pam()` que significa _partitioning around medians_. Calculamos el índice gap para las técnicas de kmedias y kmedoides.
+
+```{r}
+set.seed(123)
+
+# Método kmeans
+countries.gap.kmeans <- clusGap(
+  countries.scaled,
+  kmeans,
+  K.max = k.max,
+  verbose = FALSE
+)
+
+# Método kmedoides
+countries.gap.pam <- clusGap(
+  countries.scaled, 
+  pam, 
+  K.max = k.max,
+  verbose = FALSE
+)
+```
+
+Obtenemos los mejores valores de k, para las anteriores funciones.
+
+```{r}
+# Método kmeans
+countries.gap.kmeans.k <- maxSE(
+  countries.gap.kmeans$Tab[, "gap"],
+  countries.gap.kmeans$Tab[, "SE.sim"],
+  method = "Tibs2001SEmax")
+
+# Método kmedoides
+countries.gap.pam.k <- maxSE(
+  countries.gap.pam$Tab[, "gap"],
+  countries.gap.pam$Tab[, "SE.sim"],
+  method = "Tibs2001SEmax")
+```
+
+Almacenamos los resultados en un DataFrame y los mostramos por pantalla.
+
+```{r}
+countries.gap.results <- rbind.data.frame(
+  c(countries.gap.kmeans.k, countries.gap.kmeans$Tab[countries.gap.kmeans.k, "gap"]),
+  c(countries.gap.pam.k, countries.gap.pam$Tab[countries.gap.pam.k, "gap"])
+)
+
+# Asignamos nombres a las columnas y las filas del DataFrame
+colnames(countries.gap.results) <- c("mejor k", "gap")
+rownames(countries.gap.results) <- c("kmeans", "pam")
+
+# Mostramos por pantalla
+countries.gap.results
+```
+
+Ahora, para el caso de kmedias comparamos también con el resultado que se obtendrían si ejecutasemos el método del codo.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+k.clusters <- c(2:k.max)
+countries.kmeans.k <- data.frame(row.names = k.clusters)
+
+for (k in k.clusters) {
+  kmeans.iter <- kmeans(
+    countries.scaled, 
+    centers = k, 
+    iter.max = 10,
+    nstart = 10
+  )
+  
+  countries.kmeans.k[as.character(k), "tot.withinss"] <- kmeans.iter$tot.withinss
+}
+
+# Mostramos la gráfica
+plot(
+  x = rownames(countries.kmeans.k),
+  y = countries.kmeans.k$tot.withinss,
+  ylab = "tot.withinss",
+  xlab = "Valor de k",
+  type='b',
+  pch = 19
+)
+
+abline(v = 4, col = 'red')
+abline(v = 12, col = 'green')
+```
+
+Según la regla del codo, el valor de k debería estar entre 6 y 12. Seguramente el valor de `k=8` sea por el que me decantaría si sólo usase esta técnica para elegir el mejor valor de k.
+
+**Apartado 2**
+
+**Realiza la misma operación, pero ahora teniendo en cuenta el índice silueta. Muestra gráficamente la evolución de este índice para cada técnica en un mismo gráfico.**
+
+```{r}
+# Función para calcular el índice silueta para un valor k (kmeans)
+silhouette_score_kmeans <- function(k) {
+  km <- kmeans(
+    countries.scaled, 
+    centers = k, 
+    iter.max = 10,
+    nstart = 10
+  )
+  
+  ss <- silhouette(km$cluster, dist(countries.scaled))
+  
+  # Devolveemos la media del índice silueta
+  mean(ss[, 3])
+}
+
+# Función para calcular el índice silueta para un valor k (kmedoides)
+silhouette_score_pam <- function(k) {
+  pam <- pam(
+    countries.scaled, 
+    k = k
+  )
+  
+  ss <- silhouette(pam$cluster, dist(countries.scaled))
+  
+  # Devolveemos la media del índice silueta
+  mean(ss[, 3])
+}
+
+# Calculamos los índices silueta para cada partición posible
+avg.sil.kmeans <- sapply(k.clusters, silhouette_score_kmeans)
+avg.sil.pam <- sapply(k.clusters, silhouette_score_pam)
+
+# Juntamos en un solo dataframe
+avg.sil.df <- data.frame(kmeans = avg.sil.kmeans, pam = avg.sil.pam)
+rownames(avg.sil.df) <- c(2:k.max)
+
+# Mostramos por pantalla el resultado
+head(avg.sil.df)
+```
+
+Finalmente, mostramos la gráfica con la evolución de los índice silueta para cada técnica.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Para representar con gráfica de líneas
+avg.sil.df.melted <- melt(as.matrix(avg.sil.df), c("k", "Tecnica"))
+
+# Dibujamos la gráfica
+p <- ggplot(avg.sil.df.melted, aes(k, value)) +
+  geom_line(aes(colour = Tecnica)) +
+  geom_point(aes(colour = Tecnica)) +
+  scale_x_continuous(breaks = seq(2, k.max, 2), name="Valor de k")
+
+print(p)
+```
+
+En este gráifca podemos ver como el mejor resultado se consigue para `k=2` en ambas técnicas. También se puede ver como el valor del índice silueta para kmeans es mejor para todos los tamaños de las particiones frente al de la técnica kmedoides.
+
+**Apartado 3**
+
+**Elige la combinación de partición y técnica que mejores resultados proporcione. Selecciona algunos elementos de cada cluster e intenta interpretar la partición generada apoyando dicha interpretación con las gráficas que consideres oportuno.**
+
+Como la técnica que mejor funciona es la técnica kmeans, y utilizando el índice gap encontramos que el mejor valor de k para dicha técnica es `k=4`, elegimos esta como la mejor combinación de partición y técnica.
+
+```{r}
+countries.kmeans.best <- kmeans(
+  countries.scaled, 
+  centers = 4, 
+  iter.max = 100, 
+  nstart = 10
+)
+```
+
+
+Representamos esta solución mediante una gráfoica que nos permita ver qué países hay en cada cluster.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+set.seed(123)
+
+clusplot(countries.scaled, countries.kmeans.best$cluster, lines = 0, labels=2, color=TRUE, cex=0.7)
+```
+
+Podemos ver como en el **cluster 3** hay países como Afganistán, Angola o Uganda. Estos 3 son países de África con un bajo nivel económico, lo que puede haber llevado a que acaben en el mismo cluster. Por otra parte, en el **cluster 1** se encuentran países más ricos como Monaco, Francia, Dinamarca o Alemania. A parte de estos países europeos también podemos encontrar otros como Singapur o Hong-Kong, que aunque no estén en Europa presentan una calidad de vida similar a los países anteriores.
+
+Interpretar los **clusters 2 y 3** es algo más complicado. En el **cluster 2** encontramos países como Qatar, Kuwait o los Emiratos Árabes Unidos, esto nos puede llevar a pensar que estamos ante el cluster de los países muy desarrollados económicamente, debido al dinero del petróleo, pero no tanto a nivel social.
+
+Por último, en el **cluster 3** encontramos los países que no se adaptan a ninguna de los clusters anteriores, como puede ser el ejemplo de la India.
+
+# Ejercicio 3: Clustering Basado en Densidad
+
+**Apartado 1**
+
+**Crea un objeto como resultado de aplicar la técnica `DBScan()`, eligiendo antes el valor óptimo para la $\epsilon$-distancia. Justifica la elección de dicho valor.**
+
+Como se nos pide que elijamos el valor óptimo para la $\epsilon$-distancia, pero no se nos dice que optimicemos también para el parámetro `minPts` lo que dejaremos este valor al valor por defecto (5). 
+
+En primer lugar utilizamos la función `kNNdistplot()` para mostrar el gráfico de k-distancias que se puede utilizar para determinar el valor de $\epsilon$. Para esto fijamos el valor de k a `MinPts - 1`.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+kNNdistplot(countries.scaled, k = 4)
+abline(h=3.7, col="red")
+```
+
+Utilizando la **regla del codo**, podemos ver como un buen valor para $\epsilon$ sería el valor 3.7. Por lo tanto, usamos este valor para generar el objeto mediante la técnica `DBScan()`.
+
+```{r}
+countries.dbscan <- dbscan(countries.scaled, eps=3.7)
+```
+
+Representamos el reusltado gráficamente.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+clusplot(countries.scaled, countries.dbscan$cluster, labels=2, color=TRUE, cex=0.7)
+```
+Cabe destacar que a mayor valor de $\epsilon$, menor es el número de clusters generados. En nuestro caso obtenemos dos clusters.
+
+**Apartado 2**
+
+**Calcula el índice silueta para la partición generada.**
+
+Esto lo hacemos a continuación.
+
+```{r}
+countries.dbscan.sil <- silhouette(countries.dbscan$cluster, dist(countries.scaled))
+  
+# Imprimimos la media del índice silueta
+mean(countries.dbscan.sil[, 3])
+```
+
+**Apartado 3**
+
+**Enumera algunas instancias de cada partición e interpreta los resultados, apoyando dicha interpretación con las gráficas que consideres oportunas.**
+
+Mostramos la gráfica anterior de nuevo.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+clusplot(countries.scaled, countries.dbscan$cluster, labels=2, color=TRUE, cex=0.7)
+```
+Como se puede ver, los dos clusters se solapan. En el **cluster 0** hay países como Monaco y Afganistán, que poco tienen que ver a priori, ni por población tamaño o nivel socioeconómico. En el **cluster 1** se encuentran prácticamente la totalidad de los países.
+
+Por tanto, podemos determinar que el **clustering basado en densidad** obtiene peores resultados que los métodos de clustering de los apartados anteriores.
+
+# Ejercicio 4: Conclusiones
+
+**Apartado 1**
+**Genera una tabla cuyas filas representen todas las particiones generadas anteriormente (tienes que incluir todas las generadas) y en las columnas el número óptimo de clusters, los índices calculados y algunos índices adicionales.**
+
+Creamos un DataFrame que contengan en sus filas las particiones generadas hasta aquí, y en sus columnas el número óptimo de clusters (k), el índice silueta y el índice gap. Como índice adicional, incluiremos también el índice de Pearson.
+
+```{r}
+# Definimos el DataFrame final
+final.results.df <- data.frame(
+  k=NA, 
+  avg.sil=NA, 
+  gap=NA,
+  pearson.index=NA
+)
+```
+
+Juntamos los DataFrames con los resultados del ejercicio 1 en uno sólo para usar en el momento de obtener, para cada método, el valor óptimo de k.
+
+```{r}
+ejercicio1.results <- cbind(sil.hclust.avg.df, sil.agnes.avg.df)
+```
+
+Añadimos los resultados para los **métodos de clustering jerárquico**.
+
+```{r, warning=FALSE, message=FALSE}
+# Para los métodos de clustering jerárquico
+
+# Iteramos para los resultados de la función hclust()
+for (hclust.name in names(hclust.results)) {
+  
+  # Obtenemos la partición
+  hclust <- hclust.results[[hclust.name]]
+  
+  hclust.k <- which.max(ejercicio1.results[, hclust.name]) + 1
+  hclust.sil <- max(ejercicio1.results[, hclust.name])
+  
+  # Obtenemos el índice gap
+  hclust.gap <- clusGap(
+    countries.scaled,
+    hcut,
+    K.max = k.max,
+    hc_method = hclust$method,
+    hc_metric = hclust$dist.method,
+    verbose = FALSE
+  )
+  
+  # Obtenemos el índice de Pearson
+  hclust.stats <- cluster.stats(countries.scaled, cutree(hclust, hclust.k))
+  
+  # Añadimos al DataFrame
+  final.results.df[hclust.name, ] <- c(
+    hclust.k, 
+    hclust.sil, 
+    hclust.gap$Tab[hclust.k, "gap"], 
+    hclust.stats$pearsongamma
+    )
+}
+```
+
+También para la función `agnes()`.
+
+```{r, warning=FALSE, message=FALSE}
+# Para los métodos de clustering jerárquico
+
+# Iteramos para los resultados de la función agnes()
+for (agnes.name in names(agnes.results)) {
+  
+
+  # Obtenemos la partición
+  agnes <- agnes.results[[agnes.name]]
+  
+  agnes.k <- which.max(ejercicio1.results[, agnes.name]) + 1
+  agnes.sil <- max(ejercicio1.results[, agnes.name])
+  
+  # Obtenemos el índice de Pearson
+  agnes.stats <- cluster.stats(countries.scaled, cutree(agnes, agnes.k))
+  
+  # Añadimos al DataFrame
+  final.results.df[agnes.name, ] <- c(
+    agnes.k,
+    agnes.sil,
+    NA,
+    agnes.stats$pearsongamma
+  )
+}
+```
+
+Incluimos los datos para los **métodos de clustering particional**.
+
+```{r, warning=FALSE, message=FALSE}
+# Insertamos las estadísticas obtenidas para kmeans
+kmeans.stats <- cluster.stats(countries.scaled, countries.kmeans.best$cluster)
+kmeans.sil <- summary(silhouette(countries.kmeans.best$cluster, dist(countries.scaled)))$avg.width
+kmeans.k <- kmeans.stats$cluster.number
+
+kmeans.gap <- clusGap(
+  countries.scaled, 
+  kmeans, 
+  K.max = k.max, 
+  verbose = FALSE
+)
+
+# Añadimos al DataFrame
+final.results.df["kmeans.best", ] <- c(
+  kmeans.k,
+  kmeans.sil,
+  kmeans.gap$Tab[kmeans.k, "gap"],
+  kmeans.stats$pearsongamma
+)
+```
+
+Para terminar, incluimos los datos para los **métodos de clustering basados en densidad**.
+
+```{r, warning=FALSE, message=FALSE}
+# Insertamos las estadísticas obtenidas para dbscan()
+dbscan.stats <- cluster.stats(countries.scaled, countries.dbscan$cluster)
+dbscan.sil <- summary(silhouette(countries.dbscan$cluster, dist(countries.scaled)))$avg.width
+dbscan.k <- dbscan.stats$cluster.number
+
+# Añadimos al DataFrame
+final.results.df["dbscan", ] <- c(
+  dbscan.k,
+  dbscan.sil,
+  NA,
+  dbscan.stats$pearsongamma
+)
+```
+
+Mostramos el resultado por pantalla.
+
+```{r}
+final.results.df
+```
+
+
+**Apartado 2**
+**¿Cuál crees que es la mejor partición? Justifica tu respuesta apoyando dicha interpretación con las gráficas que consideres oportuno.**
+
+El método para el que se obtiene el mejor valor para el índice silueta es el siguiente:
+
+```{r}
+max.sil.clustering <- which.max(final.results.df[, 'avg.sil'])
+final.results.df[max.sil.clustering, ]
+```
+
+Para el que podemos obtener las dos gráficas siguientes.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+best.clustering <- cutree(hclust.results[["hclust.average.maximum"]], 2)
+
+clusplot(
+  countries.scaled, 
+  best.clustering, 
+  lines = 0, 
+  labels=2, 
+  color=TRUE, 
+  cex=0.7
+)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Obtenemos los países presentes en nuestro DataFrame
+countries.names <- rownames(countries.scaled)
+                            
+# Definimos los objetos necesarios para definir nuestro mapa del mundo
+world.map <- map_data("world")
+world.map$color <- NA
+
+for (i in 1:nrow(world.map)) {
+  country <- world.map[i, "region"]
+
+  if (country %in% countries.names) {
+    world.map[i, "color"] <- best.clustering[[country]]
+  }
+}
+
+ggplot(data = world.map) +
+  geom_polygon(
+    aes(
+      x = long,
+      y = lat,
+      group = group,
+      fill = factor(color)
+    )
+  ) +
+  labs(title = "Mapa Mundial", color = "cluster")
+```
+
+Sin embargo, como se puede ver, este número de clústers no nos aporta ninguna infomación, por lo que probaremos con el resultado de aplicar el método _kmeans_, que nos devuelve como mejor valor de k el valor 4. 
+
+Las gráficas asociadas a esta partición son las siguientes.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+clusplot(
+  countries.scaled, 
+  countries.kmeans.best$cluster, 
+  lines = 0, 
+  labels=2, 
+  color=TRUE, 
+  cex=0.7
+)
+```
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+# Obtenemos los países presentes en nuestro DataFrame
+countries.names <- rownames(countries.scaled)
+                            
+# Definimos los objetos necesarios para definir nuestro mapa del mundo
+world.map <- map_data("world")
+world.map$color <- NA
+
+for (i in 1:nrow(world.map)) {
+  country <- world.map[i, "region"]
+
+  if (country %in% countries.names) {
+    world.map[i, "color"] <- countries.kmeans.best$cluster[[country]]
+  }
+}
+
+ggplot(data = world.map) +
+  geom_polygon(
+    aes(
+      x = long,
+      y = lat,
+      group = group,
+      fill = factor(color)
+    )
+  ) +
+  labs(title = "Mapa Mundial", color = "cluster")
+```
+
+Aquí ya podemos ver una mejor clasificación de los países. En el **cluster 1** estarían los países más desarrollados, como Canadá, Australia, Japón y los países de Europa Occidental. En el **cluster 2** estarían los países en vías de desarrollo, mientras que en el **cluster 3** los países menos desarrollados.
+
+Es curioso en esta partición, los países pertencientes al **cluster 4**, qque son los del este de Europa y otros países como la India y Filipinas. Probablemente estos países tengan niveles económicos similares, por lo que a pesar de las diferencias de población acabaron en el mismo cluster.

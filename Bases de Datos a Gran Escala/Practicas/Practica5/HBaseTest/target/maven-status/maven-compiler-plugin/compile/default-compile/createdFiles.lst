@@ -1,0 +1,9 @@
+gal/usc/etse/mbd/bdge/hbasetest/DAOPeliculas.class
+gal/usc/etse/mbd/bdge/hbasetest/Utils.class
+gal/usc/etse/mbd/bdge/hbasetest/Personal.class
+gal/usc/etse/mbd/bdge/hbasetest/ImprimirPeliculas.class
+gal/usc/etse/mbd/bdge/hbasetest/test.class
+gal/usc/etse/mbd/bdge/hbasetest/DAOPeliculasHBase.class
+gal/usc/etse/mbd/bdge/hbasetest/Reparto.class
+gal/usc/etse/mbd/bdge/hbasetest/DAOPeliculasPgsql.class
+gal/usc/etse/mbd/bdge/hbasetest/Pelicula.class

@@ -1,0 +1,1 @@
+curl 172.16.242.197:2305/v2/subscriptions -s -S -H 'Content-Type: application/json' --data @subscription_test.json

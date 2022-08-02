@@ -1,0 +1,1 @@
+docker run -it --rm -v "C:\Users\Andres\Google Drive\USC\MaBD\Aprendizaje Estadistico\Practicas":/home/jovyan -p 8888:8888 jupyter/scipy-notebook:6d42503c684f start-notebook.sh --NotebookApp.token=''

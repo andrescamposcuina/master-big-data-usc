@@ -1,0 +1,14 @@
+# Ejercicio 1:
+spark-submit --master yarn --num-executors 8 --driver-memory 4g --queue urgent ejercicio1.py patentes/cite75_99.txt patentes/apat63_99.txt output_practica4/dfCitas.parquet output_practica4/dfInfo.parquet
+
+# Ejercicio 2:
+spark-submit --master yarn --num-executors 8 --driver-memory 4g --queue urgent ejercicio2.py output_practica4/dfCitas.parquet output_practica4/dfInfo.parquet /home/usc/cursos/curso105/TCDM/practica4/data/country_codes.txt output_practica4/ejercicio2_output
+
+# Ejercicio 3:
+spark-submit --master yarn --num-executors 8 --driver-memory 4g --queue urgent ejercicio3.py patentes/apat63_99.txt output_practica4/ejercicio3_output
+
+# Ejercicio 4:
+spark-submit --master yarn --num-executors 8 --driver-memory 4g --queue urgent ejercicio4.py output_practica4/dfCitas.parquet output_practica4/dfInfo.parquet FR,ES output_practica4/ejercicio4_output
+
+# Ejercicio 5:
+spark-submit --master yarn --num-executors 8 --driver-memory 4g --queue urgent ejercicio5.py output_practica4/dfInfo.parquet output_practica4/ejercicio5_output

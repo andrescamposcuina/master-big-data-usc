@@ -1,0 +1,72 @@
+<Schema name="schema_inpeliculas">
+  <Dimension type="StandardDimension" visible="true" highCardinality="false" name="director">
+    <Hierarchy name="jerarquiadirector" visible="true" hasAll="true" primaryKey="id">
+      <Table name="director" schema="public">
+      </Table>
+      <Level name="niveldirector" visible="true" table="director" column="nombre" nameColumn="nombre" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="StandardDimension" visible="true" highCardinality="false" name="productor">
+    <Hierarchy name="jerarquiaproductor" visible="true" hasAll="true" primaryKey="id">
+      <Table name="productor" schema="public">
+      </Table>
+      <Level name="nivelproductor" visible="true" table="productor" column="nombre" nameColumn="nombre" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="StandardDimension" visible="true" highCardinality="false" name="productora">
+    <Hierarchy name="jerarquiaproductora" visible="true" hasAll="true" primaryKey="id">
+      <Table name="productora" schema="public">
+      </Table>
+      <Level name="nivelproductora" visible="true" table="productora" column="nombre" nameColumn="nombre" type="String" uniqueMembers="false" levelType="Regular" hideMemberIf="Never">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="TimeDimension" visible="true" name="tiempo">
+    <Hierarchy name="jerarquiatiempo" visible="true" hasAll="true" primaryKey="id">
+      <Table name="tiempo" schema="public">
+      </Table>
+      <Level name="anno" visible="true" table="tiempo" column="ano" type="Integer" internalType="int" uniqueMembers="false" levelType="TimeYears">
+      </Level>
+      <Level name="mes" visible="true" table="tiempo" column="mes" nameColumn="mes_texto" type="Integer" internalType="int" uniqueMembers="false" levelType="TimeMonths">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Cube name="satisfaccion" visible="true" cache="true" enabled="true">
+    <Table name="satisfaccion_usuarios" schema="public">
+    </Table>
+    <DimensionUsage source="director" name="director" visible="true" foreignKey="director">
+    </DimensionUsage>
+    <DimensionUsage source="productor" name="productor" visible="true" foreignKey="productor">
+    </DimensionUsage>
+    <DimensionUsage source="productora" name="productora" visible="true" foreignKey="productora">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempoemision" caption="tiempo_emision" visible="true" foreignKey="tiempo_emision">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempovotacion" caption="tiempo_votacion" visible="true" foreignKey="tiempo_votacion">
+    </DimensionUsage>
+    <Measure name="votos" column="votos" datatype="Integer" aggregator="sum" visible="true">
+    </Measure>
+    <Measure name="satisfaccion" column="satisfaccion" datatype="Numeric" aggregator="avg" visible="true">
+    </Measure>
+  </Cube>
+  <Cube name="finanzas" visible="true" cache="true" enabled="true">
+    <Table name="finanzas" schema="public" alias="">
+    </Table>
+    <DimensionUsage source="director" name="director" visible="true" foreignKey="director">
+    </DimensionUsage>
+    <DimensionUsage source="productor" name="productor" visible="true" foreignKey="productor">
+    </DimensionUsage>
+    <DimensionUsage source="productora" name="productora" visible="true" foreignKey="productora">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempoemision" caption="tiempo_emision" visible="true" foreignKey="tiempo">
+    </DimensionUsage>
+    <Measure name="coste" column="coste" datatype="Integer" aggregator="sum" visible="true">
+    </Measure>
+    <Measure name="ingresos" column="ingresos" datatype="Integer" aggregator="sum" visible="true">
+    </Measure>
+    <CalculatedMember name="beneficio" caption="beneficio" formula="[Measures].ingresos-[Measures].coste" dimension="Measures" visible="true">
+    </CalculatedMember>
+  </Cube>
+</Schema>

@@ -1,0 +1,1169 @@
+---
+title: 'Entrega 2 - El paquete `caret`'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+\newpage
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Practica2/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(pROC)
+library(partykit)
+library(caret)
+library(stringr)
+```
+
+# Visualización
+
+Para esta práctica utilizaremos el fichero generado en la fase de preprocesamiento al que le aplicamos la imputación por el método kNN en la práctica anterior. Para esto empezamos por cargar los datos.
+
+```{r}
+hepatitis.KnnImp <- read.csv(
+  "./data/hepatitisKnnImp.csv", 
+  header = TRUE,
+  stringsAsFactors = TRUE)
+```
+
+Una vez cargado el Dataframe con los datos, podemos analizar los datos mediante gráficos de dispersión. Para realizar estos gráficos utilizamos la función `featurePlot()`.
+
+```{r}
+cols_to_plot = c("BILIRRUBINA", "FOSFATOalc", "SGOT", "ALBUMINA")
+
+featurePlot(
+  x = hepatitis.KnnImp[, (names(hepatitis.KnnImp) %in% cols_to_plot)],
+  y = hepatitis.KnnImp$PRONOSTICO,
+  plot = "pairs",
+  auto.key = list(columns = 2)
+)
+```
+
+#### Ejercicio 1
+
+Probamos todas las opciones del parámetro `plot` de la función `featurePlot()`:
+
+```{r}
+par(mfrow = c(2, 2))
+
+# Gráfica de la esquina superior izquierda
+featurePlot(
+  x = hepatitis.KnnImp[, (names(hepatitis.KnnImp) %in% cols_to_plot)],
+  y = hepatitis.KnnImp$PRONOSTICO,
+  plot = "box",
+  auto.key = list(columns = 2)
+)
+
+# Gráfica de la esquina superior derecha
+featurePlot(
+  x = hepatitis.KnnImp[, (names(hepatitis.KnnImp) %in% cols_to_plot)],
+  y = hepatitis.KnnImp$PRONOSTICO,
+  plot = "strip",
+  auto.key = list(columns = 2)
+)
+
+# Gráfica de la esquina inferior izquierda
+featurePlot(
+  x = hepatitis.KnnImp[, (names(hepatitis.KnnImp) %in% cols_to_plot)],
+  y = hepatitis.KnnImp$PRONOSTICO,
+  plot = "density",
+  auto.key = list(columns = 2)
+)
+
+# Gráfica de la esquina inferior derecha
+featurePlot(
+  x = hepatitis.KnnImp[, (names(hepatitis.KnnImp) %in% cols_to_plot)],
+  y = hepatitis.KnnImp$PRONOSTICO,
+  plot = "ellipse",
+  auto.key = list(columns = 2)
+)
+
+par(mfrow = c(1, 1))
+```
+
+El parámetro `box` nos muestra una gráfica del tipo Boxplot. De las gráficas anteriores se puede extraer la conclusión de que hay muchas más muestras de la clase VIVE que de la clase FALLECE.
+
+# Preprocesamiento
+
+Antes de empezar con las tareas de preprocesamiento, tenemos que dividir el conjunto inicial de datos en dos conjuntos: entrenamiento y prueba.
+
+```{r}
+set.seed(342)
+
+trainIndex <- createDataPartition(
+  hepatitis.KnnImp$PRONOSTICO,
+  p = 0.66,
+  list = FALSE,
+  times = 1
+)
+
+hepatitisTrain <- hepatitis.KnnImp[trainIndex, ]
+hepatitisTest <- hepatitis.KnnImp[-trainIndex, ]
+```
+
+La siguiente instrucción nos permite reducir el número de características mediante ACP, seleccionando el conjunto de componentes principales que acumulen un 95% de la varianza:
+
+```{r}
+hepatitisPCA <- preProcess(
+    hepatitis.KnnImp[1:ncol(hepatitis.KnnImp) - 1],
+    method = "pca", thresh = 0.95)
+
+print(hepatitisPCA)
+```
+
+Para efectuar el ACP hemos eliminado la última columna de la matriz de datos que es la que contienen la información sobre las clases. Una vez realizado el ACP, transformamos los datos y volvemos a añadir la columna que define las clases de los objetos:
+
+```{r}
+PCATrain <- predict(
+  hepatitisPCA, 
+  hepatitisTrain[, 1:ncol(hepatitisTrain) - 1])
+
+PCATest <- predict(
+  hepatitisPCA, 
+  hepatitisTest[, 1:ncol(hepatitisTest) - 1])
+
+PCATrain <- data.frame(PCATrain, hepatitisTrain$PRONOSTICO)
+PCATest <- data.frame(PCATest, hepatitisTest$PRONOSTICO)
+```
+
+
+#### Ejercicio 2
+
+Para esto podríamos quedarnos sólo con las 6 últimas columnas más la columna con la clase (columna PRONOSTICO) de los conjuntos de datos PCATrain y PCATest:
+
+```{r}
+PCATrain <- PCATrain[, (ncol(PCATrain)-6):ncol(PCATrain)]
+PCATest <- PCATest[, (ncol(PCATest)-6):ncol(PCATest)]
+```
+
+Utilizando el paquete `caret` mostramos las cuatro primeras componenentes principal del conjunto de entranamiento:
+
+```{r}
+cols_to_plot = c("PC1", "PC2", "PC3", "PC4")
+
+featurePlot(
+  x = PCATrain[, (names(PCATrain) %in% cols_to_plot)],
+  y = PCATrain$hepatitisTrain.PRONOSTICO,
+  plot = "pairs",
+  auto.key = list(columns = 2)
+)
+```
+
+Repetimos el proceso anterior para determinar las componentes independientes, lo haremos para un valor de `n.comp` igual a 6:
+
+```{r}
+hepatitisICA <- preProcess(
+  hepatitis.KnnImp[1:ncol(hepatitis.KnnImp) - 1],
+  method = "ica", 
+  n.comp = 6)
+
+print(hepatitisICA)
+```
+
+Una vez realizado el ICA, transformamos los datos y volvemos a añadir la columna que define las clases de los objetos:
+
+```{r}
+ICATrain <- predict(
+  hepatitisICA, 
+  hepatitisTrain[, 1:ncol(hepatitisTrain) - 1])
+
+ICATest <- predict(
+  hepatitisICA, 
+  hepatitisTest[, 1:ncol(hepatitisTest) - 1])
+
+ICATrain <- data.frame(ICATrain, hepatitisTrain$PRONOSTICO)
+ICATest <- data.frame(ICATest, hepatitisTest$PRONOSTICO)
+```
+
+Mostramos un gráfico con las 4 primeras componentes independientes del conjunto de entrenamiento:
+
+```{r}
+ICATrain <- ICATrain[, (ncol(ICATrain)-6):ncol(ICATrain)]
+ICATest <- ICATest[, (ncol(ICATest)-6):ncol(ICATest)]
+
+cols_to_plot = c("ICA1", "ICA2", "ICA3", "ICA4")
+
+featurePlot(
+  x = ICATrain[, (names(ICATrain) %in% cols_to_plot)],
+  y = ICATrain$hepatitisTrain.PRONOSTICO,
+  plot = "pairs",
+  auto.key = list(columns = 2))
+```
+También se han aplicado métodos de preprocesamiento para el centrado y escalado de los datos.
+
+Comprobamos si alguna variables presenta una varianza cercana a 0. Para esto hacemos uso de la función `nearZeroVar`:
+
+```{r}
+nearZeroVar(hepatitis.KnnImp[1:ncol(hepatitis.KnnImp) - 1], saveMetrics = TRUE)
+```
+
+Como se puede comprobar, ninguna variable presente una varianza cercana a 0.
+
+# Selección de variables
+
+## Eliminación recursiva de variables
+
+La eliminación recursiva de variables se realiza a través de la función `rfe()`. Para poder usar esta función tenemos que crear un objeto de control que defina alguno de los parámetros del algoritmo de selección de variables:
+
+```{r}
+set.seed(123)
+
+subsets <- c(3:19)
+seeds <- vector(mode = "list", length = 6)
+
+for (i in 1:5)
+  seeds[[i]] <- sample.int(1000, length(subsets) + 1)
+
+seeds[[6]] <- sample.int(1000, 1)
+
+ctrl.rfe <- rfeControl(
+  functions = rfFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = TRUE,
+  allowParallel = TRUE
+)
+```
+
+Invocamos a la función `rfe()` para realizar la selección de variables:
+
+```{r}
+set.seed(342)
+
+# rf.rfe <- rfe(
+#   PRONOSTICO ~ .,
+#   data = hepatitis.KnnImp,
+#   sizes = subsets,
+#   rfeControl = ctrl.rfe)
+# 
+# saveRDS(rf.rfe, "./models/rf.rfe1.rds")
+rf.rfe = readRDS("./models/rf.rfe1.rds")
+```
+
+Comprobamos la información que nos devuelve la función `rfe()`:
+
+```{r}
+rf.rfe
+```
+
+Comprobamos las variables de nuestro clasificador:
+
+```{r}
+rf.rfe$optVariables
+```
+
+```{r}
+sel.cols <- c(rf.rfe$optVariables,"PRONOSTICO")
+
+## Este bloque se comenta para que no provoque errores al 
+## generar el fichero HTML
+# 
+# hepatitisTrain.sel <- hepatitisTrain[, sel.cols]
+# hepatitisTest.sel <- hepatitisTest[, sel.cols]
+```
+
+#### Ejercicio 3
+
+Este código falla ya que algunas de las columnas llevan `TRUE` añadido al final del nombre:
+
+```{r}
+print(sel.cols)
+```
+
+Si lo eliminamos, solucionamos el problema:
+
+```{r}
+sel.cols <- str_replace(sel.cols, "TRUE", "")
+sel.cols <- str_replace(sel.cols, "MASCULINO", "")
+print(sel.cols)
+```
+
+Ahora ya funcionaría el bloque de código anterior sin problemas:
+
+```{r}
+hepatitisTrain.sel <- hepatitisTrain[, sel.cols]
+hepatitisTest.sel <- hepatitisTest[, sel.cols]
+```
+
+
+#### Ejercicio 4
+
+Realiza una selección de variables utilizando la función rfe con las funciones treebagFuncs y nbFuncs
+
+Realizamos ahora una selección de variables utilizando la función `rfe()` con las funciones `treebagsFuncs` y `nbFuncs`. En primer lugar, lo hacemos `treebagsFuncs`:
+
+```{r}
+set.seed(342)
+
+ctrl.rfe <- rfeControl(
+  functions = treebagFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = TRUE,
+  allowParallel = TRUE
+)
+
+# rf.rfe <- rfe(
+#   PRONOSTICO ~ .,
+#   data = hepatitis.KnnImp,
+#   sizes = subsets,
+#   rfeControl = ctrl.rfe
+#   )
+# 
+# saveRDS(rf.rfe, "./models/rf.rfe2.rds")
+rf.rfe = readRDS("./models/rf.rfe2.rds")
+```
+
+Imprimimos los resultados:
+
+```{r}
+rf.rfe
+```
+Aquí se utiliza el clasificador Random Forest y se seleccionan 13 variables.
+
+Repetimos para `nbFuncs`:
+
+```{r}
+set.seed(342)
+
+ctrl.rfe <- rfeControl(
+  functions = nbFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = TRUE,
+  allowParallel = TRUE
+)
+
+# rf.rfe <- rfe(
+#   PRONOSTICO ~ .,
+#   data = hepatitis.KnnImp,
+#   sizes = subsets,
+#   rfeControl = ctrl.rfe
+#   )
+# 
+# saveRDS(rf.rfe, "./models/rf.rfe3.rds")
+rf.rfe = readRDS("./models/rf.rfe3.rds")
+
+rf.rfe
+```
+
+En este caso se utiliza el clasificador Naive Bayes y se seleccionan 10 variables.
+
+Hacemos lo mismo pero para las técnicas de clasificación `svmLinear` y `rpart`. En primer lugar probamos con `svmLinear`:
+
+```{r}
+set.seed(342)
+
+ctrl.rfe <- rfeControl(
+  functions = caretFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = TRUE,
+  allowParallel = TRUE
+)
+
+# rf.rfe <- rfe(
+#   PRONOSTICO ~ .,
+#   method = "svmLinear",
+#   data = hepatitis.KnnImp,
+#   sizes = subsets,
+#   rfeControl = ctrl.rfe
+#   )
+# 
+# saveRDS(rf.rfe, "./models/rf.rfe4.rds")
+rf.rfe = readRDS("./models/rf.rfe4.rds")
+
+rf.rfe
+```
+
+Aquí el clasificador que se usa el una Máquina de Soporte Vectorial con kernel Lineal y se seleccionan 3 variables.
+
+Por último, probamos con `rpart`:
+
+```{r}
+set.seed(342)
+
+ctrl.rfe <- rfeControl(
+  functions = caretFuncs,
+  method = "cv",
+  number = 5,
+  seeds = seeds,
+  returnResamp = "final",
+  verbose = TRUE,
+  allowParallel = TRUE
+)
+
+# rf.rfe <- rfe(
+#   PRONOSTICO ~ .,
+#   method = "rpart",
+#   data = hepatitis.KnnImp,
+#   sizes = subsets,
+#   rfeControl = ctrl.rfe
+#   )
+# 
+# saveRDS(rf.rfe, "./models/rf.rfe5.rds")
+rf.rfe = readRDS("./models/rf.rfe5.rds")
+
+rf.rfe
+```
+
+Se requieren 3 variables de nuevo. El método que se usa es el método CART, como se puede ver a continuación:
+
+```{r}
+rf.rfe$fit
+```
+
+## Eliminación de variables por filtros
+
+En `caret` el filtro está implementado a través de la función `sbf()`. Su utilización se puede ver en la celda siguiente:
+
+```{r}
+set.seed(123)
+
+folds = 5
+seeds <- sample.int(1000, folds + 1)
+
+ctrl.ranker <- sbfControl(
+  functions = ldaSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+Comprobamos, mediante el objeto `lda.ranker$fit` la importancia de cada una de las variables:
+
+```{r}
+lda.ranker$fit
+```
+
+#### Ejercicio 5
+
+Aplicamos las selección por filtros utilizando las funciones de evaluación disponibles e indicamos cuantas variables están disponibles en cada caso. Las funciones disponibles son `ldaSBF`, `rfSBF`, `nbSBF`, `treebagSBF` y `caretSBF`.
+
+```{r}
+ctrl.ranker <- sbfControl(
+  functions = ldaSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+
+Según el método `ldaSBF` se seleccionan de media 12.6 variables.
+
+```{r}
+ctrl.ranker <- sbfControl(
+  functions = rfSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+
+Según el método Random Forest se seleccionan de media 12.6 variables.
+
+```{r}
+ctrl.ranker <- sbfControl(
+  functions = nbSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+
+Según el método Naive Bayes se seleccionan de media 12.4 variables.
+
+```{r}
+ctrl.ranker <- sbfControl(
+  functions = treebagSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+
+Según el método de Árboles de Clasificación con Bagging se utilizan 12.6 variables de media.
+
+```{r}
+ctrl.ranker <- sbfControl(
+  functions = caretSBF,
+  method = "cv",
+  number = folds,
+  seeds = seeds
+)
+
+lda.ranker <- sbf(
+  PRONOSTICO ~ .,
+  data = hepatitis.KnnImp,
+  sbfControl = ctrl.ranker)
+
+lda.ranker
+```
+
+Según el método `caretSBF` se seleccionan 12.6 variables de media.
+
+Creamos el DataFrame con estos datos:
+
+```{r}
+resultados_lda <-
+  data.frame (
+    metodo = c("ldaSBF", "rfSBF", "nbSBF", "treebagSBF", "caretSBF"),
+    resultado = c(12.6, 12.6, 12.4, 12.6, 12.6))
+```
+
+## Entrenamiento de clasificadores y ajuste de parámetros
+
+#### Ejercicio 6
+
+Utilizamos el conjunto de entrenamiento para generar los clasificadores siguientes:
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# C50Fit <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "C5.0",
+#   tuneLength = 10,
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(C50Fit, "./models/C50Fit.rds")
+C50Fit = readRDS("./models/C50Fit.rds")
+
+# Graficamos el resultado
+plot(C50Fit)
+```
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# svmFit <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "svmLinear",
+#   tuneLength = 10,
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(svmFit, "./models/svmFit.rds")
+svmFit = readRDS("./models/svmFit.rds")
+
+# Mostramos el resultado
+svmFit
+```
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# knnFit <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "knn",
+#   tuneLength = 10,
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(knnFit, "./models/knnFit.rds")
+knnFit = readRDS("./models/knnFit.rds")
+
+# Graficamos el resultado
+plot(knnFit)
+```
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# ldaFit <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "lda",
+#   tuneLength = 10,
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(ldaFit, "./models/ldaFit.rds")
+ldaFit = readRDS("./models/ldaFit.rds")
+
+# Mostramos el resultado
+ldaFit
+```
+
+Creamos una tabla que contenga los resultados de la precisión y el índice Kappa para cada uno de los modelos:
+
+```{r}
+cols = c("Accuracy", "AccuracySD", "Kappa", "KappaSD")
+
+resultados = rbind.data.frame(
+  C50Fit$results[rownames(C50Fit$bestTune),][,cols], 
+  svmFit$results[rownames(svmFit$bestTune),][,cols], 
+  knnFit$results[rownames(knnFit$bestTune),][,cols], 
+  ldaFit$results[rownames(ldaFit$bestTune),][,cols])
+
+rownames(resultados) = c("C50","svm","knn","lda")
+```
+
+Mostramos la tabla:
+
+```{r}
+print(resultados)
+```
+
+## Preprocesamiento a través de la función `train()`
+
+#### Ejercicio 7
+
+Volvemos a generar un clasificador `C50` aplicando centrado y escalado como preprocesamiento:
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# C50Fit_CyE <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "C5.0",
+#   tuneLength = 10,
+#   preProc = c("center", "scale"),
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(C50Fit_CyE, "./models/C50Fit_CyE.rds")
+C50Fit_CyE = readRDS("./models/C50Fit_CyE.rds")
+
+# Mostramos el resultado
+plot(C50Fit_CyE)
+```
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# C50Fit_Range <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "C5.0",
+#   tuneLength = 10,
+#   preProc = c("range"),
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(C50Fit_Range, "./models/C50Fit_Range.rds")
+C50Fit_Range = readRDS("./models/C50Fit_Range.rds")
+
+# Mostramos el resultado
+plot(C50Fit_Range)
+```
+
+La precisión en ambos casos toma valores muy similares, por lo que no se puede determinar qué opción aporta mejores resultados.
+
+```{r}
+set.seed(123)
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# svmFit_CyE <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "svmLinear",
+#   tuneLength = 10,
+#   preProc = c("center", "scale"),
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(svmFit_CyE, "./models/svmFit_CyE.rds")
+svmFit_CyE = readRDS("./models/svmFit_CyE.rds")
+
+# Mostramos el resultado
+print(svmFit_CyE)
+print(svmFit_CyE$results)
+```
+Respecto a la máquina de soporte vectorial con kernel lineal del ejercicio anterior esta nueva máquina nos devuelve el mismo valor para la precisión obtenida, por lo que no parece haber diferencias. Esto podría ser debido a que los modelos ejecuten en todos los casos este preprocesado de los datos aunque no se específique de forma explícita.
+
+## Ajuste de los hiperparámetros
+
+#### Ejercicio 8
+
+Utilizamos el código del enunciado y lo extendemos para buscar la mejor red neuronal variando el número de neuronas de la capa intermedia entre 10 y 20 neuronas.
+
+```{r}
+set.seed(123)
+
+nnetGrid <- expand.grid(
+  size=c(10:20),
+  decay=c(0.5,0.1,0.001)
+  )
+
+fitControl<- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+  )
+
+# nnet.cv.10 <- train(
+#   PRONOSTICO~.,
+#   data=hepatitisTrain.sel,
+#   method="nnet",
+#   tuneGrid=nnetGrid, 
+#   trControl=fitControl
+#   )
+# 
+# saveRDS(nnet.cv.10, "./models/nnet.cv.10.rds")
+nnet.cv.10 = readRDS("./models/nnet.cv.10.rds")
+
+plot(nnet.cv.10)
+```
+
+Ahora repetimos el proceso anterior realizando un centrado y escalado de los datos:
+
+```{r}
+set.seed(123)
+
+nnetGrid <- expand.grid(
+  size=c(10:20),
+  decay=c(0.5,0.1,0.001)
+  )
+
+fitControl<- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+  )
+
+# nnet.cv.10_CyS <- train(
+#   PRONOSTICO~.,
+#   data=hepatitisTrain.sel,
+#   method="nnet",
+#   preProc= c("center","scale"),
+#   tuneGrid=nnetGrid,
+#   trControl=fitControl
+#   )
+# 
+# saveRDS(nnet.cv.10_CyS, "./models/nnet.cv.10_CyS.rds")
+nnet.cv.10_CyS = readRDS("./models/nnet.cv.10_CyS.rds")
+
+plot(nnet.cv.10_CyS)
+```
+
+Eliminamos el *grid* definido  e introducimos el parámetro `tuneLength=10`:
+
+```{r}
+set.seed(123)
+
+fitControl<- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = FALSE,
+  allowParallel = TRUE
+  )
+
+# nnet.cv.10_nogrid <- train(
+#   PRONOSTICO~.,
+#   data=hepatitisTrain.sel,
+#   method="nnet",
+#   preProc= c("center","scale"),
+#   tuneLength=10,
+#   trControl=fitControl
+#   )
+# 
+# saveRDS(nnet.cv.10_nogrid, "./models/nnet.cv.10_nogrid.rds")
+nnet.cv.10_nogrid = readRDS("./models/nnet.cv.10_nogrid.rds")
+
+plot(nnet.cv.10_nogrid)
+```
+
+Ahora se realiza el entrenamiento para 10 valores diferentes del hiperparámetro `decay` y para 10 valores diferentes del hiperparámetro `size`.
+
+Por último, en este ejercicio entrenamos una máquina de soporte de vesctores lineal:
+
+```{r}
+set.seed(123)
+
+svmGrid <- expand.grid(C=c(0.25,0.5,1,2,4,8,16,32,64))
+
+fitcontrol <- trainControl(
+  method = "cv",
+  number = 10,
+  returnResamp = "all",
+  verboseIter = TRUE,
+  allowParallel = TRUE
+)
+
+# svmFit_cv <- train(
+#   PRONOSTICO ~ .,
+#   data = hepatitisTrain.sel,
+#   method = "svmLinear",
+#   tuneGrid=svmGrid,
+#   preProc = c("center", "scale"),
+#   trControl = fitcontrol
+# )
+# 
+# saveRDS(svmFit_cv, "./models/svmFit_cv.rds")
+svmFit_cv = readRDS("./models/svmFit_cv.rds")
+
+# Mostramos el resultado
+plot(svmFit_cv)
+```
+El mejor valor de C:
+
+```{r}
+print(svmFit_cv$bestTune)
+```
+
+## Área bajo la curva ROC
+
+#### Ejercicio 9
+
+Esto se debe al orden de los nivel en la variable PRONOSTICO de tipo factor. Para cambiarlo habría que cambiar el orden de los niveles. Esto se podría hacer con la función `relevel()` que nos permite reordenar nivel de factores en R.
+
+
+#### Ejercicio 10
+
+Calculamos las probabilidades de clase y la curva ROC para 2 de los tres modelos de clasificación generados en los ejercicios anteriores. En primer lugar los calculamos para el modelo de la máquina de soporte de vectores con un kernel lineal.
+
+```{r}
+set.seed(123)
+
+fitControl <- trainControl(
+  method = "cv",
+  number=10,
+  returnResamp = "final",
+  summaryFunction = twoClassSummary,
+  classProbs=TRUE,
+  verboseIter=TRUE
+  )
+
+# svmFitROC <- train(
+#   PRONOSTICO~.,
+#   data=hepatitisTrain.sel,
+#   method="svmLinear",
+#   tuneLength=10,
+#   trControl=fitControl,
+#   metric = "ROC")
+# 
+# saveRDS(svmFitROC, "./models/svmFitROC.rds")
+svmFitROC = readRDS("./models/svmFitROC.rds")
+
+svmProb <- predict(
+  svmFitROC,
+  newdata = hepatitisTest.sel, 
+  type = "prob"
+  )
+
+head(svmProb)
+```
+
+Siendo la gráfica del área bajo la curva ROC la siguiente:
+
+```{r}
+svmROC <- roc(
+  hepatitisTest$PRONOSTICO, 
+  svmProb$VIVE, 
+  dataGrid = TRUE,
+  gridLength = 100)
+
+plot(svmROC)
+```
+
+En segundo lugar, lo hacemos para una red neuronal:
+
+```{r}
+set.seed(123)
+
+fitControl <- trainControl(
+  method = "cv",
+  number=10,
+  returnResamp = "final",
+  summaryFunction = twoClassSummary,
+  classProbs=TRUE,
+  verboseIter=TRUE
+  )
+
+# nnetFitROC <- train(
+#   PRONOSTICO~.,
+#   data=hepatitisTrain.sel,
+#   method="nnet",
+#   tuneLength=10,
+#   trControl=fitControl,
+#   metric = "ROC")
+# 
+# saveRDS(nnetFitROC, "./models/nnetFitROC.rds")
+nnetFitROC=readRDS("./models/nnetFitROC.rds")
+
+nnetProb <- predict(
+  nnetFitROC,
+  newdata = hepatitisTest.sel, 
+  type = "prob"
+  )
+
+head(nnetProb)
+```
+
+Y mostramos la gráfica:
+
+```{r}
+nnetROC <- roc(
+  hepatitisTest$PRONOSTICO, 
+  nnetProb$VIVE, 
+  dataGrid = TRUE,
+  gridLength = 100
+  )
+
+plot(nnetROC)
+```
+
+## Evaluación de los conjuntos de prueba
+
+#### Ejercicio 11
+
+Ahora debemos escoger dos modelos de los anteriormente generados (además ambos tienen que haber sido evaluados con la misma técnica). En primer lugar calculamos la matriz de confusión y los principales índices de eficiencia de ambos modelos.
+
+```{r}
+hepatitis.pred.nnet <- predict(
+  nnet.cv.10, 
+  hepatitisTest.sel
+)
+
+hepatitis.conf.nnet <- confusionMatrix(
+  hepatitis.pred.nnet,
+  hepatitisTest.sel[, ncol(hepatitisTest.sel)],
+  positive = "VIVE"
+)
+
+hepatitis.conf.nnet
+```
+
+```{r}
+hepatitis.pred.svm <- predict(
+  svmFit_CyE, 
+  hepatitisTest.sel
+)
+
+hepatitis.conf.svm <- confusionMatrix(
+  hepatitis.pred.svm,
+  hepatitisTest.sel[, ncol(hepatitisTest.sel)],
+  positive = "VIVE"
+)
+
+hepatitis.conf.svm
+```
+Se ve como el modelo `nnet.cv.10` tiene una precisión mejor.
+
+Los atributos del objeto generado por la función `confusionMatrix()` son los siguientes:
+
+```{r}
+names(hepatitis.conf.svm)
+```
+
+Por último, generamos una tabla con los nombres de los modelos en las filas y el de los indicadores en las columnas. Primero comprobamos los indicadores del objeto devuelto por la función `confusionMatrix()`:
+
+```{r}
+as.matrix(hepatitis.conf.nnet, what = "classes")
+```
+
+```{r}
+as.matrix(hepatitis.conf.nnet, what = "overall")
+```
+
+Con el parámetro `overall` obtenemos los valores de precisión generales del modelo, por lo que serán estos valores los que usaremos para generar la tabla:
+
+```{r}
+hepatitis.conf.nnet.overall = t(as.matrix(hepatitis.conf.nnet, what = "overall"))
+
+hepatitis.conf.svm.overall = t(as.matrix(hepatitis.conf.svm, what = "overall"))
+
+tabla_ej11 = rbind.data.frame(
+  hepatitis.conf.nnet.overall, 
+  hepatitis.conf.svm.overall)
+
+rownames(tabla_ej11) = c("nnet.cv.10","svmFit_CyE")
+```
+
+Mostramos la tabla generada:
+
+```{r}
+tabla_ej11
+```
+
+# Comparación de modelos
+
+#### Ejercicio 12
+
+Seleccionamos los mismos dos modelos que los utilizados para el ejercicio anterior:
+
+```{r}
+models <- list(
+  SVM = svmFit_CyE,
+  Nnet = nnet.cv.10)
+```
+
+En primer lugar, extraemos la información sobre el muestreo de los dos modelos y mostramos el resumen con las medidas utilizadas para su evaluación:
+
+```{r}
+hepatitis.resample <- resamples(models)
+summary(hepatitis.resample)
+```
+
+Generamos algunas gráficas que muestren el resultado de la celda de código anterior:
+
+```{r}
+bwplot(hepatitis.resample)
+```
+
+```{r}
+densityplot(hepatitis.resample)
+```
+
+```{r}
+xyplot(hepatitis.resample)
+```
+
+Aplicamos el test T de Student e interpretamos el resultado:
+
+```{r}
+difValues <- diff(hepatitis.resample, adjustment = "none")
+summary(difValues)
+```
+
+Este **test T de Student** se puede utilizar para evaluar la hipótesis nula de que no hay diferencia entre los dos modelos que estamos evaluando. La función `diff()` utilizada en la celda de código anterior nos permite calcularlo.
+
+Como se puede ver, en la diagonal inferior se pueden encontrar los p-values de nuestra hipótesis nula. En este caso no podemos rechazar la hipótesis de que los modelos presentan la misma eficacia al ser los p-values iguales a 0.1684 y 0.1673 y por lo tanto mayores que la significancia por defecto de 0.05.
+
+Por últimos aplicamos la función `compare_models()`:
+
+```{r}
+compare_models(a = nnet.cv.10, b = svmFit_CyE)
+```
+
+Esta función también nos indica que no hay diferencias significativas entre ambos modelos.

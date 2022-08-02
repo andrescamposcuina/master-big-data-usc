@@ -1,0 +1,433 @@
+---
+title: 'Entrega 5 - Reglas de Asociación'
+subtitle: 'Minería de Datos'
+author: "Andrés Campos Cuiña"
+date: "`r format(Sys.time(), '%d/%m/%Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+  pdf_document:
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage[spanish]{babel}
+---
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo=TRUE) 
+```
+
+<style>
+body {text-align : justify}
+</style>
+
+# Introducción
+
+En primer lugar, definimos el directorio de trabajo: 
+
+```{r}
+setwd("c:/Users/Andres/Google Drive/USC/MaBD/Mineria de Datos/Practicas/Practica5/")
+```
+
+En segundo lugar, cargamos las librerías necesarias:
+
+```{r, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(gridExtra)
+library(reshape)
+library(arules)
+library(arulesViz)
+library(car)
+```
+
+# Ejercicios
+
+## Ejercicio 1
+
+**Examina el contenido de los ficheros titanic1 y titanic2.**
+
+**1. ¿En qué formato están almacenados los datos en cada fichero?**
+
+**2. Crea dos objetos llamados titanic.basket y titanic.single que contengan los datos de los ficheros anteriormente mencionados.**
+
+**Apartado 1**
+
+El fichero `titanic1` está almacenado en formato `basket`, ya que cada linea representa una transacción donde los _items_ están separados por un caracter delimitador (en este caso un espacio en blanco). 
+
+En el fichero `titanic1` en cada línea aparece una transacción con cinco atributos, que son **clase**, **superviviente**, **sexo**, **edad** y **embarque**.
+
+Por otra parte, el fichero `titanic2` está almacenado en formato `single`, ya que línea corresponde a un único _item_ y cada línea tiene dos columnas, el **id** de la transacción y el atributo que se está representando en esa línea. Cada transacción se define, por lo tanto, como un conjunto de línea que tengan el mismo id. 
+
+Los atributos de las transacciones del fichero `titanic2` son los mismos que los del fichero `titanic1`.
+
+**Apartado 2**
+
+```{r}
+titanic.basket <-
+  read.transactions(
+    "./data/titanic1",
+    format = "basket",
+    header=FALSE,
+    rm.duplicates = TRUE,
+    quote = "\""
+  )
+
+# Mostramos por pantalla
+titanic.basket
+```
+
+```{r}
+titanic.single <-
+  read.transactions(
+    "./data/titanic2",
+    format = "single",
+    header=FALSE,
+    cols = c(1, 2),
+    rm.duplicates = TRUE,
+    quote = "\""
+  )
+
+# Mostramos por pantalla
+titanic.single
+```
+
+## Ejercicio 2
+
+**Lee el fichero `titanic.csv` y examina los atributos que tiene y el tipo de cada uno de ellos.**
+
+**1. Elimina la columna `tarifa`, esa información la tenemos discretizada en el atributo `clase`.**
+
+**2. Discretiza el atributo `edad` en tres categorías: `Child` (menor que 18), `Adult` (entre 18 y 65) y `Old` (mayor que 65).**
+
+**3. Recodifica el atributo `superviviente` a `Si` para el valor 1 y `No` para el valor 0.**
+
+**4. Crea un objeto de la clase `transactions`, llamado `titanic.trans`, a partir del dataframe `titanic`.**
+
+Lo primero será leer el fichero `titanic.csv` y ver los atributos que tiene y el tipo de cada uno de ellos.
+
+```{r}
+titanic <- read.csv(
+  './data/titanic.csv', 
+  header=TRUE,
+  sep = ';'
+)
+
+# Mostramos los atributos que tiene por pantalla
+str(titanic)
+```
+
+Como podemos ver hay 6 atributos, que son los siguiente:
+
+  - **clase**: de tipo char con tres valores posibles (primera, segunda y tercera).
+
+  - **superviviente**: de tipo int con dos valores posibles (0 y 1).
+
+  - **sexo**: de tipo char con dos valores posibles (mujer y hombre).
+
+  - **edad**: de tipo char (debería ser de tipo int).
+
+  - **tarifa**: de tipo char (debería ser de tipo numeric).
+
+  - **embarque**: de tipo char con tres valores posibles (Southampton, Cherbourg y Queenstown).
+
+Antes de seguir, hacemos los cambios en el tipo de dato adecuados.
+
+```{r}
+# Cambiamos las comas por puntos para que la conversión se haga correctamente
+
+# edad a numeric
+titanic$edad <- as.numeric(sub(",", ".", titanic$edad, fixed = TRUE))
+```
+
+
+**Apartado 1**
+
+```{r}
+titanic$tarifa <- NULL
+```
+
+**Apartado 2**
+
+```{r}
+titanic$edad <-
+  discretize(
+    titanic$edad,
+    method = "fixed",
+    breaks = c(0, 18, 66, 123),
+    labels = c("Child", "Adult", "Old"),
+    ordered = TRUE
+  )
+```
+
+**Apartado 3**
+
+```{r}
+titanic$superviviente <-
+  as.factor(recode(titanic$superviviente, "0='No';1='Si'"))
+```
+
+**Apartado 4**
+
+Antes de generar el objeto `titanic.trans` convertimos las columnas que siguen con tipo `char` a tipo `Factor`.
+
+```{r}
+titanic$clase <- as.factor(titanic$clase)
+titanic$sexo <- as.factor(titanic$sexo)
+titanic$embarque <- as.factor(titanic$embarque)
+```
+
+Ahora generamos el objeto `titanic.trans`,
+
+```{r}
+titanic.trans <- as(titanic, "transactions")
+
+# Mostramos por pantalla
+titanic.trans
+```
+
+## Ejercicio 3
+
+**Utilizando la función `write()` genera dos ficheros en formato `csv` denominados `titanic.basket` y `titanic.single`, cada uno conteniendo las transacciones en los formatos indicados en su nombre.**
+
+```{r}
+write(titanic.trans, file = "./output/titanic.basket", format = "basket")
+write(titanic.trans, file = "./output/titanic.single", format = "single")
+```
+
+## Ejercicio 4
+
+**Partiendo de la base de transacciones `titanic.trans` obtenida en el ejercicio 2.**
+
+**1. Aplica las funciones `apriori()` y `eclat()` y genera los objetos `titanic.rules` y `titanic.eclat` respectivamente.**
+
+**2. Indica cuáles son los valores de los parámetros por defecto.**
+
+**3. Genera una tabla en R en la que en cada fila indique un valor real entre 0 y 1 (empezando por 0.1 y con incrementos de 0.1), el número de reglas generadas para un soporte igual a dicho número en la segunda columna y lo mismo pero para la confianza en la tercera columna. Para poder realizar esta cuestión hay que utilizar la función `length()` sobre el conjunto de reglas.**
+
+**4. Representa gráficamente la tabla anterior.**
+
+**5. Genera un conjunto de reglas de asociación para determinar qué items están relacionados con el sexo.**
+
+**Apartado 1**
+
+```{r}
+titanic.rules <- apriori(titanic.trans)
+titanic.eclat <- eclat(titanic.trans)
+```
+
+**Apartado 2**
+
+Los valores de los parámetros por defecto son los siguientes:
+
+- `titanic.rules`:
+
+  - support de 0.1
+  - minimum confidence de 0.8 (confidence)
+  - maximum de 10 items (maxlen)
+  - maximal time for subset checking de 5 segundos (maxtime)
+  - minval de 0.1
+  - smax de 1
+  - arem igual a 'none'
+  - aval igual a FALSE
+  - originalSupport igual a TRUE
+  - minlen de 1 (mínimo 1 item)
+
+- `titanic.eclat`
+  
+  - tidLists igual a FALSE
+  - support	de 0.1
+  - minlen de 1
+  - maxlen de 10
+  
+**Apartado 3**
+
+Generamos la tabla que se nos pide en el enunciado del boletín.
+
+```{r}
+ejercicio4.df <- data.frame(matrix(ncol = 3))
+colnames(ejercicio4.df) <- c("parametro", "reglas_generadas_support", "reglas_generadas_confidence")
+
+# Definimos un contador de la iteración
+i <- 0
+
+# Iteramos sobe los distintos valores del parámetro support
+for (iter.value in seq(0, 1, 0.1)) {
+  support <- apriori(
+    titanic.trans,
+    parameter = list(support = iter.value),
+    control = list(verbose=FALSE)
+  )
+  
+  confidence <- apriori(
+    titanic.trans,
+    parameter = list(confidence = iter.value),
+    control = list(verbose=FALSE)
+  )
+  
+  ejercicio4.df[i, ] <- c(iter.value, length(support), length(confidence))
+  
+  # Aumentamos el contador de la iteración
+  i <- i + 1
+}
+
+# Mostramos el resultado por pantalla
+ejercicio4.df
+```
+
+**Apartado 4**
+
+Representamos gráficamente la tabla anterior.
+
+```{r, message=FALSE, warning=FALSE, results='hide', out.width='100%'}
+g <- ggplot(
+    melt(ejercicio4.df, id.vars = "parametro"),
+    aes(x = parametro, y = value, color = variable)
+  ) +
+  geom_point() + 
+  geom_line() +
+  xlim(0.1, 1) +
+  labs(
+    title = "Reglas Generadas",
+    x = "Valor del parámetro",
+    y = "Reglas generadas"
+  )
+
+# Mostramos la gráfica
+g
+```
+
+**Apartado 5**
+
+Para esto indicamos que en el _consecuente_ de las reglas encontradas solo puede aparecer el sexo, a través del parámetro `rhs`.
+
+```{r}
+titanic.rules.sexo <- apriori(
+  titanic.trans,
+  appearance = list(
+    rhs = c("sexo=hombre", "sexo=mujer"),
+    default = "lhs"
+  ),
+  control = list(verbose = FALSE)
+)
+
+# Mostramos las reglas encontradas por pantalla
+inspect(titanic.rules.sexo)
+```
+
+## Ejercicio 5
+
+**Partiendo del del conjunto de reglas generado por el algoritmo apriori en el ejercicio 4.1.**
+
+**1- Selecciona el conjunto de reglas que permitan determinar si se sobrevive a partir de la ciudad de embarque ¿Cuántas reglas se han seleccionado?.**
+
+**2. Del conjunto anterior, selecciona las reglas con una confianza superior al 0.83.**
+
+**3. Calcula el índice gini, hyperlift e hyperConfidence. Agrégalos al conjunto de reglas `titanic.rules` y muestra por pantalla, para cada índice, las 5 reglas que lo tengan más alto.**
+
+**4. Genera diferentes conjuntos de reglas para las reglas no redundantes y maximales.**
+
+**5. Genera los conjuntos de los itemsets frecuentes maximales y cerrados.**
+
+**Apartado 1**
+
+Utilizamos la función `subset()`.
+
+```{r, warning=FALSE}
+titanic.rules.sub1 <- subset(
+  titanic.rules,
+  subset = lhs %pin% "embarque" & rhs %pin% "superviviente")
+
+# Mostramos las reglas encontradas por pantalla
+inspectDT(titanic.rules.sub1)
+```
+
+Como se puede ver, se han encontrado **6 reglas**.
+
+**Apartado 2**
+
+Del conjunto anterior, seleccionamos aquellas con una confianza superior a '0.83'.
+
+```{r}
+titanic.rules.sub2 <- subset(
+  titanic.rules.sub1, 
+  subset = confidence > 0.83
+  )
+
+# Mostramos por pantalla
+inspectDT(titanic.rules.sub2)
+```
+
+**Apartado 3**
+
+Añadimos dichas medidas al conjunto de medidas ya registradas en el conjunto de reglas, mediante la siguiente instrucción:
+
+```{r}
+quality(titanic.rules) <- cbind(
+  quality(titanic.rules),
+  interestMeasure(
+    titanic.rules,
+    c("gini", "hyperLift", "hyperConfidence"),
+    titanic.trans
+  )
+)
+```
+
+Mostramos para cada índice, las cinco reglas que lo tengan más alto.
+
+```{r}
+inspect(head(sort(titanic.rules, by = "gini"), n=5))
+inspect(head(sort(titanic.rules, by = "hyperLift"), n=5))
+inspect(head(sort(titanic.rules, by = "hyperConfidence"), n=5))
+```
+
+**Apartado 4**
+
+Generamos diferentes conjuntos de reglas para las no redundantes y maximales.
+
+Reglas maximales:
+
+```{r}
+titanic.rules.sub3 <- titanic.rules[is.maximal(titanic.rules)]
+
+# Por pantalla
+inspectDT(titanic.rules.sub3)
+```
+
+Reglas no redundantes:
+
+```{r}
+titanic.rules.sub4 <- titanic.rules[!is.redundant(titanic.rules)]
+
+# Por pantalla
+inspectDT(titanic.rules.sub4)
+```
+
+**Apartado 5**
+
+Generamos los conjuntos de itemsets frecuentes maximales y cerrados.
+
+Conjunto de itemsets frecuentes maximales:
+
+```{r}
+titanic.eclat.sub1 <- titanic.eclat[is.maximal(titanic.eclat)]
+
+# Por pantalla
+inspectDT(titanic.eclat.sub1)
+```
+
+Conjunto de itemsets frecuentes cerrados:
+
+```{r}
+titanic.eclat.sub2 <- titanic.eclat[is.closed(titanic.eclat)]
+
+# Por panatalla
+inspectDT(titanic.eclat.sub2)
+```
+
