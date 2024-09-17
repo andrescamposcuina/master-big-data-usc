@@ -1,0 +1,80 @@
+ORGANIZACIÓN DE LA MATERIA DE TECNOLOGÍAS DE GESTIÓN DE INFORMACIÓN NO ESTRUCTURADA
+
+ 
+
+Teoría: 
+
+14 sesiones de 1.15h 
+
+La temporización de estas sesiones sería (preliminar, se irá actualizando la información a medida que se vaya avanzando en el curso):
+
+PARTE I: Tec. de búsqueda, RI, clasificación, minería web…..
+
+S1: 12-Sep
+
+Presentación e Intro (hasta slide 15).
+
+S2: 19-Sep
+
+Taller de Introducción a Python (parte I)
+
+S3: 26-Sep
+
+Intro (hasta slide 25).  Leed Capítulo 1 del libro. 
+
+S4: 3-Oct
+
+Text Data Understanding (hasta slide 25). Leed capítulo 3 del libro. 
+
+S5: 10-Oct
+
+Fin de Text Data Understanding + Overview of Text Data Access. Leed Capítulo 5 del libro. 
+
+S6: 17-Oct
+
+Retrieval Models (hasta slide 35). Leed Capítulo 6 del libro.
+
+S7: 24-Oct
+
+Fin de Retrieval Models + SE implementation (hasta 11). 
+
+Leed capítulo 8 del libro (excepto secciones 8.4 y 8.5) y capítulo 9 del libro. 
+
+S8: 31-Oct
+
+Find SE implementation + SE Evaluation (hasta slide 11). Leed capítulo 10 del libro. 
+
+S9: 7-Nov
+
+Fin de SE evaluation + Web search (hasta 11). Leed capítulo 12 y 14 del libro (excepto sección 14.3)
+
+S10: 14-Nov
+
+Fin Web Search + Text Data Analysis (fin). Leed capítulos 15 y 16 del libro. 
+
+S11: 21-Nov
+
+Tecnologías de aprendizaje profundo para tratamiento de textos
+
+PARTE II: Introducción a la Recuperación de Imágenes
+
+S12: 28-Nov,  S13: 5-Dic, S14: 12-Dic
+
+
+Prácticas: 
+
+8 sesiones de 1,45h. 
+
+La temporización preliminar de estas sesiones sería:
+
+S1: 22-Sep 
+
+Taller de Introducción a Python (Parte II)
+
+S2: 29-Sep, S3: 6-Oct, S4: 13-Oct
+
+Trabajo 1
+
+S5: 20-Oct, S6: 27-Oct, S7: 3-Nov, S8: 10-Nov
+
+Trabajo 2

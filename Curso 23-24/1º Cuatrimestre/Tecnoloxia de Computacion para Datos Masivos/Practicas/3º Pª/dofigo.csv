@@ -1,0 +1,183 @@
+hdfs dfs -moveFromLocal fichero_grande /user/luser
+
+Bloque 0: [datanode2, datanode3, datanode6]
+Bloque 1: [datanode1, datanode3, datanode6]
+Bloque 2: [datanode2, datanode3, datanode6]
+Bloque 3: [datanode2, datanode3, datanode6]
+Bloque 4: [datanode2, datanode3, datanode6]
+Bloque 5: [datanode1, datanode2, datanode6]
+
+
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741908_1084 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+1. BP-1565195148-172.19.0.2-1696698989543:blk_1073741909_1085 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK], DatanodeInfoWithStorage[172.19.0.3:9866,DS-fdec86e1-d9f1-470d-8a9b-569ffe7bfc1b,DISK]]
+2. BP-1565195148-172.19.0.2-1696698989543:blk_1073741910_1086 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+3. BP-1565195148-172.19.0.2-1696698989543:blk_1073741911_1087 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+4. BP-1565195148-172.19.0.2-1696698989543:blk_1073741912_1088 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+5. BP-1565195148-172.19.0.2-1696698989543:blk_1073741913_1089 len=31457280 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.3:9866,DS-fdec86e1-d9f1-470d-8a9b-569ffe7bfc1b,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+
+0. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+1. [172.19.0.3, 172.19.0.5, 172.19.0.8] -> [datanode1, datanode3, datanode6]
+2. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+3. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+4. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+5. [172.19.0.3, 172.19.0.4, 172.19.0.8] -> [datanode1, datanode2, datanode6]
+
+datanode1: 172.19.0.3
+datanode2: 172.19.0.4
+datanode3: 172.19.0.5
+datanode6: 172.19.0.8
+
+		echo "Contenido del archivo 1" > archivo1.txt
+		echo "Contenido del archivo 2" > archivo2.txt
+		echo "Contenido del archivo 3" > archivo3.txt
+		echo "Contenido del archivo 4" > archivo4.txt
+		echo "Contenido del archivo 5" > archivo5.txt
+
+
+        hdfs dfs -copyFromLocal archivo1.txt /user/hdadmin/quota4/
+        hdfs dfs -copyFromLocal archivo2.txt /user/hdadmin/quota4/
+        hdfs dfs -copyFromLocal archivo3.txt /user/hdadmin/quota4/
+        hdfs dfs -copyFromLocal archivo4.txt /user/hdadmin/quota4/
+        hdfs dfs -copyFromLocal archivo5.txt /user/hdadmin/quota4/
+
+
+
+
+
+
+
+
+Connecting to namenode via http://namenode:9870/fsck?ugi=hdadmin&path=%2F
+FSCK started by hdadmin (auth:SIMPLE) from /172.19.0.2 for path / at Mon Oct 09 15:49:33 CEST 2023
+
+
+Connecting to namenode via http://namenode:9870/fsck?ugi=hdadmin&files=1&blocks=1&locations=1&path=%2F
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696700464573_0001-1696703934234-hdadmin-QuasiMonteCarlo-1696703979258-16-1-SUCCEEDED-default-1696703942986.jhist 78562 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741865_1041. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741865_1041 len=78562 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696700464573_0001.summary 454 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741864_1040. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741864_1040 len=454 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696700464573_0001_conf.xml 273328 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741866_1042. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741866_1042 len=273328 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696761379800_0001-1696762398529-hdadmin-QuasiMonteCarlo-1696762445187-16-1-SUCCEEDED-default-1696762407734.jhist 78507 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741904_1080. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741904_1080 len=78507 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696761379800_0001.summary 454 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741903_1079. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741903_1079 len=454 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/hdadmin/job_1696761379800_0001_conf.xml 273323 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741905_1081. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741905_1081 len=273323 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/luser/job_1696700464573_0002-1696704427271-luser-Word+Count-1696704473659-15-3-SUCCEEDED-default-1696704433664.jhist 85844 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741877_1053. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741877_1053 len=85844 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/luser/job_1696700464573_0002.summary 447 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741876_1052. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741876_1052 len=447 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/tmp/hadoop-yarn/staging/history/done_intermediate/luser/job_1696700464573_0002_conf.xml 272956 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741878_1054. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741878_1054 len=272956 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/hdadmin/quota4/archivo1.txt 24 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741914_1090. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741914_1090 len=24 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK], DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK]]
+--
+/user/hdadmin/quota4/archivo2.txt 24 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741915_1091. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741915_1091 len=24 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK], DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK]]
+--
+/user/hdadmin/quota4/archivo3.txt 24 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741916_1092. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741916_1092 len=24 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK], DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK]]
+--
+/user/luser/fichero_grande 367001600 bytes, replicated: replication=3, 6 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741908_1084. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+ Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741909_1085. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+--
+/user/luser/libros/pg14329.txt.gz 441804 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741827_1003. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741827_1003 len=441804 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg1619.txt.gz 264123 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741835_1011. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741835_1011 len=264123 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg16625.txt.gz 455129 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741836_1012. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741836_1012 len=455129 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg17013.txt.gz 939502 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741834_1010. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741834_1010 len=939502 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg17073.txt.gz 737367 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741825_1001. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741825_1001 len=737367 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg18005.txt.gz 219304 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741826_1002. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741826_1002 len=219304 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg2000.txt.gz 813698 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741828_1004. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741828_1004 len=813698 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg24536.txt.gz 328494 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741831_1007. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741831_1007 len=328494 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg25640.txt.gz 504188 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741838_1014. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741838_1014 len=504188 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg25807.txt.gz 38194 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741833_1009. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741833_1009 len=38194 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg32315.txt.gz 103986 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741837_1013. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741837_1013 len=103986 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg5201.txt.gz 125693 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741829_1005. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741829_1005 len=125693 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg7109.txt.gz 82099 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741832_1008. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741832_1008 len=82099 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg8870.txt.gz 99685 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741839_1015. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741839_1015 len=99685 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/libros/pg9980.txt.gz 85187 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741830_1006. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741830_1006 len=85187 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/wordcount-out/part-r-00000 363947 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741873_1049. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741873_1049 len=363947 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/wordcount-out/part-r-00001 365976 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741874_1050. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741874_1050 len=365976 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+--
+/user/luser/wordcount-out/part-r-00002 361370 bytes, replicated: replication=3, 1 block(s):  Under replicated BP-1565195148-172.19.0.2-1696698989543:blk_1073741875_1051. Target Replicas is 3 but found 2 live replica(s), 0 decommissioned replica(s), 0 decommissioning replica(s).
+0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741875_1051 len=361370 Live_repl=2  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+
+hdfs fsck / -files -blocks -locations | grep -A 1 'block(s):  Under replicated'
+
+
+
+
+docker container run -d --name datanode7 --network=hadoop-cluster --hostname datanode7 --cpus 1 --memory 3072m --expose 8000-10000 --expose 50000-50200 datanode-image /inicio.sh
+
+
+
+
+
+hdadmin@namenode:~$ hdfs ec -listPolicies
+Erasure Coding Policies:
+ErasureCodingPolicy=[Name=RS-10-4-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=10, numParityUnits=4]], CellSize=1048576, Id=5], State=DISABLED
+ErasureCodingPolicy=[Name=RS-3-2-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=3, numParityUnits=2]], CellSize=1048576, Id=2], State=DISABLED
+ErasureCodingPolicy=[Name=RS-6-3-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=6, numParityUnits=3]], CellSize=1048576, Id=1], State=ENABLED
+ErasureCodingPolicy=[Name=RS-LEGACY-6-3-1024k, Schema=[ECSchema=[Codec=rs-legacy, numDataUnits=6, numParityUnits=3]], CellSize=1048576, Id=3], State=DISABLED
+ErasureCodingPolicy=[Name=XOR-2-1-1024k, Schema=[ECSchema=[Codec=xor, numDataUnits=2, numParityUnits=1]], CellSize=1048576, Id=4], State=DISABLED
+
+
+
+
+datanode1 -> 0
+datanode2 -> 36
+datanode3 -> 33
+datanode5 -> 0
+datanode6 -> 3
+datanode7 -> 36
+
+
+datanode1 -> 0
+datanode2 -> 36
+datanode3 -> 33
+datanode5 -> 0
+datanode6 -> 3
+datanode7 -> 36

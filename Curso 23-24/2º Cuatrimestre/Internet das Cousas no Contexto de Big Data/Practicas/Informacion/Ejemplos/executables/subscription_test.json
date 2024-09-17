@@ -1,0 +1,25 @@
+{
+    "description": "A subscription to get info about Mote1",
+    "subject": {
+      "entities": [
+        {
+          "id": "Mote1",
+          "type": "Mote"
+        }
+      ],
+      "condition": {
+        "attrs": [
+          "timeInstant", "temperature", "lighting", "flame"
+        ]
+      }
+    },
+    "notification": {
+      "http": {
+        "url": "http://localhost:5050/notify"
+      },
+      "attrs": [],
+      "attrsFormat": "legacy"
+    },
+    "expires": "2040-01-01T14:00:00.00Z",
+    "throttling": 1
+  }

@@ -1,0 +1,1 @@
+curl 172.16.240.210:2303/v2/subscriptions -s -S --header "Content-Type: application/json" -d @jsonpruebaSubscription.txt

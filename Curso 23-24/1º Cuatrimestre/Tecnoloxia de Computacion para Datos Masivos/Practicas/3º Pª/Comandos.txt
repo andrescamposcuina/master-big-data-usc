@@ -1,0 +1,486 @@
+--------------- Primera parte --------------- 
+	su - luser
+	dd if=/dev/urandom of=fichero_grande bs=1M count=350 -> crea un fichero de caracteres aleatorios en la carpeta actual
+	hdfs dfs -ls /user/luser -> exploramos la estructura de datos de hdfs
+	hdfs dfs -moveFromLocal fichero_grande /user/luser -> movemos el archivo a la carpeta del usuario luser en hdfs
+	-> Visitamos la interfaz web http://localhost:9870
+		Se ha dividido en 6 bloques, 
+			Bloque 0: [datanode6, datanode2, datanode3]
+			Bloque 1: [datanode6, datanode1, datanode3]
+			Bloque 2: [datanode6, datanode2, datanode3]
+			Bloque 3: [datanode6, datanode2, datanode3]
+			Bloque 4: [datanode6, datanode2, datanode3]
+			Bloque 5: [datanode6, datanode1, datanode2]
+	
+	hdfs fsck /user/luser/fichero_grande -files -blocks -locations -> vemos la informacion de fichero_grande
+	0. BP-1565195148-172.19.0.2-1696698989543:blk_1073741908_1084 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+	1. BP-1565195148-172.19.0.2-1696698989543:blk_1073741909_1085 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK], DatanodeInfoWithStorage[172.19.0.3:9866,DS-fdec86e1-d9f1-470d-8a9b-569ffe7bfc1b,DISK]]
+	2. BP-1565195148-172.19.0.2-1696698989543:blk_1073741910_1086 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+	3. BP-1565195148-172.19.0.2-1696698989543:blk_1073741911_1087 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+	4. BP-1565195148-172.19.0.2-1696698989543:blk_1073741912_1088 len=67108864 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.5:9866,DS-79b74aa9-c175-449d-8cdb-d3b4a721fbb8,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+	5. BP-1565195148-172.19.0.2-1696698989543:blk_1073741913_1089 len=31457280 Live_repl=3  [DatanodeInfoWithStorage[172.19.0.4:9866,DS-c9eeb7ce-b4b8-4b45-acf1-3aa529704383,DISK], DatanodeInfoWithStorage[172.19.0.3:9866,DS-fdec86e1-d9f1-470d-8a9b-569ffe7bfc1b,DISK], DatanodeInfoWithStorage[172.19.0.8:9866,DS-b4dc9d7a-55a4-4ffc-8d15-006545c35f50,DISK]]
+
+	0. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+	1. [172.19.0.3, 172.19.0.5, 172.19.0.8] -> [datanode1, datanode3, datanode6]
+	2. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+	3. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+	4. [172.19.0.4, 172.19.0.5, 172.19.0.8] -> [datanode2, datanode3, datanode6]
+	5. [172.19.0.3, 172.19.0.4, 172.19.0.8] -> [datanode1, datanode2, datanode6]
+
+	datanode1: 172.19.0.3
+	datanode2: 172.19.0.4
+	datanode3: 172.19.0.5
+	datanode6: 172.19.0.8
+
+
+
+--------------- Segunda parte --------------- 
+	su - hdadmin
+	hdfs dfs -mkdir /user/hdadmin/quota4 -> creamos la carpeta
+ 	hdfs dfsadmin -setQuota 4 /user/hdadmin/quota4 -> establecemos la limitacion
+
+	-> Creamos 4 archivos
+		echo "Contenido del archivo 1" > archivo1.txt
+		echo "Contenido del archivo 2" > archivo2.txt
+		echo "Contenido del archivo 3" > archivo3.txt
+		echo "Contenido del archivo 4" > archivo4.txt
+
+	-> Añadimos 4 a hdfs
+		hdfs dfs -copyFromLocal archivo1.txt /user/hdadmin/quota4/
+		hdfs dfs -copyFromLocal archivo2.txt /user/hdadmin/quota4/
+		hdfs dfs -copyFromLocal archivo3.txt /user/hdadmin/quota4/
+		hdfs dfs -copyFromLocal archivo4.txt /user/hdadmin/quota4/
+
+	-> El ultimo da error ya que -setQuota incluye el propio directorio!
+		copyFromLocal: The NameSpace quota (directories and files) of directory /user/hdadmin/quota4 is exceeded: quota=4 file count=5
+
+
+
+
+
+
+--------------- Tercera parte --------------- 
+	hdfs fsck /
+Connecting to namenode via http://namenode:9870/fsck?ugi=hdadmin&path=%2F
+FSCK started by hdadmin (auth:SIMPLE) from /172.19.0.2 for path / at Mon Oct 09 15:11:47 CEST 2023
+
+
+Status: HEALTHY
+ Number of data-nodes:  5
+ Number of racks:               3
+ Total dirs:                    19
+ Total symlinks:                0
+
+Replicated Blocks:
+ Total size:    374395293 B
+ Total files:   32
+ Total blocks (validated):      36 (avg. block size 10399869 B)
+ Minimally replicated blocks:   36 (100.0 %)
+ Over-replicated blocks:        0 (0.0 %)
+ Under-replicated blocks:       0 (0.0 %)
+ Mis-replicated blocks:         0 (0.0 %)
+ Default replication factor:    3
+ Average block replication:     3.0
+ Missing blocks:                0
+ Corrupt blocks:                0
+ Missing replicas:              0 (0.0 %)
+ Blocks queued for replication: 0
+
+Erasure Coded Block Groups:
+ Total size:    0 B
+ Total files:   0
+ Total block groups (validated):        0
+ Minimally erasure-coded block groups:  0
+ Over-erasure-coded block groups:       0
+ Under-erasure-coded block groups:      0
+ Unsatisfactory placement block groups: 0
+ Average block group size:      0.0
+ Missing block groups:          0
+ Corrupt block groups:          0
+ Missing internal blocks:       0
+ Blocks queued for replication: 0
+FSCK ended at Mon Oct 09 15:11:47 CEST 2023 in 32 milliseconds
+
+
+The filesystem under path '/' is HEALTHY
+
+	hdfs dfsadmin -printTopology
+Rack: /rack1
+   172.19.0.4:9866 (datanode2.hadoop-cluster) In Service
+   172.19.0.3:9866 (datanode1.hadoop-cluster) In Service
+
+Rack: /rack2
+   172.19.0.5:9866 (datanode3.hadoop-cluster) In Service
+
+Rack: /rack3
+   172.19.0.8:9866 (datanode6.hadoop-cluster) In Service
+   172.19.0.7:9866 (datanode5.hadoop-cluster) In Service
+
+
+(en powershell)
+	docker container stop datanode1
+	docker container stop datanode3
+	docker container stop datanode5
+
+
+	hdfs dfsadmin -report
+Configured Capacity: 2162202353664 (1.97 TB)
+Present Capacity: 2033682804736 (1.85 TB)
+DFS Remaining: 2032927703040 (1.85 TB)
+DFS Used: 755101696 (720.12 MB)
+DFS Used%: 0.04%
+Replicated Blocks:
+        Under replicated blocks: 36
+        Blocks with corrupt replicas: 0
+        Missing blocks: 0
+        Missing blocks (with replication factor 1): 0
+        Low redundancy blocks with highest priority to recover: 0
+        Pending deletion blocks: 0
+Erasure Coded Block Groups:
+        Low redundancy block groups: 0
+        Block groups with corrupt internal blocks: 0
+        Missing block groups: 0
+        Low redundancy blocks with highest priority to recover: 0
+        Pending deletion blocks: 0
+
+-------------------------------------------------
+Live datanodes (2):
+
+Name: 172.19.0.4:9866 (datanode2.hadoop-cluster)
+Hostname: datanode2
+Rack: /rack1
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 377548800 (360.06 MB)
+Non DFS Used: 9267421184 (8.63 GB)
+DFS Remaining: 1016463851520 (946.66 GB)
+DFS Used%: 0.03%
+DFS Remaining%: 94.02%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 15:47:30 CEST 2023
+Last Block Report: Mon Oct 09 15:10:57 CEST 2023
+Num of Blocks: 36
+
+
+Name: 172.19.0.8:9866 (datanode6.hadoop-cluster)
+Hostname: datanode6
+Rack: /rack3
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 377552896 (360.06 MB)
+Non DFS Used: 9267417088 (8.63 GB)
+DFS Remaining: 1016463851520 (946.66 GB)
+DFS Used%: 0.03%
+DFS Remaining%: 94.02%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 15:47:30 CEST 2023
+Last Block Report: Mon Oct 09 15:10:57 CEST 2023
+Num of Blocks: 36
+
+
+Dead datanodes (3):
+
+Name: 172.19.0.3:9866 (172.19.0.3)
+Hostname: datanode1
+Rack: /rack1
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 106991616 (102.04 MB)
+Non DFS Used: 9460502528 (8.81 GB)
+DFS Remaining: 1016541327360 (946.73 GB)
+DFS Used%: 0.01%
+DFS Remaining%: 94.03%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 15:14:11 CEST 2023
+Last Block Report: Mon Oct 09 15:10:56 CEST 2023
+Num of Blocks: 0
+
+
+Name: 172.19.0.5:9866 (172.19.0.5)
+Hostname: datanode3
+Rack: /rack2
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 345829376 (329.81 MB)
+Non DFS Used: 9221681152 (8.59 GB)
+DFS Remaining: 1016541310976 (946.73 GB)
+DFS Used%: 0.03%
+DFS Remaining%: 94.03%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 15:14:59 CEST 2023
+Last Block Report: Mon Oct 09 15:10:57 CEST 2023
+Num of Blocks: 0
+
+
+Name: 172.19.0.7:9866 (172.19.0.7)
+Hostname: datanode5
+Rack: /rack3
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 45056 (44 KB)
+Non DFS Used: 9567436800 (8.91 GB)
+DFS Remaining: 1016541339648 (946.73 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.03%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 15:15:11 CEST 2023
+Last Block Report: Mon Oct 09 15:10:56 CEST 2023
+Num of Blocks: 0
+
+
+
+
+	hdfs fsck / -list-corruptfileblocks
+Connecting to namenode via http://namenode:9870/fsck?ugi=hdadmin&listcorruptfileblocks=1&path=%2F
+The filesystem under path '/' has 0 CORRUPT files
+
+
+	hdfs fsck / -files -blocks -locations -racks
+Status: HEALTHY
+ Number of data-nodes:  2
+ Number of racks:               2
+ Total dirs:                    19
+ Total symlinks:                0
+ 
+Replicated Blocks:
+ Total size:    374395293 B
+ Total files:   32
+ Total blocks (validated):      36 (avg. block size 10399869 B)
+ Minimally replicated blocks:   36 (100.0 %)
+ Over-replicated blocks:        0 (0.0 %)
+ Under-replicated blocks:       36 (100.0 %)
+ Mis-replicated blocks:         0 (0.0 %)
+ Default replication factor:    3
+ Average block replication:     2.0
+ Missing blocks:                0
+ Corrupt blocks:                0
+ Missing replicas:              36 (33.333332 %)
+ Blocks queued for replication: 0
+
+
+
+	hdfs fsck /user/luser/fichero_grande
+Status: HEALTHY
+ Number of data-nodes:  2
+ Number of racks:               2
+ Total dirs:                    0
+ Total symlinks:                0
+
+Replicated Blocks:
+ Total size:    367001600 B
+ Total files:   1
+ Total blocks (validated):      6 (avg. block size 61166933 B)
+ Minimally replicated blocks:   6 (100.0 %)
+ Over-replicated blocks:        0 (0.0 %)
+ Under-replicated blocks:       6 (100.0 %)
+ Mis-replicated blocks:         0 (0.0 %)
+ Default replication factor:    3
+ Average block replication:     2.0
+ Missing blocks:                0
+ Corrupt blocks:                0
+ Missing replicas:              6 (33.333332 %)
+ Blocks queued for replication: 0
+
+Erasure Coded Block Groups:
+ Total size:    0 B
+ Total files:   0
+ Total block groups (validated):        0
+ Minimally erasure-coded block groups:  0
+ Over-erasure-coded block groups:       0
+ Under-erasure-coded block groups:      0
+ Unsatisfactory placement block groups: 0
+ Average block group size:      0.0
+ Missing block groups:          0
+ Corrupt block groups:          0
+ Missing internal blocks:       0
+ Blocks queued for replication: 0
+FSCK ended at Mon Oct 09 16:25:04 CEST 2023 in 1 milliseconds
+
+
+The filesystem under path '/user/luser/fichero_grande' is HEALTHY
+
+
+	hdfs dfs -get /user/luser/fichero_grande
+	ls
+fichero_grande  hadoop  hadoop-3.3.6
+
+	nano hadoop/etc/hadoop/dfs.include (datanode7)
+	nano hadoop/etc/hadoop/yarn.include (datanode7)
+
+(powershell)
+	docker container run -d --name datanode7 --network=hadoop-cluster --hostname datanode7 --cpus 1 --memory 3072m --expose 8000-10000 --expose 50000-50200 datanode-image /inicio.sh
+
+	hdfs dfsadmin -refreshNodes
+
+	hdfs dfsadmin -report
+Name: 172.19.0.3:9866 (datanode7.hadoop-cluster)
+Hostname: datanode7
+Rack: /rack1
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 377345137 (359.86 MB)
+Non DFS Used: 10016684943 (9.33 GB)
+DFS Remaining: 1015714791424 (945.96 GB)
+DFS Used%: 0.03%
+DFS Remaining%: 93.95%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Mon Oct 09 16:45:18 CEST 2023
+Last Block Report: Mon Oct 09 16:40:39 CEST 2023
+Num of Blocks: 36
+
+	hdfs fsck / -files -blocks -locations -racks
+Status: HEALTHY
+ Number of data-nodes:  3
+ Number of racks:               2
+ Total dirs:                    19
+ Total symlinks:                0
+
+Replicated Blocks:
+ Total size:    374395293 B
+ Total files:   32
+ Total blocks (validated):      36 (avg. block size 10399869 B)
+ Minimally replicated blocks:   36 (100.0 %)
+ Over-replicated blocks:        0 (0.0 %)
+ Under-replicated blocks:       0 (0.0 %)
+ Mis-replicated blocks:         0 (0.0 %)
+ Default replication factor:    3
+ Average block replication:     3.0
+ Missing blocks:                0
+ Corrupt blocks:                0
+ Missing replicas:              0 (0.0 %)
+ Blocks queued for replication: 0
+
+
+
+--------------- Cuarta parte --------------- 
+
+Levantamos los datanodes 1, 3 y 5
+
+	hdfs dfsadmin -refreshNodes -> nos aseguramos que se recarga
+
+	hdfs ec -listPolicies
+Erasure Coding Policies:
+ErasureCodingPolicy=[Name=RS-10-4-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=10, numParityUnits=4]], CellSize=1048576, Id=5], State=DISABLED
+ErasureCodingPolicy=[Name=RS-3-2-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=3, numParityUnits=2]], CellSize=1048576, Id=2], State=DISABLED
+ErasureCodingPolicy=[Name=RS-6-3-1024k, Schema=[ECSchema=[Codec=rs, numDataUnits=6, numParityUnits=3]], CellSize=1048576, Id=1], State=ENABLED
+ErasureCodingPolicy=[Name=RS-LEGACY-6-3-1024k, Schema=[ECSchema=[Codec=rs-legacy, numDataUnits=6, numParityUnits=3]], CellSize=1048576, Id=3], State=DISABLED
+ErasureCodingPolicy=[Name=XOR-2-1-1024k, Schema=[ECSchema=[Codec=xor, numDataUnits=2, numParityUnits=1]], CellSize=1048576, Id=4], State=DISABLED
+
+	hdfs ec -enablePolicy -policy RS-3-2-1024k
+
+	hdfs dfs -mkdir /user/grandes -> creamos la carpeta
+
+	hdfs ec -setPolicy -path /user/grandes -policy RS-3-2-1024k -> aplicamos la nueva politica
+
+
+	-> Mover el documento entre directorios de HDFS no aplica el EC, por lo que creamos el fichero de nuevo
+	dd if=/dev/urandom of=fichero_grande bs=1M count=350 
+
+(si no teniamos fichero_grande)
+	hdfs dfs -put fichero_grande /user/luser/ -> metemos el documento en el directorio con EC por defecto
+
+	dfs dfsadmin -report -> revisamos la asignacion de bloques
+(bloques pre EC)
+datanode1 -> 0
+datanode2 -> 33
+datanode3 -> 31
+datanode5 -> 6
+datanode6 -> 5
+datanode7 -> 33
+total     -> 108
+
+	hdfs dfs -rm /user/luser/fichero_grande -> borramos el documento
+	hdfs dfs -expunge -> vaciamos la papelera
+
+	hdfs dfs -put fichero_grande /user/grandes -> metemos el documento en el directorio con EC modificado
+
+
+	hdfs dfsadmin -report
+(bloques post EC)
+datanode1 -> 2
+datanode2 -> 32
+datanode3 -> 30
+datanode5 -> 2
+datanode6 -> 3
+datanode7 -> 31
+total     -> 100
+
+	hdfs fsck /user/grandes
+hdadmin@namenode:~$ hdfs fsck /user/grandes
+Connecting to namenode via http://namenode:9870/fsck?ugi=hdadmin&path=%2Fuser%2Fgrandes
+FSCK started by hdadmin (auth:SIMPLE) from /172.19.0.2 for path /user/grandes at Tue Oct 10 17:49:41 CEST 2023
+
+
+Status: HEALTHY
+ Number of data-nodes:  6
+ Number of racks:               4
+ Total dirs:                    1
+ Total symlinks:                0
+
+Replicated Blocks:
+ Total size:    0 B
+ Total files:   0
+ Total blocks (validated):      0
+ Minimally replicated blocks:   0
+ Over-replicated blocks:        0
+ Under-replicated blocks:       0
+ Mis-replicated blocks:         0
+ Default replication factor:    3
+ Average block replication:     0.0
+ Missing blocks:                0
+ Corrupt blocks:                0
+ Missing replicas:              0
+ Blocks queued for replication: 0
+
+Erasure Coded Block Groups:
+ Total size:    367001600 B
+ Total files:   1
+ Total block groups (validated):        2 (avg. block group size 183500800 B)
+ Minimally erasure-coded block groups:  2 (100.0 %)
+ Over-erasure-coded block groups:       0 (0.0 %)
+ Under-erasure-coded block groups:      0 (0.0 %)
+ Unsatisfactory placement block groups: 0 (0.0 %)
+ Average block group size:      5.0
+ Missing block groups:          0
+ Corrupt block groups:          0
+ Missing internal blocks:       0 (0.0 %)
+ Blocks queued for replication: 0
+FSCK ended at Tue Oct 10 17:49:41 CEST 2023 in 2 milliseconds
+
+
+
+PRE EC ------> DFS Used: 1132756992 (1.05 GB) 
+POST EC -----> DFS Used: 640249863 (610.59 MB)
+
+
+

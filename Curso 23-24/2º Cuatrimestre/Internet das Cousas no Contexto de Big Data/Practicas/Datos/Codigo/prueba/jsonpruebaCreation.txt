@@ -1,0 +1,24 @@
+{
+    "id": "Mote1",
+    "type": "Mote",
+    "timeInstant": {
+        "value": "2024-04-12T00:00:00Z",
+        "type": "time",
+        "metadata": {
+            "timeInstantUnit": {
+                "value": "ISO8601",
+                "type": "string"
+            }
+        }
+    },
+    "temperature": {
+        "value": 27.0,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "celsius",
+                "type": "string"
+            }
+        }
+    }
+}

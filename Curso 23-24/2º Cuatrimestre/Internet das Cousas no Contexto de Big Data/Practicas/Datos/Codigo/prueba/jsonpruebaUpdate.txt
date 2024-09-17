@@ -1,0 +1,22 @@
+{
+    "timeInstant": {
+        "value": "2024-04-15T17:00:00Z",
+        "type": "time",
+        "metadata": {
+            "timeInstantUnit": {
+                "value": "ISO8601",
+                "type": "string"
+            }
+        }
+    },
+    "temperature": {
+        "value": 399.0,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "celsius",
+                "type": "string"
+            }
+        }
+    }
+}

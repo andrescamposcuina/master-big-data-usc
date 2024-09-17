@@ -1,0 +1,595 @@
+Como usuario hdadmin, hadoop esta en /opt/bd/hadoop/etc/hadoop
+
+Iniciar demonios namenode y datanode
+	- hdfs --daemon start namenode
+	- yarn --daemon start resourcemanager
+
+	- hdfs --daemon start datanode
+	- yarn --daemon start nodemanager
+Apagar demonios namenode y datanode
+	- hdfs --daemon stop namenode
+	- yarn --daemon stop resourcemanager
+
+	- hdfs --daemon stop datanode
+	- yarn --daemon stop nodemanager
+
+Webs
+	- HDFS http://localhost:9870
+	- YARN http://localhost:8088
+	- Backup http://localhost:50105
+	- Timelineserver http://localhost:8188/
+
+Crear datanodes en powershell
+	for ($i = 1; $i -le 6; $i++) {
+    		docker container run -d --name datanode$i --network=hadoop-cluster --hostname datanode$i --cpus 1 --memory 3072m --expose 8000-10000 --expose 50000-50200 datanode-image /inicio.sh
+	}
+
+Conectarse a docker namenode
+	docker container exec -ti namenode /bin/bash
+
+Encender y apagar datanodes
+	docker container start namenode datanode{1..4}
+      	docker container stop namenode datanode{1..4}
+
+Encender y apagar datanodes en powershell
+	docker container start namenode
+	for ($i = 1; $i -le 4; $i++) {
+	    $containerName = "datanode$i"
+	    docker container start $containerName
+	}
+	docker container run -d --name backupnode --network=hadoop-cluster --hostname backupnode --cpus=1 --memory=3072m --expose 50100 -p 50105:50105 backupnode-image su hdadmin -c "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 /opt/bd/hadoop/bin/hdfs namenode -backup"
+	docker container run -ti --name timelineserver --network=hadoop-cluster --hostname timelineserver --cpus=1 --memory=3072m --expose 10200 -p 8188:8188 tfpena/hadoop-base /bin/bash
+----> acceder a timelineserver con docker timelineserver exec -ti timelineserver /bin/bash
+----> Ejecutar yarn --daemon start timelineserver
+
+	docker container stop namenode
+	docker container stop backupnode
+	docker container stop timelineserver
+	for ($i = 1; $i -le 4; $i++) {
+	    $containerName = "datanode$i"
+	    docker container stop $containerName
+	}
+
+
+------------------------ Tarea 1 ---------------------------
+
+Importante: var/data/hdfs/namenode/current/
+
+1.1.2 en backupnode
+	mkdir -p /var/data/backupnode/dfs/name
+	chown -R hdadmin:hadoop /var/data/backupnode/
+
+
+1.1.3 en backupnode
+	nano hadoop/etc/hadoop/core-site.xml
+<configuration>
+  <property>
+    <!-- Nombre del filesystem por defecto -->
+    <!-- Como queremos usar HDFS tenemos que indicarlo con hdfs:// y el servidor y puerto en el que corre el NameNod -->
+    <name>fs.defaultFS</name>
+    <value>hdfs://namenode:9000/</value>
+    <final>true</final>
+  </property>
+  <property>
+    <!-- Directorio para guardar las copias de seguridad -->
+    <name>hadoop.tmp.dir</name>
+    <value>/var/data/backupnode</value>
+    <final>true</final>
+  </property>
+</configuration>
+
+1.1.4 en backupnode
+	nano hadoop/etc/hadoop/hdfs-site.xml
+<configuration>
+     <property>
+         <!-- Dirección y puerto del nodo de backup -->
+         <name>dfs.namenode.backup.address</name>
+         <value>backupnode:50100</value>
+         <final>true</final>
+    </property>
+    <property>
+        <!-- Dirección y puerto del servicio web del nodo de backup -->
+        <name>dfs.namenode.backup.http-address</name>
+        <value>backupnode:50105</value>
+        <final>true</final>
+    </property>
+</configuration>
+
+1.1.5 en backupnode
+	hdfs namenode -backup
+
+1.1.6 Crear BackupNode a partir de imagen
+	docker container run -d --name backupnode --network=hadoop-cluster --hostname backupnode --cpus=1 --memory=3072m --expose 50100 -p 50105:50105 backupnode-image su hdadmin -c "JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 /opt/bd/hadoop/bin/hdfs namenode -backup"
+
+
+1.2.1
+	docker container exec -ti namenode /bin/bash
+	yarn --daemon stop resourcemanager
+
+1.2.2 en namenode
+	nano hadoop/etc/hadoop/yarn-site.xml
+<configuration>
+  <property>
+    <!-- Nombre del equipo que ejecuta el demonio ResourceManager -->
+    <name>yarn.resourcemanager.hostname</name>
+    <value>resourcemanager</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Número máximo de vcores que un ApplicationMaster puede pedir al RM (por defecto: 4) -->
+    <!-- Peticiones mayores lanzan una InvalidResourceRequestException -->
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>1</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Memoria minima (MB) que un ApplicationMaster puede solicitar al RM (por defecto: 1024) -->
+    <!-- La memoria asignada a un contenedor será múltiplo de esta cantidad -->
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>128</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Memoria maxima (MB) que un ApplicationMaster puede solicitar al RM (por defecto: 8192 MB) -->
+    <!-- Peticiones mayores lanzan una InvalidResourceRequestException -->
+    <!-- Puedes aumentar o reducir este valor en funcion de la memoria de la que dispongas -->
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>2048</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Nombre del equipo que ejecutará el demonio de línea de tiempo por defecto -->
+    <name>yarn.timeline-service.hostname</name>
+    <value>timelineserver</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Indica que si el servicio de linea de tiempo está activo o no -->
+    <name>yarn.timeline-service.enabled</name>
+    <value>true</value>
+    <final>true</final>
+  </property>
+  
+  <property>
+    <!-- Le indica al ResourceManager que publique las metricas de YARN en el timeline server -->
+    <name>yarn.system-metrics-publisher.enabled</name>
+    <value>true</value>
+    <final>true</final>
+  </property>
+</configuration>
+
+1.2.3 en namenode
+	yarn --daemon start resourcemanager
+
+1.2.3 En powershell
+	docker container run -ti --name timelineserver --network=hadoop-cluster --hostname timelineserver --cpus=1 --memory=3072m --expose 10200 -p 8188:8188 tfpena/hadoop-base /bin/bash
+
+1.2.4 en timelineserver
+	su - hdadmin
+	yarn --daemon start timelineserver
+
+1.2.5
+	export MAPRED_EXAMPLES=$HADOOP_HOME/share/hadoop/mapreduce
+	yarn jar $MAPRED_EXAMPLES/hadoop-mapreduce-examples-*.jar pi 16 1000
+
+
+------------------------ Tarea 2 ---------------------------
+2.1.1 en el NameNode (como usuario hdadmin)
+
+2.1.2 y 2.1.3 dfs.include //////// yarn.include (cada nombre en linea nueva)
+	nano hadoop/etc/hadoop/dfs.include //////// nano hadoop/etc/hadoop/yarn.include
+datanode1
+datanode2
+datanode3
+datanode4
+
+2.1.2 y 2.1.3 dfs.exclude //////// yarn.exclude ("touch" crea archivos vacios)
+	touch hadoop/etc/hadoop/dfs.exclude
+	touch hadoop/etc/hadoop/yarn.exclude
+
+2.1.4
+	nano hadoop/etc/hadoop/hdfs-site.xml
+<configuration>
+  <property>
+    <!-- Factor de replicacion de los bloques -->
+     <name>dfs.replication</name>
+     <value>3</value>
+     <final>true</final>
+   </property>
+
+   <property>
+    <!-- Tamano del bloque (por defecto 128m) -->
+     <name>dfs.blocksize</name>
+     <value>64m</value>
+     <final>true</final>
+   </property>
+
+   <property>
+     <!-- Lista (separada por comas) de directorios donde el namenode guarda los metadatos. -->
+     <name>dfs.namenode.name.dir</name>
+     <value>file:///var/data/hdfs/namenode</value>
+     <final>true</final>
+   </property>
+
+   <property>
+     <!-- Direccion y puerto del interfaz web del namenode -->
+     <name>dfs.namenode.http-address</name>
+     <value>namenode:9870</value>
+     <final>true</final>
+   </property>
+   
+   <property>
+     <!-- Nombre de un fichero con lista de hosts que pueden actuar como DataNodes; si el fichero esta vacio, cualquier nodo esta permitido -->
+     <name>dfs.hosts</name>
+     <value>/opt/bd/hadoop/etc/hadoop/dfs.include</value>
+     <final>true</final>
+   </property>
+   
+   <property>
+     <!-- Nombre de un fichero con lista de hosts que no pueden actuar como DataNodes; si el fichero esta vacio, ninguno esta excluido -->
+     <name>dfs.hosts.exclude</name>
+     <value>/opt/bd/hadoop/etc/hadoop/dfs.exclude</value>
+     <final>true</final>
+   </property>
+ </configuration>
+
+2.1.5
+	nano hadoop/etc/hadoop/yarn-site.xml
+
+ <configuration>
+  <property>
+    <!-- Nombre del equipo que ejecuta el demonio ResourceManager -->
+    <name>yarn.resourcemanager.hostname</name>
+    <value>resourcemanager</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Número máximo de vcores que un ApplicationMaster puede pedir al RM (por defecto: 4) -->
+    <!-- Peticiones mayores lanzan una InvalidResourceRequestException -->
+    <name>yarn.scheduler.maximum-allocation-vcores</name>
+    <value>1</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Memoria minima (MB) que un ApplicationMaster puede solicitar al RM (por defecto: 1024) -->
+    <!-- La memoria asignada a un contenedor será múltiplo de esta cantidad -->
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>128</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Memoria maxima (MB) que un ApplicationMaster puede solicitar al RM (por defecto: 8192 MB) -->
+    <!-- Peticiones mayores lanzan una InvalidResourceRequestException -->
+    <!-- Puedes aumentar o reducir este valor en funcion de la memoria de la que dispongas -->
+    <name>yarn.scheduler.maximum-allocation-mb</name>
+    <value>2048</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Nombre del equipo que ejecutará el demonio de línea de tiempo por defecto -->
+    <name>yarn.timeline-service.hostname</name>
+    <value>timelineserver</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Indica que si el servicio de linea de tiempo está activo o no -->
+    <name>yarn.timeline-service.enabled</name>
+    <value>true</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Le indica al ResourceManager que publique las metricas de YARN en el timeline server -->
+    <name>yarn.system-metrics-publisher.enabled</name>
+    <value>true</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Nombre de un fichero con lista de hosts que pueden actuar como NodeManagers; si el fichero esta vacio, cualquier nodo estan permitido -->
+    <name>yarn.resourcemanager.nodes.include-path</name>
+    <value>/opt/bd/hadoop/etc/hadoop/yarn.include</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Nombre de un fichero con lista de hosts que no pueden actuar como NodeManagers; si el fichero esta vacio, ninguno esta excluido -->
+    <name>yarn.resourcemanager.nodes.exclude-path</name>
+    <value>/opt/bd/hadoop/etc/hadoop/yarn.exclude</value>
+    <final>true</final>
+  </property>
+</configuration>
+
+2.1.6 en namenode
+	hdfs --daemon stop namenode
+	yarn --daemon stop resourcemanager
+	hdfs --daemon start namenode
+	yarn --daemon start resourcemanager
+
+2.1.7 en namenode
+	tail hadoop/logs/hadoop-hdadmin-resourcemanager-namenode.log
+	tail -n 40 hadoop/logs/hadoop-hdadmin-namenode-namenode.log
+
+
+
+2.2.1 en namenode
+	nano hadoop/etc/hadoop/dfs.exclude ////// nano hadoop/etc/hadoop/yarn.exclude
+datanode4
+	
+	hdfs dfsadmin -refreshNodes
+	yarn rmadmin -refreshNodes
+
+2.2.2
+
+------------------------ Tarea 3 ---------------------------
+3.1 en namenode
+	nano hadoop/etc/hadoop/dfs.include //////// nano hadoop/etc/hadoop/yarn.include
+datanode5
+datanode6
+
+3.2 en namenode
+	hdfs dfsadmin -refreshNodes
+	yarn rmadmin -refreshNodes
+
+3.3 en powershell
+	docker container run -d --name datanode5 --network=hadoop-cluster --hostname datanode5 --cpus=1 --memory=3072m --expose 8000-10000 --expose 50000-50200 datanode-image /inicio.sh
+	docker container run -d --name datanode6 --network=hadoop-cluster --hostname datanode6 --cpus=1 --memory=3072m --expose 8000-10000 --expose 50000-50200 datanode-image /inicio.sh
+
+3.3.1 en namenode (yarn detecto los datanodes pero hdfs no)
+	hdfs dfsadmin -refreshNodes
+
+3.3.2 IMPORTANTE PARA LA ENTREGA
+	cat hadoop/logs/hadoop-hdadmin-namenode-namenode.log
+2023-10-08 18:44:39,817 INFO org.apache.hadoop.hdfs.server.common.Util: dfs.datanode.fileio.profiling.sampling.percentage set to 0. Disabling file IO profiling
+2023-10-08 18:44:40,027 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode1" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/dfs.include
+2023-10-08 18:44:40,028 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode2" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/dfs.include
+2023-10-08 18:44:40,028 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode3" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/dfs.include
+2023-10-08 18:44:40,028 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode5" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/dfs.include
+2023-10-08 18:44:40,028 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode6" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/dfs.include
+
+	cat hadoop/logs/hadoop-hdadmin-resourcemanager-namenode.log
+2023-10-08 17:20:24,064 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode1" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/yarn.include
+2023-10-08 17:20:24,064 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode2" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/yarn.include
+2023-10-08 17:20:24,064 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode3" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/yarn.include
+2023-10-08 17:20:24,064 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode5" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/yarn.include
+2023-10-08 17:20:24,064 INFO org.apache.hadoop.util.HostsFileReader: Adding a node "datanode6" to the list of included hosts from /opt/bd/hadoop/etc/hadoop/yarn.include
+2023-10-08 17:20:24,065 INFO org.apache.hadoop.yarn.server.resourcemanager.NodesListManager: hostsReader include:{datanode5,datanode6,datanode1,datanode2,datanode3} exclude:{}
+
+3.4 en namenode
+	hdfs dfsadmin -report
+-------------------------------------------------
+Live datanodes (5):
+
+Name: 172.19.0.10:9866 (datanode6.hadoop-cluster)
+Hostname: datanode6
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 24576 (24 KB)
+Non DFS Used: 8425771008 (7.85 GB)
+DFS Remaining: 1017683025920 (947.79 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.13%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Sun Oct 08 17:22:25 CEST 2023
+Last Block Report: Sun Oct 08 17:22:22 CEST 2023
+Num of Blocks: 0
+
+
+Name: 172.19.0.3:9866 (datanode1.hadoop-cluster)
+Hostname: datanode1
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 7618560 (7.27 MB)
+Non DFS Used: 8418209792 (7.84 GB)
+DFS Remaining: 1017682993152 (947.79 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.13%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Sun Oct 08 17:22:26 CEST 2023
+Last Block Report: Sun Oct 08 16:59:02 CEST 2023
+Num of Blocks: 27
+
+
+Name: 172.19.0.4:9866 (datanode2.hadoop-cluster)
+Hostname: datanode2
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 7618560 (7.27 MB)
+Non DFS Used: 8418209792 (7.84 GB)
+DFS Remaining: 1017682993152 (947.79 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.13%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Sun Oct 08 17:22:26 CEST 2023
+Last Block Report: Sun Oct 08 17:19:38 CEST 2023
+Num of Blocks: 27
+
+
+Name: 172.19.0.5:9866 (datanode3.hadoop-cluster)
+Hostname: datanode3
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 7618560 (7.27 MB)
+Non DFS Used: 8418209792 (7.84 GB)
+DFS Remaining: 1017682993152 (947.79 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.13%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Sun Oct 08 17:22:26 CEST 2023
+Last Block Report: Sun Oct 08 13:49:01 CEST 2023
+Num of Blocks: 27
+
+
+Name: 172.19.0.9:9866 (datanode5.hadoop-cluster)
+Hostname: datanode5
+Decommission Status : Normal
+Configured Capacity: 1081101176832 (1006.85 GB)
+DFS Used: 24576 (24 KB)
+Non DFS Used: 8425766912 (7.85 GB)
+DFS Remaining: 1017683030016 (947.79 GB)
+DFS Used%: 0.00%
+DFS Remaining%: 94.13%
+Configured Cache Capacity: 0 (0 B)
+Cache Used: 0 (0 B)
+Cache Remaining: 0 (0 B)
+Cache Used%: 100.00%
+Cache Remaining%: 0.00%
+Xceivers: 0
+Last contact: Sun Oct 08 17:22:25 CEST 2023
+Last Block Report: Sun Oct 08 17:22:25 CEST 2023
+Num of Blocks: 0
+
+-------> En estas practicas el tamaño de bloque es 64MB, MB ocupados = Nº Bloques * 64MB
+
+	yarn node -list
+2023-10-08 17:23:04,547 INFO client.DefaultNoHARMFailoverProxyProvider: Connecting to ResourceManager at resourcemanager/172.19.0.2:8032
+2023-10-08 17:23:04,800 INFO client.AHSProxy: Connecting to Application History server at timelineserver/172.19.0.8:10200
+Total Nodes:5
+         Node-Id             Node-State Node-Http-Address       Number-of-Running-Containers
+ datanode5:42949                RUNNING    datanode5:8042                                  0
+ datanode3:33861                RUNNING    datanode3:8042                                  0
+ datanode6:45099                RUNNING    datanode6:8042                                  0
+ datanode1:46439                RUNNING    datanode1:8042                                  0
+ datanode2:41559                RUNNING    datanode2:8042                                  0
+
+	
+
+3.5
+	hdfs balancer -threshold 1
+2023-10-08 17:42:53,371 INFO balancer.Balancer: Using a threshold of 1.0
+2023-10-08 17:42:53,373 INFO balancer.Balancer: namenodes  = [hdfs://namenode:9000]
+2023-10-08 17:42:53,374 INFO balancer.Balancer: parameters = Balancer.BalancerParameters [BalancingPolicy.Node, threshold = 1.0, max idle iteration = 5, #excluded nodes = 0, #included nodes = 0, #source nodes = 0, #blockpools = 0, run during upgrade = false]
+2023-10-08 17:42:53,374 INFO balancer.Balancer: included nodes = []
+2023-10-08 17:42:53,375 INFO balancer.Balancer: excluded nodes = []
+2023-10-08 17:42:53,375 INFO balancer.Balancer: source nodes = []
+Time Stamp               Iteration#  Bytes Already Moved  Bytes Left To Move  Bytes Being Moved  NameNode
+2023-10-08 17:42:53,378 INFO balancer.NameNodeConnector: getBlocks calls for hdfs://namenode:9000 will be rate-limited to 20 per second
+2023-10-08 17:42:54,887 INFO balancer.Balancer: dfs.namenode.get-blocks.max-qps = 20 (default=20)
+2023-10-08 17:42:54,887 INFO balancer.Balancer: dfs.balancer.movedWinWidth = 5400000 (default=5400000)
+2023-10-08 17:42:54,887 INFO balancer.Balancer: dfs.balancer.moverThreads = 1000 (default=1000)
+2023-10-08 17:42:54,887 INFO balancer.Balancer: dfs.balancer.dispatcherThreads = 200 (default=200)
+2023-10-08 17:42:54,888 INFO balancer.Balancer: dfs.balancer.getBlocks.size = 2147483648 (default=2147483648)
+2023-10-08 17:42:54,888 INFO balancer.Balancer: dfs.balancer.getBlocks.min-block-size = 10485760 (default=10485760)
+2023-10-08 17:42:54,888 INFO balancer.Balancer: dfs.datanode.balance.max.concurrent.moves = 100 (default=100)
+2023-10-08 17:42:54,888 INFO balancer.Balancer: dfs.datanode.balance.bandwidthPerSec = 104857600 (default=104857600)
+2023-10-08 17:42:54,894 INFO balancer.Balancer: dfs.balancer.max-size-to-move = 10737418240 (default=10737418240)
+2023-10-08 17:42:54,894 INFO balancer.Balancer: dfs.blocksize = 67108864 (default=134217728)
+2023-10-08 17:42:54,916 INFO net.NetworkTopology: Adding a new node: /default-rack/172.19.0.5:9866
+2023-10-08 17:42:54,916 INFO net.NetworkTopology: Adding a new node: /default-rack/172.19.0.3:9866
+2023-10-08 17:42:54,916 INFO net.NetworkTopology: Adding a new node: /default-rack/172.19.0.4:9866
+2023-10-08 17:42:54,916 INFO net.NetworkTopology: Adding a new node: /default-rack/172.19.0.9:9866
+2023-10-08 17:42:54,916 INFO net.NetworkTopology: Adding a new node: /default-rack/172.19.0.10:9866
+2023-10-08 17:42:54,919 INFO balancer.Balancer: 0 over-utilized: []
+2023-10-08 17:42:54,919 INFO balancer.Balancer: 0 underutilized: []
+08-oct-2023 17:42:54              0                  0 B                 0 B                0 B                  0  hdfs://namenode:9000
+The cluster is balanced. Exiting...
+08-oct-2023 17:42:54     Balancing took 1.9 seconds
+
+
+--------------------------- Tarea 4 -----------------------------
+4.1
+	hdfs dfsadmin -printTopology
+Rack: /default-rack
+   172.19.0.10:9866 (datanode6.hadoop-cluster) In Service
+   172.19.0.4:9866 (datanode2.hadoop-cluster) In Service
+   172.19.0.3:9866 (datanode1.hadoop-cluster) In Service
+   172.19.0.5:9866 (datanode3.hadoop-cluster) In Service
+   172.19.0.9:9866 (datanode5.hadoop-cluster) In Service
+
+4.2
+	hdfs --daemon stop namenode
+
+4.3
+	nano hadoop/etc/hadoop/topology.data
+172.19.0.3     /rack1
+172.19.0.4     /rack1
+172.19.0.5     /rack2
+172.19.0.9     /rack3
+172.19.0.10     /rack3
+
+4.4
+	nano hadoop/etc/hadoop/topology.script
+#!/bin/bash
+
+HADOOP_CONF=$HADOOP_HOME/etc/hadoop 
+while [ $# -gt 0 ] ; do
+  nodeArg=$1
+  exec< ${HADOOP_CONF}/topology.data 
+  result="" 
+  while read line ; do
+    ar=( $line ) 
+    if [ "${ar[0]}" = "$nodeArg" ] ; then
+      result="${ar[1]}"
+    fi
+  done 
+  shift 
+  if [ -z "$result" ] ; then
+    echo -n "/default-rack "
+  else
+    echo -n "$result "
+  fi
+done
+
+	chmod +x hadoop/etc/hadoop/topology.script
+
+4.5
+	hdfs --daemon stop namenode
+<configuration>
+  <property>
+    <!-- Nombre del filesystem por defecto -->
+    <!-- Como queremos usar HDFS tenemos que indicarlo con hdfs:// y el servidor y puerto en el que corre el NameNode -->
+    <name>fs.defaultFS</name>
+    <value>hdfs://namenode:9000/</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Directorio para almacenamiento temporal (debe tener suficiente espacio) -->
+    <name>hadoop.tmp.dir</name>
+    <value>/var/tmp/hadoop-${user.name}</value>
+    <final>true</final>
+  </property>
+
+  <property>
+    <!-- Script que define la topologia de racks -->
+    <name>net.topology.script.file.name</name>
+    <value>/opt/bd/hadoop/etc/hadoop/topology.script</value>
+    <final>true</final>
+  </property>
+</configuration>
+
+4.6
+	hdfs --daemon start namenode
+
+
+

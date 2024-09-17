@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDADescriptor>
+   <DataSources>
+      <Connection id="resultadosproductoras" type="mondrian.jndi">
+         <Catalog>mondrian:/ProduccionCine</Catalog>
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="resultadosproductora2" type="mondrian.jndi">
+         <Catalog>mondrian:/ProduccionCine</Catalog>
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="resultadosproductora1" type="mondrian.jndi">
+         <Catalog>mondrian:/ProduccionCine</Catalog>
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="Productoras" type="sql.jndi">
+         <Jndi>peliculas</Jndi>
+      </Connection>
+   </DataSources>
+   <DataAccess access="public" connection="resultadosproductoras" id="resultadosproductoras"
+               type="mdx">
+      <Name>resultadosproductoras</Name>
+      <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[WITH
+SET [~FILTER] AS
+    {[tiempoemision.jerarquiatiempo].[2006], [tiempoemision.jerarquiatiempo].[2007], [tiempoemision.jerarquiatiempo].[2008], [tiempoemision.jerarquiatiempo].[2009], [tiempoemision.jerarquiatiempo].[2010], [tiempoemision.jerarquiatiempo].[2011], [tiempoemision.jerarquiatiempo].[2012], [tiempoemision.jerarquiatiempo].[2013], [tiempoemision.jerarquiatiempo].[2014], [tiempoemision.jerarquiatiempo].[2015], [tiempoemision.jerarquiatiempo].[2016]}
+SET [~ROWS] AS
+    Order({[productora.jerarquiaproductora].[nivelproductora].Members}, [Measures].[ingresos], DESC)
+SELECT
+NON EMPTY {[Measures].[beneficio], [Measures].[coste]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [finanzas]
+WHERE [~FILTER]]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="resultadosproductora2" id="resultadosproductora2"
+               type="mdx">
+      <Name>resultadosproductora2</Name>
+      <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters>
+         <Parameter default="Warner Bros." name="productora2" type="String"/>
+      </Parameters>
+      <Query><![CDATA[WITH
+SET [~FILTER] AS
+    {[productora.jerarquiaproductora].[${productora2}]}
+SET [~ROWS] AS
+    Order({[tiempoemision.jerarquiatiempo].[2006], [tiempoemision.jerarquiatiempo].[2007], [tiempoemision.jerarquiatiempo].[2008], [tiempoemision.jerarquiatiempo].[2009], [tiempoemision.jerarquiatiempo].[2010], [tiempoemision.jerarquiatiempo].[2011], [tiempoemision.jerarquiatiempo].[2012], [tiempoemision.jerarquiatiempo].[2013], [tiempoemision.jerarquiatiempo].[2014], [tiempoemision.jerarquiatiempo].[2015], [tiempoemision.jerarquiatiempo].[2016]}, [tiempoemision.jerarquiatiempo].[anno].CURRENTMEMBER.ORDERKEY, ASC)
+SELECT
+NON EMPTY {[Measures].[beneficio], [Measures].[coste]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [finanzas]
+WHERE [~FILTER]]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="resultadosproductora1" id="resultadosproductora1"
+               type="mdx">
+      <Name>resultadosproductora1</Name>
+      <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters>
+         <Parameter default="Warner Bros." name="productora1" type="String"/>
+      </Parameters>
+      <Query><![CDATA[WITH
+SET [~FILTER] AS
+    {[productora.jerarquiaproductora].[${productora1}]}
+SET [~ROWS] AS
+    Order({[tiempoemision.jerarquiatiempo].[2006], [tiempoemision.jerarquiatiempo].[2007], [tiempoemision.jerarquiatiempo].[2008], [tiempoemision.jerarquiatiempo].[2009], [tiempoemision.jerarquiatiempo].[2010], [tiempoemision.jerarquiatiempo].[2011], [tiempoemision.jerarquiatiempo].[2012], [tiempoemision.jerarquiatiempo].[2013], [tiempoemision.jerarquiatiempo].[2014], [tiempoemision.jerarquiatiempo].[2015], [tiempoemision.jerarquiatiempo].[2016]}, [tiempoemision.jerarquiatiempo].[anno].CURRENTMEMBER.ORDERKEY, ASC)
+SELECT
+NON EMPTY {[Measures].[beneficio], [Measures].[coste]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [finanzas]
+WHERE [~FILTER]]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="Productoras" id="Productoras" type="sql">
+      <Name>Productoras</Name>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[select nombre
+from dw.productoras
+order by nombre]]></Query>
+   </DataAccess>
+</CDADescriptor>

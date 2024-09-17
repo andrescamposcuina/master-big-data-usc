@@ -1,0 +1,11 @@
+{
+  "dataProbeLocations": [
+    {
+      "sourcePipelineFilename": "${PROJECT_HOME}/reflection/generate-fake-books.hpl",
+      "sourceTransformName": "dummy"
+    }
+  ],
+  "name": "pipeline-probe-example",
+  "pipelineFilename": "${PROJECT_HOME}/reflection/pipeline-probe-example.hpl",
+  "enabled": true
+}

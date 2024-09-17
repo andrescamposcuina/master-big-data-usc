@@ -1,0 +1,18 @@
+{
+    "timeInstant": {
+      "value": "2019-03-07T00:00:00Z",
+      "type": "time"
+    },
+    "temperature": {
+      "value": 23.0,
+      "type": "float"
+    },
+    "lighting": {
+      "value": 18.0,
+      "type": "float"
+     },
+    "flame": {
+    "value": "false",
+    "type": "boolean"
+    } 
+}

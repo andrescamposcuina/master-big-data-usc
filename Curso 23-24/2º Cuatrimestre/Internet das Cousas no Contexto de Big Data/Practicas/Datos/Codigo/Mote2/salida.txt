@@ -1,0 +1,124 @@
+| recvTimeTs    | recvTime                | fiwareServicePath | entityId | entityType | attrName    | attrType | attrValue            | 
+attrMd                                                            |
++---------------+-------------------------+-------------------+----------+------------+-------------+----------+----------------------+-------------------------------------------------------------------+
+| 1712765482916 | 2024-04-10T16:11:22.916 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712765482916 | 2024-04-10T16:11:22.916 | /                 | Mote2    | Mote       | light       | float    | 1500                 | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712765482916 | 2024-04-10T16:11:22.916 | /                 | Mote2    | Mote       | temperature | float    | 25                   | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712765482916 | 2024-04-10T16:11:22.916 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T10:05:00Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766748855 | 2024-04-10T16:32:28.855 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766748855 | 2024-04-10T16:32:28.855 | /                 | Mote2    | Mote       | light       | float    | 18.641441            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766748855 | 2024-04-10T16:32:28.855 | /                 | Mote2    | Mote       | temperature | float    | 24.058605            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766748855 | 2024-04-10T16:32:28.855 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:32:27Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766764734 | 2024-04-10T16:32:44.734 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766764734 | 2024-04-10T16:32:44.734 | /                 | Mote2    | Mote       | light       | float    | 19.142157            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766764734 | 2024-04-10T16:32:44.734 | /                 | Mote2    | Mote       | temperature | float    | 23.736263            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766764734 | 2024-04-10T16:32:44.734 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:32:33Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766770086 | 2024-04-10T16:32:50.86  | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766770086 | 2024-04-10T16:32:50.86  | /                 | Mote2    | Mote       | light       | float    | 16.738297            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766770086 | 2024-04-10T16:32:50.86  | /                 | Mote2    | Mote       | temperature | float    | 24.139196            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766770086 | 2024-04-10T16:32:50.86  | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:32:50Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766775783 | 2024-04-10T16:32:55.783 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766775783 | 2024-04-10T16:32:55.783 | /                 | Mote2    | Mote       | light       | float    | 13.546625            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766775783 | 2024-04-10T16:32:55.783 | /                 | Mote2    | Mote       | temperature | float    | 24.139196            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766775783 | 2024-04-10T16:32:55.783 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:32:55Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766781066 | 2024-04-10T16:33:01.66  | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766781066 | 2024-04-10T16:33:01.66  | /                 | Mote2    | Mote       | light       | float    | 15.938502            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766781066 | 2024-04-10T16:33:01.66  | /                 | Mote2    | Mote       | temperature | float    | 24.058605            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766781066 | 2024-04-10T16:33:01.66  | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:01Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766786506 | 2024-04-10T16:33:06.506 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766786506 | 2024-04-10T16:33:06.506 | /                 | Mote2    | Mote       | light       | float    | 18.771061            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766786506 | 2024-04-10T16:33:06.506 | /                 | Mote2    | Mote       | temperature | float    | 23.736263            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766786506 | 2024-04-10T16:33:06.506 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:06Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766802346 | 2024-04-10T16:33:22.346 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766802346 | 2024-04-10T16:33:22.346 | /                 | Mote2    | Mote       | light       | float    | 14.763423            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766802346 | 2024-04-10T16:33:22.346 | /                 | Mote2    | Mote       | temperature | float    | 24.139196            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766802346 | 2024-04-10T16:33:22.346 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:22Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766802348 | 2024-04-10T16:33:22.348 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766802348 | 2024-04-10T16:33:22.348 | /                 | Mote2    | Mote       | light       | float    | 18.19322             | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766802348 | 2024-04-10T16:33:22.348 | /                 | Mote2    | Mote       | temperature | float    | 23.897434            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766802348 | 2024-04-10T16:33:22.348 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:12Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766807563 | 2024-04-10T16:33:27.563 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766807563 | 2024-04-10T16:33:27.563 | /                 | Mote2    | Mote       | light       | float    | 10.979566            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766807563 | 2024-04-10T16:33:27.563 | /                 | Mote2    | Mote       | temperature | float    | 24.058605            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766807563 | 2024-04-10T16:33:27.563 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:27Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766812991 | 2024-04-10T16:33:32.991 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766812991 | 2024-04-10T16:33:32.991 | /                 | Mote2    | Mote       | light       | float    | 12.349583            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766812991 | 2024-04-10T16:33:32.991 | /                 | Mote2    | Mote       | temperature | float    | 23.736263            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766812991 | 2024-04-10T16:33:32.991 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:33Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766818454 | 2024-04-10T16:33:38.454 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766818454 | 2024-04-10T16:33:38.454 | /                 | Mote2    | Mote       | light       | float    | 13.427076            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766818454 | 2024-04-10T16:33:38.454 | /                 | Mote2    | Mote       | temperature | float    | 24.058605            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766818454 | 2024-04-10T16:33:38.454 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:38Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766823877 | 2024-04-10T16:33:43.877 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766823877 | 2024-04-10T16:33:43.877 | /                 | Mote2    | Mote       | light       | float    | 13.393048            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766823877 | 2024-04-10T16:33:43.877 | /                 | Mote2    | Mote       | temperature | float    | 24.219782            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766823877 | 2024-04-10T16:33:43.877 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:44Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766837904 | 2024-04-10T16:33:57.904 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766837904 | 2024-04-10T16:33:57.904 | /                 | Mote2    | Mote       | light       | float    | 14.014362            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766837904 | 2024-04-10T16:33:57.904 | /                 | Mote2    | Mote       | temperature | float    | 24.542124            | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766837904 | 2024-04-10T16:33:57.904 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:49Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
+| 1712766839367 | 2024-04-10T16:33:59.367 | /                 | Mote2    | Mote       | UV          | boolean  | false                | 
+[{"name":"temperatureUnit","type":"string","value":"detects UV"}] |
+| 1712766839367 | 2024-04-10T16:33:59.367 | /                 | Mote2    | Mote       | light       | float    | 13.598069            | 
+[{"name":"temperatureUnit","type":"string","value":"lux"}]        |
+| 1712766839367 | 2024-04-10T16:33:59.367 | /                 | Mote2    | Mote       | temperature | float    | 23.97802             | 
+[{"name":"temperatureUnit","type":"string","value":"celsius"}]    |
+| 1712766839367 | 2024-04-10T16:33:59.367 | /                 | Mote2    | Mote       | timeInstant | time     | 2024-04-10T16:33:59Z | 
+[{"name":"timeInstantUnit","type":"string","value":"ISO8601"}]    |
++---------------+-------------------------+-------------------+--------

@@ -1,0 +1,1 @@
+curl 172.16.240.210:2303/v2/entities/Mote2?options=keyValues -s -S --header "Accept: application/json"

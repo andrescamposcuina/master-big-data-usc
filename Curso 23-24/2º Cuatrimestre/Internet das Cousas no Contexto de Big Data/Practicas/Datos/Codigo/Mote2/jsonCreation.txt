@@ -1,0 +1,44 @@
+{
+    "id": "Mote2",
+    "type": "Mote",
+    "timeInstant": {
+        "value": "2024-04-10T10:00:00Z",
+        "type": "time",
+        "metadata": {
+            "timeInstantUnit": {
+                "value": "ISO8601",
+                "type": "string"
+            }
+        }
+    },
+    "temperature": {
+        "value": 28.0,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "celsius",
+                "type": "string"
+            }
+        }
+    },
+    "light": {
+        "value": 1800.0,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "lux",
+                "type": "string"
+            }
+        }
+    },
+    "UV": {
+        "value": true,
+        "type": "boolean",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "detects UV",
+                "type": "string"
+            }
+        }
+    }
+}
