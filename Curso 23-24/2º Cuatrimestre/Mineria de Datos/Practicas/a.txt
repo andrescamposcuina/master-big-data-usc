@@ -1,0 +1,4 @@
+transformacion de datos + balanceado
+que pueda ser reproducible
+incluir graficas para que sea facil entenderlo
+explicar todas las decisiones tomadas

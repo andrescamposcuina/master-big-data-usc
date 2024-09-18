@@ -1,0 +1,34 @@
+-------------------- ENCENDER ---------------------
+docker container start namenode
+docker exec -ti namenode /bin/bash
+
+for ($i = 1; $i -le 7; $i++) {
+    $containerName = "datanode$i"
+    docker container start $containerName
+}
+
+docker container start backupnode
+
+docker container start timelineserver 
+
+----> acceder a timelineserver con docker attach timelineserver
+----> Ejecutar yarn --daemon start timelineserver
+----> Salir sin apagar ctrl + p, NO SOLTAR CTRL, ctrl + q
+
+-------------------- APAGAR ---------------------
+docker container stop namenode
+
+docker container stop backupnode
+
+docker container stop timelineserver
+
+for ($i = 1; $i -le 7; $i++) {
+    $containerName = "datanode$i"
+    docker container stop $containerName
+}
+
+-------------------- WEBS ---------------------
+	- HDFS http://localhost:9870
+	- YARN http://localhost:8088
+	- Backup http://localhost:50105
+	- Timelineserver http://localhost:8188/

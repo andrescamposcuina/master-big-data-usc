@@ -1,0 +1,24 @@
+Descripción de las variables del dataset Telco-customer-churn
+
+customerID – ID del cliente.
+Gender - Género
+SeniorCitizen - Ciudadado Senior (Jubilado)
+Partner – Si tiene compañero en el contrato
+Dependents – Si tiene personas dependientes en el contrato.
+Tenure – Número de meses de permanencia
+PhoneService – Si tiene servicio de teléfono
+MultipleLines – Si tiene múltiples lineas
+InternetService – Tipo de servicio de Internet
+OnlineSecurity – Si tiene contratado la seguridad Online
+OnlineBackup – Si tiene contratado el backup online
+DeviceProtection – Si tiene contratado un seguro del ordenador ante incidencias
+TechSupport – Si tiene contratado soporte técnico
+StreamingTV – Si tiene contratado TV por Streaming
+StreamingMovies – Si tiene contratado servicio de películas por Streaming
+Contract – Tipo de contrato
+PaperlessBilling – Si ha seleccionado facturación sin papel
+PaymentMethod – Método de pago
+MonthlyCharges – Factura mensual
+TotalCharges – Factura total durante el periodo de permanencia en la compañia
+Churn – Si ha cambiado de compañía
+

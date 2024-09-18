@@ -1,0 +1,72 @@
+<Schema name="ProduccionCine" description="Nuevo esquemade cine">
+  <Dimension type="StandardDimension" visible="true" name="director">
+    <Hierarchy name="jerarquiadirector" visible="true" hasAll="true" primaryKey="id">
+      <Table name="director" schema="public" alias="">
+      </Table>
+      <Level name="niveldirector" visible="true" table="director" column="nombre" type="String" internalType="String" uniqueMembers="false">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="StandardDimension" visible="true" name="productor">
+    <Hierarchy name="jerarquiaproductor" visible="true" hasAll="true" primaryKey="id">
+      <Table name="productor" schema="public" alias="">
+      </Table>
+      <Level name="nivelproductor" visible="true" table="productor" column="nombre" type="String" internalType="String" uniqueMembers="false">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="StandardDimension" visible="true" name="productora">
+    <Hierarchy name="jerarquiaproductora" visible="true" hasAll="true" primaryKey="id">
+      <Table name="productora" schema="public" alias="">
+      </Table>
+      <Level name="nivelproductora" visible="true" table="productora" column="nombre" type="String" internalType="String" uniqueMembers="false">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Dimension type="TimeDimension" visible="true" name="tiempo">
+    <Hierarchy name="jerarquiatiempo" visible="true" hasAll="true" primaryKey="id">
+      <Table name="tiempo" schema="public" alias="">
+      </Table>
+      <Level name="anno" visible="true" table="tiempo" column="ano" type="Integer" internalType="int" uniqueMembers="false">
+      </Level>
+      <Level name="mes" visible="true" table="tiempo" column="mes" nameColumn="mes_texto" type="Integer" internalType="int" uniqueMembers="false">
+      </Level>
+    </Hierarchy>
+  </Dimension>
+  <Cube name="satisfaccion" visible="true" cache="false" enabled="true">
+    <Table name="satisfaccion_usuarios" schema="public" alias="">
+    </Table>
+    <DimensionUsage source="director" name="director" visible="true" foreignKey="director">
+    </DimensionUsage>
+    <DimensionUsage source="productor" name="productor" visible="true" foreignKey="productor">
+    </DimensionUsage>
+    <DimensionUsage source="productora" name="productora" visible="true" foreignKey="productora">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempoemision" visible="true" foreignKey="tiempo_emision">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempovotacion" visible="true" foreignKey="tiempo_votacion">
+    </DimensionUsage>
+    <Measure name="votos" column="votos" datatype="Integer" aggregator="sum" visible="true">
+    </Measure>
+    <Measure name="satisfaccion" column="satisfaccion" datatype="Numeric" aggregator="avg" visible="true">
+    </Measure>
+  </Cube>
+  <Cube name="finanzas" visible="true" cache="false" enabled="true">
+    <Table name="finanzas" schema="public" alias="">
+    </Table>
+    <DimensionUsage source="director" name="director" visible="true" foreignKey="director">
+    </DimensionUsage>
+    <DimensionUsage source="productor" name="productor" visible="true" foreignKey="productor">
+    </DimensionUsage>
+    <DimensionUsage source="productora" name="productora" visible="true" foreignKey="productora">
+    </DimensionUsage>
+    <DimensionUsage source="tiempo" name="tiempoemision" visible="true" foreignKey="tiempo">
+    </DimensionUsage>
+    <Measure name="coste" column="coste" datatype="Numeric" aggregator="sum" visible="true">
+    </Measure>
+    <Measure name="ingresos" column="ingresos" datatype="Numeric" aggregator="sum" visible="true">
+    </Measure>
+    <CalculatedMember name="beneficio" formatString="" formula="[Measures].[ingresos]- [Measures].[coste]" dimension="Measures" visible="true">
+    </CalculatedMember>
+  </Cube>
+</Schema>

@@ -1,0 +1,7 @@
+Your device id is e00fce6870bd139e06dee90e
+Your system firmware version is 4.2.0
+
+NO MODIFICAR EL PUERTO DEL FIREWALL
+sudo firewall-cmd --zone=public --add-port=1026/tcp --permanent
+
+el puerto a usar es 2303, en vez del 1026

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CDADescriptor>
+   <DataSources>
+      <Connection id="directoresMejorValorados" type="sql.jndi">
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="SatisfaccionProductores" type="sql.jndi">
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="ingresosProductores" type="mondrian.jndi">
+         <Catalog>mondrian:/ProduccionCine</Catalog>
+         <Jndi>peliculas</Jndi>
+      </Connection>
+      <Connection id="ingresosDirectores" type="mondrian.jndi">
+         <Catalog>mondrian:/ProduccionCine</Catalog>
+         <Jndi>peliculas</Jndi>
+      </Connection>
+   </DataSources>
+   <DataAccess access="public" connection="directoresMejorValorados"
+               id="directoresMejorValorados"
+               type="sql">
+      <Name>directoresMejorValorados</Name>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[select cast(cume_dist() over (order by avg(satisfaccion) desc) as numeric(3,2))as pctl,
+  d.nombre as Director, cast(avg(satisfaccion) as numeric(2,1)) as valoracion, sum(votos) as votos
+from dw.satisfaccion_usuarios su, dw.tiempo t, dw.directores d 
+where su.tiempo_votacion = t.id and su.director = d.id 
+ and t.ano between 2006 and 2016
+group by d.id 
+having sum(votos) > 100
+order by valoracion desc]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="SatisfaccionProductores"
+               id="SatisfaccionProductores"
+               type="sql">
+      <Name>SatisfaccionProductores</Name>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[select cast(cume_dist() over (order by avg(satisfaccion) desc) as numeric(3,2))as pctl,
+  p.nombre as Productor, cast(avg(satisfaccion) as numeric(2,1)) as valoracion, sum(votos) as votos
+from dw.satisfaccion_usuarios su, dw.tiempo t, dw.productores p
+where su.tiempo_votacion = t.id and su.director = p.id 
+ and t.ano between 2006 and 2016
+group by p.id 
+having sum(votos) > 100
+order by valoracion desc]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="ingresosProductores" id="ingresosProductores"
+               type="mdx">
+      <Name>ingresosProductores</Name>
+      <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[WITH
+SET [~FILTER] AS
+    {[tiempoemision.jerarquiatiempo].[2006], [tiempoemision.jerarquiatiempo].[2007], [tiempoemision.jerarquiatiempo].[2008], [tiempoemision.jerarquiatiempo].[2009], [tiempoemision.jerarquiatiempo].[2010], [tiempoemision.jerarquiatiempo].[2011], [tiempoemision.jerarquiatiempo].[2012], [tiempoemision.jerarquiatiempo].[2013], [tiempoemision.jerarquiatiempo].[2014], [tiempoemision.jerarquiatiempo].[2015], [tiempoemision.jerarquiatiempo].[2016]}
+SET [~ROWS] AS
+    Order(TopCount({[productor.jerarquiaproductor].[nivelproductor].Members}, 20, [Measures].[ingresos]), [Measures].[ingresos], DESC)
+SELECT
+NON EMPTY {[Measures].[beneficio], [Measures].[coste]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [finanzas]
+WHERE [~FILTER]]]></Query>
+   </DataAccess>
+   <DataAccess access="public" connection="ingresosDirectores" id="ingresosDirectores"
+               type="mdx">
+      <Name>ingresosDirectores</Name>
+      <BandedMode>compact</BandedMode>
+      <Cache duration="3600" enabled="true"/>
+      <Columns/>
+      <Parameters/>
+      <Query><![CDATA[WITH
+SET [~FILTER] AS
+    {[tiempoemision.jerarquiatiempo].[2006], [tiempoemision.jerarquiatiempo].[2007], [tiempoemision.jerarquiatiempo].[2008], [tiempoemision.jerarquiatiempo].[2009], [tiempoemision.jerarquiatiempo].[2010], [tiempoemision.jerarquiatiempo].[2011], [tiempoemision.jerarquiatiempo].[2012], [tiempoemision.jerarquiatiempo].[2013], [tiempoemision.jerarquiatiempo].[2014], [tiempoemision.jerarquiatiempo].[2015], [tiempoemision.jerarquiatiempo].[2016]}
+SET [~ROWS] AS
+    Order(TopCount({[director.jerarquiadirector].[niveldirector].Members}, 20, [Measures].[ingresos]), [Measures].[ingresos], DESC)
+SELECT
+NON EMPTY {[Measures].[beneficio], [Measures].[coste]} ON COLUMNS,
+NON EMPTY [~ROWS] ON ROWS
+FROM [finanzas]
+WHERE [~FILTER]]]></Query>
+   </DataAccess>
+</CDADescriptor>

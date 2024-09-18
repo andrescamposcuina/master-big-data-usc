@@ -1,0 +1,1 @@
+curl 172.16.240.210:2303/v2/entities/Mote1/attrs -s -S --header "Content-Type: application/json" -d @jsonpruebaUpdate.txt

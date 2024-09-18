@@ -1,0 +1,18 @@
+{
+  "rdbms": {
+    "POSTGRESQL": {
+      "databaseName": "cine",
+      "pluginId": "POSTGRESQL",
+      "accessType": 0,
+      "hostname": "localhost",
+      "password": "Encrypted 456e63727970746564203262653938616663383661613739353934dffd9ef80bc4c5d0f31aad22d896f7d8",
+      "pluginName": "PostgreSQL",
+      "port": "5432",
+      "attributes": {
+        "PORT_NUMBER": "5432"
+      },
+      "username": "alumnogreibd"
+    }
+  },
+  "name": "cine"
+}

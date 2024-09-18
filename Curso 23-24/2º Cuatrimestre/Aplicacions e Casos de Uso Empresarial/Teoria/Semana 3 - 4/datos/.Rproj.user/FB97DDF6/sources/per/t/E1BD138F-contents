@@ -1,0 +1,4 @@
+# Ejercicio 4
+library(recommenderlab)
+data(Jester5k)
+Jester5k

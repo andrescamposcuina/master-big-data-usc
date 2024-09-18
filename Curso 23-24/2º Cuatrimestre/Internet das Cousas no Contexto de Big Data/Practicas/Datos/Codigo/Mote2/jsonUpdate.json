@@ -1,0 +1,42 @@
+{
+    "timeInstant": {
+        "value": "2024-04-10T16:31:08Z",
+        "type": "time",
+        "metadata": {
+            "timeInstantUnit": {
+                "value": "ISO8601",
+                "type": "string"
+            }
+        }
+    },
+    "temperature": {
+        "value": 24.219782,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "celsius",
+                "type": "string"
+            }
+        }
+    },
+    "light": {
+        "value": 8.684682,
+        "type": "float",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "lux",
+                "type": "string"
+            }
+        }
+    },
+    "UV": {
+        "value": false,
+        "type": "boolean",
+        "metadata": {
+            "temperatureUnit": {
+                "value": "detects UV",
+                "type": "string"
+            }
+        }
+    }
+}

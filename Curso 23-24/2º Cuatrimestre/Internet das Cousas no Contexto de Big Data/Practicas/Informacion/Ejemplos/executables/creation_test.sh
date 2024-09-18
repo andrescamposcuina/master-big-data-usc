@@ -1,0 +1,1 @@
+curl --location --request POST 'http://172.16.242.197:2305/v2/entities/' --header 'Content-Type: application/json' --data @creation_test.json
